@@ -1,0 +1,16 @@
+{
+  "theme": "base",
+  "flowchart": {
+    "defaultRenderer": "elk",
+    "curve": "basis",
+    "nodeSpacing": 38,
+    "rankSpacing": 52
+  },
+  "themeVariables": {
+    "fontFamily": "Noto Sans, Arial, sans-serif",
+    "fontSize": "17px",
+    "lineColor": "#52677b",
+    "primaryTextColor": "#17324d",
+    "background": "#f7faf7"
+  }
+}

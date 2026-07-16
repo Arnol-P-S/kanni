@@ -1,0 +1,29 @@
+flowchart TB
+  Student["Student activity"] --> Record[("Versioned local record")]
+  Record --> Teacher["Teacher review"]
+  Teacher --> Strategy["Bounded strategy choice"]
+  Strategy --> Next["Learner's next activity"]
+  Record --> Parent["Filtered parent prompt"]
+  Strategy --> Parent
+
+  Static["Reviewed lesson content"] --> Student
+  Student --> Gate["Adult confirmation"]
+  Gate --> API["POST /api/tutor"]
+  API --> Safety["Zod, NFC, privacy, safety"]
+  Safety --> Sol["GPT-5.6 Sol"]
+  Static --> Sol
+  Sol --> Validate["Structured output and ID checks"]
+  Sol --> Critics["Optional parallel Luna critics"]
+  Critics --> Validate
+  API --> Fallback["Reviewed fallback"]
+  Validate --> Answer["Grounded student answer"]
+  Fallback --> Answer
+
+  classDef role fill:#ffffff,stroke:#0f766e,stroke-width:2px,color:#17324d;
+  classDef control fill:#dff3ef,stroke:#0f766e,stroke-width:2px,color:#17324d;
+  classDef ai fill:#fff3d6,stroke:#b96b00,stroke-width:2px,color:#17324d;
+  classDef store fill:#edf5f2,stroke:#17324d,stroke-width:2px,color:#17324d;
+  class Student,Teacher,Parent,Next,Answer role;
+  class Gate,API,Safety,Validate,Static,Fallback,Strategy control;
+  class Sol,Critics ai;
+  class Record store;
