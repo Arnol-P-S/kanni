@@ -39,6 +39,12 @@ export class TeacherPage {
     await this.page.getByRole("button", { name: /Use objects/ }).click();
     await expect(this.page.getByText("approved", { exact: true })).toBeVisible();
   }
+
+  async chooseStrategy(name: RegExp) {
+    await this.page.goto("/teacher");
+    await this.page.getByRole("button", { name }).click();
+    await expect(this.page.getByText("approved", { exact: true })).toBeVisible();
+  }
 }
 
 export class ParentPage {

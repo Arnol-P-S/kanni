@@ -1,47 +1,55 @@
 # Kanni demo video script
 
-Target length: 2 minutes 50 seconds. Narration and captions are in English. Malayalam interface text receives a short English explanation.
+Target length: 2 minutes 50 seconds. Narration and captions are in English. Malayalam preview text receives a short English explanation.
 
-## 0:00 to 0:12
+## 0:00 to 0:15
 
-Screen: Kanni home page, connected-node mark, and the two implemented lesson cards.
+Screen: Home page with the four connected roles.
 
-Narration: "A learning moment rarely belongs to one person. Kanni turns one activity into age-appropriate help for a Kerala student, a clear signal for the teacher, and one useful next step for the parent."
+Narration: "Students rarely learn alone. Kanni turns one learning goal into clear work for the student, teacher, parent, and school administrator. Each person sees only the part they need."
 
-## 0:12 to 1:02
+## 0:15 to 0:35
 
-Screen: Open Class 1 Mathematics. Point to the Malayalam-first label and concrete counters. Select 4 for 2 plus 3. Show the reviewed Malayalam hint, then continue and select 6 for 4 plus 2.
+Screen: Open the synthetic login. Choose Asha, confirm adult testing, and enter Admin. Map Meera, Diya, and Arun with Malayalam preview selected.
 
-Narration: "This Class 1 activity uses fixed choices, large touch targets, and concrete counters. There is no free-text field, timer, rank, or learner identity. The first answer is incorrect, so Kanni shows a reviewed Malayalam hint. The follow-up answer is correct. Kanni records only that activity event."
+Narration: "These are fictional profiles for adult testing. Admin maps one support circle and sees operational handoffs, not the learner's explanation."
 
-## 1:02 to 1:32
+## 0:35 to 1:00
 
-Screen: Open Teacher. Show pre-check, follow-up, attempt count, hint use, and the activity-only wording. Select Use objects. Open Parent and show the spoon activity.
+Screen: Switch to Meera. Show the fractions goal, success criteria, misconception checks, quick check, and reviewed static origin. Publish the plan.
 
-Narration: "The teacher sees what happened in this activity, not a diagnosis. Choosing Use objects approves one bounded strategy. The parent then receives one plain-language prompt and never sees the learner's custom question or a model transcript."
+Narration: "The teacher reviews the plan before anything reaches the learner. Kanni can optionally draft this structure with GPT-5.6, but the complete reviewed plan works with AI off."
 
-## 1:32 to 1:50
+## 1:00 to 1:30
 
-Screen: Use the parent link to return to Class 1. Highlight Teacher choice applied and the counters message.
+Screen: Switch to Diya. Choose one quarter, open another way, show the two equal fraction strips, revise to one half, choose the explanation, and submit.
 
-Narration: "This is the connected part of Kanni. The teacher's decision changes the learner's next activity on the same device."
+Narration: "The student tries first, asks for another representation, and explains the revision. There is no rank, streak, ability label, or free-text personal story. The student can also challenge an inaccurate record."
 
-## 1:50 to 2:12
+## 1:30 to 1:52
 
-Screen: Open Class 11 linear search. Show the trace. Select a reviewed question, then show a prepared adult-gated custom answer with its source card and Deep Check summary.
+Screen: Try opening Teacher while still Student and show the safe redirect. Switch to Meera, review the activity evidence, choose the next support, and approve the family brief.
 
-Narration: "Class 11 starts with reviewed answers that work without AI. A supervised custom question is grounded in one bundled lesson pack. GPT-5.6 Sol returns a structured answer with allowlisted source IDs. Optional GPT-5.6 Luna critics return short checks, not hidden reasoning or proof."
+Narration: "Kanni checks both role and relationship. A role jump is denied. The assigned teacher sees activity evidence, not a diagnosis, and chooses the next support before releasing the family update."
 
-## 2:12 to 2:30
+## 1:52 to 2:15
 
-Screen: Open Trust. Show the rights registry, privacy boundary, 32-case eval specification, and known limits.
+Screen: Switch to Arun. Show the filtered summary, Malayalam-preview paper-folding activity, and privacy exclusions. Select Tried it. Switch back to Meera and show the family signal.
 
-Narration: "The Trust page makes the boundaries visible. The lesson content is original, SCERT references are link only, profiles are synthetic, safety routes are static, and live model results are published only after the budgeted release run."
+Narration: "The linked parent receives one plain activity. Raw learner prompts, model transcripts, ranks, and private teacher notes stay out. The parent's bounded response returns to the teacher and closes the loop."
 
-## 2:30 to 2:50
+## 2:15 to 2:35
 
-Screen: Return to the home loop, then briefly show repository tests and architecture image.
+Screen: Open Trust and the two revised architecture diagrams. Show the deterministic scorecard and optional OpenRouter boundary.
 
-Narration: "Codex helped turn a broad tutor idea into this testable student, teacher, and parent loop. Kanni does not promise a complete curriculum or learning improvement. It shows one smaller claim working end to end: one learning event can become useful across school and home."
+Narration: "The Trust page separates working behavior from limits. Sessions are signed but not real identity. Original content is rights-cleared. Optional model calls use a bounded structured path and always fall back. No paid live model result is claimed."
 
-End card: "Kanni | കണ്ണി. One learning moment, connected."
+## 2:35 to 2:50
+
+Screen: Show the test summary, return to the home cycle, and end on the Kanni mark.
+
+Narration: "Codex helped turn separate dashboards into one tested learning-support cycle. Kanni makes one careful claim: four people can move the same learning goal forward without making the chatbot the center."
+
+End card: "Kanni | കണ്ണി. One learning goal. Four people moving it forward."
+
+If a live OpenRouter run is approved before recording, add it only after the exact route, model, cost, output, and eval result are saved. Do not narrate a result that is not visible and verified.

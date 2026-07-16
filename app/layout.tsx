@@ -17,7 +17,7 @@ export const metadata: Metadata = {
     template: "%s | Kanni",
   },
   description:
-    "One learning moment becomes useful to a Kerala student, teacher, and parent.",
+    "One learning goal becomes a coordinated next step for a student, teacher, parent, and school.",
 };
 
 export default function RootLayout({

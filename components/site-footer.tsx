@@ -12,6 +12,8 @@ export function SiteFooter() {
       </div>
       <div className="footer-links">
         <Link href="/trust">Trust and limitations</Link>
+        <Link href="/privacy">Privacy</Link>
+        <Link href="/terms">Prototype terms</Link>
         <span>Code license: MIT</span>
       </div>
     </footer>

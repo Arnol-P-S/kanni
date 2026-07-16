@@ -1,29 +1,26 @@
+%% Compatibility overview only. The canonical architecture evidence is in
+%% docs/diagrams/render and docs/SYSTEM-DESIGN.md.
 flowchart TB
-  Student["Student activity"] --> Record[("Versioned local record")]
+  Student["Student activity"] --> Record[("Versioned synthetic local record")]
   Record --> Teacher["Teacher review"]
   Teacher --> Strategy["Bounded strategy choice"]
   Strategy --> Next["Learner's next activity"]
   Record --> Parent["Filtered parent prompt"]
   Strategy --> Parent
 
-  Static["Reviewed lesson content"] --> Student
-  Student --> Gate["Adult confirmation"]
-  Gate --> API["POST /api/tutor"]
-  API --> Safety["Zod, NFC, privacy, safety"]
-  Safety --> Sol["GPT-5.6 Sol"]
-  Static --> Sol
-  Sol --> Validate["Structured output and ID checks"]
-  Sol --> Critics["Optional parallel Luna critics"]
-  Critics --> Validate
-  API --> Fallback["Reviewed fallback"]
-  Validate --> Answer["Grounded student answer"]
-  Fallback --> Answer
+  Fixed["Project-authored fixed content"] --> Student
+  Student --> API["Public Next.js routes"]
+  API --> Boundary["Strict schema, safety, privacy, and adult-gate boundaries"]
+  Boundary --> Capability["AI capability: unavailable"]
+  Capability --> Fallback["Fixed safety or unavailable response"]
+
+  Future["Future provider-neutral runtime"] -. "requires provider approval, moderation, rate and spend limits, and live evals" .-> Capability
 
   classDef role fill:#ffffff,stroke:#0f766e,stroke-width:2px,color:#17324d;
   classDef control fill:#dff3ef,stroke:#0f766e,stroke-width:2px,color:#17324d;
-  classDef ai fill:#fff3d6,stroke:#b96b00,stroke-width:2px,color:#17324d;
+  classDef blocked fill:#fff3d6,stroke:#b42318,stroke-width:2px,color:#17324d;
   classDef store fill:#edf5f2,stroke:#17324d,stroke-width:2px,color:#17324d;
-  class Student,Teacher,Parent,Next,Answer role;
-  class Gate,API,Safety,Validate,Static,Fallback,Strategy control;
-  class Sol,Critics ai;
+  class Student,Teacher,Parent,Next role;
+  class API,Boundary,Fixed,Fallback,Strategy control;
+  class Capability,Future blocked;
   class Record store;

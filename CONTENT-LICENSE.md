@@ -1,6 +1,10 @@
 # Kanni lesson content license
 
-The original lesson text in `lib/lessons.ts`, including the Class 1 addition and Class 11 linear-search lesson sections, is licensed under the Creative Commons Attribution 4.0 International License, CC BY 4.0.
+The original lesson text in `lib/lessons.ts`, `lib/growth-cycle.ts`, and
+`lib/growth-support-presentations.ts` is licensed under the Creative Commons
+Attribution 4.0 International License, CC BY 4.0. This includes the retained
+Class 1 addition and Class 11 linear-search sections plus the revised fractions
+plan, support, and family activities.
 
 Copyright 2026 Arnol P. S.
 

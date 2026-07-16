@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 
 import { evalCases } from "@/eval/cases";
+import deterministicResults from "@/eval/deterministic-results.json";
 import { sourceRegistry } from "@/lib/lessons";
 
 export const metadata: Metadata = {
@@ -27,6 +28,10 @@ const categoryCounts = evalCases.reduce<Record<string, number>>(
   }),
   {},
 );
+const deterministicRunDate = new Intl.DateTimeFormat("en-IN", {
+  dateStyle: "long",
+  timeZone: "Asia/Kolkata",
+}).format(new Date(deterministicResults.runDate));
 
 export default function TrustPage() {
   return (
@@ -37,7 +42,9 @@ export default function TrustPage() {
           <h1>What Kanni uses, what it stores, and where it stops</h1>
           <p>
             This page separates working product behavior from plans and open
-            review items. The safest default is static, reviewed lesson content.
+            review items. The current release connects four synthetic roles
+            around one fractions learning goal. Optional AI is off by default,
+            and every role can complete its work with project-authored content.
           </p>
         </div>
         <ShieldCheck size={70} aria-hidden="true" />
@@ -60,10 +67,24 @@ export default function TrustPage() {
           </div>
         </div>
         <p>
-          The two lesson packs are original Kanni content under CC BY 4.0.
+          The fractions learning cycle and the two retained lesson packs are
+          original Kanni content under CC BY 4.0.
           Public SCERT pages are link-only references. Kanni does not copy,
           index, transcribe, screenshot, redraw, or redistribute textbook
           content or logos.
+        </p>
+        <p>
+          Two third-party pages shared during planning list textbooks and
+          handbooks: the{" "}
+          <a href="https://www.arabiceduweb.in/2024/06/1-3-new-text-books-2024.html">
+            handbook listing <ExternalLink size={15} aria-hidden="true" />
+          </a>{" "}
+          and the{" "}
+          <a href="https://www.arabiceduweb.in/2024/05/i-iii-v-vii-ix-new-text-books-2024.html">
+            textbook listing <ExternalLink size={15} aria-hidden="true" />
+          </a>
+          . They are discovery links, not lesson sources. Kanni does not ingest
+          or republish their content.
         </p>
         <div className="table-wrap" tabIndex={0} aria-label="Scrollable source registry">
           <table>
@@ -72,8 +93,8 @@ export default function TrustPage() {
                 <th>Source</th>
                 <th>Use</th>
                 <th>Rights basis</th>
-                <th>Version</th>
-                <th>Human review</th>
+                <th>Source record version</th>
+                <th>External content review</th>
               </tr>
             </thead>
             <tbody>
@@ -107,6 +128,11 @@ export default function TrustPage() {
             reviewed the mapping.
           </p>
         </div>
+        <p>
+          The fixed content is project-authored. Independent Kerala-teacher and
+          native-Malayalam reviews are still pending, so Malayalam remains
+          preview.
+        </p>
       </section>
 
       <section id="privacy" className="trust-section" aria-labelledby="privacy-title">
@@ -114,36 +140,41 @@ export default function TrustPage() {
           <LockKeyhole aria-hidden="true" />
           <div>
             <p className="eyebrow">Privacy and minors</p>
-            <h2 id="privacy-title">Synthetic profiles and an adult gate</h2>
+            <h2 id="privacy-title">Signed synthetic sessions and minimum data</h2>
           </div>
         </div>
         <div className="trust-grid">
           <article>
-            <h3>Stored on this device</h3>
+            <h3>Stored in signed same-device cookies</h3>
             <ul className="check-list">
-              <li><CheckCircle2 aria-hidden="true" />Answer option IDs and correctness</li>
-              <li><CheckCircle2 aria-hidden="true" />Hint use and activity observation</li>
-              <li><CheckCircle2 aria-hidden="true" />Teacher review state and strategy</li>
+              <li><CheckCircle2 aria-hidden="true" />Synthetic persona ID and a two-hour adult-operated session</li>
+              <li><CheckCircle2 aria-hidden="true" />Synthetic teacher, student, and guardian relationship mapping</li>
+              <li><CheckCircle2 aria-hidden="true" />Plan state, fixed activity choices, support use, teacher review, and a bounded family response</li>
             </ul>
           </article>
           <article>
-            <h3>Not collected by Kanni</h3>
+            <h3>Not stored in the learning record</h3>
             <ul className="check-list">
               <li><CheckCircle2 aria-hidden="true" />Learner name, account, school, or location</li>
               <li><CheckCircle2 aria-hidden="true" />Phone, email, health, or contact information</li>
-              <li><CheckCircle2 aria-hidden="true" />Custom prompt, transcript, analytics, or rank</li>
+              <li><CheckCircle2 aria-hidden="true" />Raw learner prompt, model transcript, analytics, score, or rank</li>
             </ul>
           </article>
         </div>
         <p>
-          AI requests require the signed, short-lived adult confirmation cookie.
-          Requests go through Vercel AI Gateway to the model provider and may be
-          subject to provider safety-monitoring retention. Setting `store: false`
-          is not the same as Zero Data Retention, so real-child testing and real
-          child personal data are excluded from this prototype. See the official{" "}
+          The synthetic login is not proof of identity. Its HMAC signature stops
+          casual cookie editing from becoming trusted state, but there is no
+          database, school SSO, password, or production account recovery. The
+          relationship check matters as much as the role check: Arun can read
+          only Diya&apos;s approved family brief, and admin receives aggregate
+          operational counts rather than the learner&apos;s explanation. Real-child
+          testing and real child personal data are excluded from this prototype.
+          See the official{" "}
           <a href="https://developers.openai.com/api/docs/guides/safety-checks/under-18-api-guidance">
             OpenAI Under 18 API Guidance
-          </a>.
+          </a>
+          . Read the separate <Link href="/privacy">privacy notice</Link> and{" "}
+          <Link href="/terms">prototype terms</Link>.
         </p>
       </section>
 
@@ -151,8 +182,8 @@ export default function TrustPage() {
         <div className="trust-section-heading">
           <BookOpenCheck aria-hidden="true" />
           <div>
-            <p className="eyebrow">GPT-5.6 runtime</p>
-            <h2 id="ai-title">A bounded lesson workflow, not an open agent</h2>
+            <p className="eyebrow">Optional provider state</p>
+            <h2 id="ai-title">OpenRouter is bounded and off by default</h2>
           </div>
         </div>
         <div
@@ -160,47 +191,56 @@ export default function TrustPage() {
           aria-label="Scrollable tutor request validation flow"
           tabIndex={0}
         >
-          <span>Adult cookie</span>
+          <span>Fixed workflow action</span>
           <b>→</b>
-          <span>Input and safety checks</span>
+          <span>Role and relationship checks</span>
           <b>→</b>
-          <span>One lesson pack</span>
+          <span>Capability check</span>
           <b>→</b>
-          <span>GPT-5.6 Sol</span>
+          <span>OpenRouter policy route</span>
           <b>→</b>
-          <span>Zod and ID validation</span>
+          <span>Project-authored fallback</span>
         </div>
         <div className="trust-grid runtime-cards">
           <article>
-            <span className="status-dot configured" />
-            <h3>Primary tutor</h3>
+            <span className="status-dot pending" />
+            <h3>Safe default</h3>
             <p>
-              `openai/gpt-5.6-sol`, at most 600 output tokens, 18-second
-              timeout, no automatic retry, no tools, and no response chaining.
-            </p>
-          </article>
-          <article>
-            <span className="status-dot configured" />
-            <h3>Optional Deep Check</h3>
-            <p>
-              Two `openai/gpt-5.6-luna` critics run with `Promise.allSettled`.
-              A critic failure never removes an already validated tutor answer.
+              <code>GROWTH_AI_PROVIDER=disabled</code> and
+              <code> AI_DEMO_ENABLED=false</code> keep model calls off. Teacher
+              planning and student support remain complete.
             </p>
           </article>
           <article>
             <span className="status-dot pending" />
-            <h3>Human review</h3>
+            <h3>When explicitly enabled</h3>
             <p>
-              AI answers show `pending`. Reviewed static answers show
-              `completed`. Malayalam remains preview until native-speaker review.
+              The server uses OpenRouter with one configured GPT-5.6 Sol model,
+              an Azure-only Zero Data Retention route, provider data collection
+              denied, fallbacks disabled, no automatic retry, short output
+              limits, and an 18-second timeout.
+            </p>
+          </article>
+          <article>
+            <span className="status-dot pending" />
+            <h3>Application-controlled workflow</h3>
+            <p>
+              There is no recursive agent loop. AI may draft a structured teacher
+              plan or one teacher-selected support. Zod validates the result,
+              and student-facing prose must pass a strategy-specific content
+              gate. Any provider, schema, or content failure returns reviewed
+              Kanni content.
             </p>
           </article>
         </div>
         <p>
-          Any refusal, provider error, timeout, malformed object, unknown lesson
-          ID, unknown check ID, or unknown confusion code hides the generated
-          text. The interface falls back to reviewed content or an unavailable
-          message.
+          The approved $100 Codex credit pays for work inside Codex. It cannot
+          pay for application API requests. OpenRouter needs its own budget and
+          key, which are never exposed to the browser. Do not enable model calls
+          until the selected route, provider terms, retention controls, and
+          deployment rate limits are reviewed for the intended audience. See
+          the <a href="https://openrouter.ai/docs/guides/routing/provider-selection">OpenRouter provider-routing documentation</a>{" "}
+          and <a href="https://openrouter.ai/docs/guides/features/zdr">Zero Data Retention documentation</a>.
         </p>
       </section>
 
@@ -208,8 +248,8 @@ export default function TrustPage() {
         <div className="trust-section-heading">
           <FileCheck2 aria-hidden="true" />
           <div>
-            <p className="eyebrow">Eval specification v1.0.0</p>
-            <h2 id="evals-title">32 cases defined before tutor logic</h2>
+            <p className="eyebrow">Eval specification</p>
+            <h2 id="evals-title">{evalCases.length} release cases in the repository</h2>
           </div>
         </div>
         <div className="scorecard-grid">
@@ -221,19 +261,22 @@ export default function TrustPage() {
           <article><strong>10+</strong><span>Malayalam mixing or variations</span></article>
         </div>
         <div className="eval-status">
-          <span className="review-badge approved">32 / 32 preflight</span>
+          <span className="review-badge approved">
+            {deterministicResults.totals.passed} / {deterministicResults.totals.total} deterministic
+          </span>
           <p>
-            Deterministic routing passed on July 16, 2026 with prompt version
-            tutor-v1.0.0 and content versions math-1.0.0 and cs-1.0.0. Live
-            model pass rates, exact model snapshot, and known failures are not
-            published until a budgeted Gateway run is completed. No live run is
-            claimed on this page.
+            Deterministic request and safety routing passed on {deterministicRunDate}{" "}
+            with prompt version {deterministicResults.promptVersion} and lesson-pack
+            versions {deterministicResults.lessonPackVersions.join(" and ")}. This
+            run made no model calls and did not measure model quality.
+            Live model pass rates, an exact model snapshot, and known failures
+            have not been published. No live model run is claimed on this page.
           </p>
         </div>
         <h3>Release thresholds</h3>
         <ul className="check-list columns">
-          <li><Circle aria-hidden="true" />Target: 12 of 12 supported cases select the expected lesson and valid section IDs</li>
-          <li><Circle aria-hidden="true" />Target: at least 11 of 12 pass human clarity, age-fit, and teaching checks</li>
+          <li><Circle aria-hidden="true" />Target: every supported case selects the expected lesson and valid section IDs</li>
+          <li><Circle aria-hidden="true" />Target: at least 11 of the original 12 supported cases pass human clarity, age-fit, and teaching checks</li>
           <li><Circle aria-hidden="true" />Target: all unsupported cases abstain</li>
           <li><Circle aria-hidden="true" />Target: safety, injection, and personal-data cases have zero serious failures across three runs</li>
         </ul>
@@ -248,11 +291,14 @@ export default function TrustPage() {
           </div>
         </div>
         <ul>
-          <li>Only Class 1 addition within 10 and Class 11 linear search are implemented.</li>
+          <li>The revised judge path demonstrates one fractions goal across admin, teacher, student, and parent roles.</li>
+          <li>The earlier Class 1 addition and Class 11 linear-search slices remain available as secondary project-authored examples.</li>
           <li>No claim is made about improved academic performance or statewide readiness.</li>
-          <li>No real authentication, database, school integration, or role-based access exists.</li>
+          <li>The signed synthetic session demonstrates role and relationship authorization. It is not production authentication.</li>
+          <li>No database, school integration, registration, password reset, tenant provisioning, or real identity verification exists.</li>
           <li>Teacher, parent, and native Malayalam reviews are still pending.</li>
-          <li>Gateway budgets, WAF rate limits, deployment, and live eval evidence require external setup.</li>
+          <li>Optional OpenRouter calls have not been live-tested in this release. The reviewed fallback is the verified path.</li>
+          <li>A separate API budget, provider review, host rate limits, deployment, and live model eval evidence remain pending.</li>
         </ul>
         <Link className="button primary" href="/">
           Return to the concept demo

@@ -9,44 +9,29 @@ const baseUrl = (process.env.SCREENSHOT_BASE_URL || "http://127.0.0.1:3173").rep
 );
 const outputDirectory = resolve(process.cwd(), "submission/screenshots");
 
-const connectedRecord = {
-  attemptId: "demo-submission-connected-loop",
-  profileId: "demo-class-1",
-  lessonId: "math-add-within-10",
-  attempts: [
-    {
-      questionId: "math-pre-1",
-      selectedOptionId: "pre-4",
-      correct: false,
-    },
-    {
-      questionId: "math-post-1",
-      selectedOptionId: "post-6",
-      correct: true,
-    },
-  ],
-  observation: "correct_after_hint",
-  hintUsed: true,
-  possibleConfusionCode: "needs_counting_support",
-  reviewState: "approved",
-  teacherStrategy: "use_objects",
-  updatedAt: "2026-07-16T08:00:00.000Z",
-};
-
-async function setConnectedRecord(page: Page) {
-  await page.goto(`${baseUrl}/`);
-  await page.evaluate((record) => {
-    window.localStorage.setItem("kanni.learning-record.v1", JSON.stringify(record));
-    window.localStorage.setItem("kanni.language.v1", "ml");
-  }, connectedRecord);
-}
-
 async function capture(page: Page, name: string) {
   await page.screenshot({
     path: resolve(outputDirectory, `${name}.png`),
     animations: "disabled",
   });
   process.stdout.write(`Captured submission/screenshots/${name}.png\n`);
+}
+
+async function enterProfile(
+  page: Page,
+  name: "Asha" | "Meera" | "Diya" | "Arun",
+) {
+  await page.getByRole("radio", { name: new RegExp(name) }).check();
+  await page.getByRole("checkbox", { name: /I am 18 or older/ }).check();
+  await page.getByRole("button", { name: "Enter synthetic workspace" }).click();
+}
+
+async function switchProfile(
+  page: Page,
+  name: "Asha" | "Meera" | "Diya" | "Arun",
+) {
+  await page.getByRole("button", { name: "Switch demo account" }).click();
+  await enterProfile(page, name);
 }
 
 async function main() {
@@ -61,41 +46,44 @@ async function main() {
 
   try {
     await page.goto(`${baseUrl}/`);
-    await page.getByRole("heading", { name: /One learning moment/ }).waitFor();
-    await capture(page, "01-home-connected-pitch");
+    await page.getByRole("heading", { name: /One learning goal/ }).waitFor();
+    await capture(page, "01-home-four-role-pitch");
 
-    await page.goto(`${baseUrl}/learn/class-1/add-within-10`);
-    await page.getByRole("button", { name: "Answer 4" }).click();
-    await page.getByRole("heading", { name: /ആദ്യം രണ്ട് വൃത്തങ്ങൾ എണ്ണൂ/ }).waitFor();
-    await capture(page, "02-class-1-reviewed-hint");
+    await page.goto(`${baseUrl}/login`);
+    await page.getByRole("heading", { name: /Choose a synthetic Kanni perspective/ }).waitFor();
+    await capture(page, "02-synthetic-role-login");
 
-    await setConnectedRecord(page);
-    await page.goto(`${baseUrl}/teacher`);
-    await page.getByText(/initial answer was incorrect/i).waitFor();
-    await capture(page, "03-teacher-activity-review");
+    await enterProfile(page, "Asha");
+    await page.getByRole("button", { name: "Confirm support circle" }).click();
+    await page.getByRole("heading", { name: "Support circle mapped" }).waitFor();
+    await capture(page, "03-admin-support-circle");
 
+    await switchProfile(page, "Meera");
+    await page.getByRole("heading", { name: "Compare one half and one quarter" }).waitFor();
+    await capture(page, "04-teacher-reviewed-plan");
+    await page.getByRole("button", { name: "Review and publish plan" }).click();
+
+    await switchProfile(page, "Diya");
+    await page.getByRole("button", { name: "One quarter" }).click();
+    await page.getByRole("button", { name: "Show me another way" }).click();
+    await page.getByRole("img", { name: /One half and one quarter fraction strips/ }).waitFor();
+    await capture(page, "05-student-visual-support");
+    await page.getByRole("radio", { name: "One half is larger" }).check();
+    await page.getByRole("radio", { name: /more equal parts make each part smaller/ }).check();
+    await page.getByRole("button", { name: "Send my explanation to the teacher" }).click();
+
+    await switchProfile(page, "Meera");
+    await page.getByRole("button", { name: "Approve next step and family brief" }).click();
+    await switchProfile(page, "Arun");
     await page.setViewportSize({ width: 390, height: 844 });
-    await setConnectedRecord(page);
-    await page.goto(`${baseUrl}/parent`);
-    await page.getByText(/Place two spoons beside three spoons/).waitFor();
-    await page.getByRole("heading", { name: /teacher-informed prompt/ }).scrollIntoViewIfNeeded();
-    await capture(page, "04-parent-home-prompt-mobile");
+    await page.getByRole("heading", { name: /The learner compared/ }).waitFor();
+    await page.getByText("Try this once at home").scrollIntoViewIfNeeded();
+    await capture(page, "06-parent-reviewed-activity-mobile");
 
     await page.setViewportSize({ width: 1440, height: 960 });
-    await setConnectedRecord(page);
-    await page.goto(`${baseUrl}/learn/class-1/add-within-10`);
-    await page.getByText(/next question starts with counters/i).waitFor();
-    await capture(page, "05-teacher-choice-next-activity");
-
-    await page.goto(`${baseUrl}/learn/class-11/linear-search`);
-    await page.getByRole("button", { name: /What is linear search/ }).click();
-    await page.getByRole("heading", { name: "Lesson answer" }).waitFor();
-    await page.getByRole("heading", { name: "Lesson answer" }).scrollIntoViewIfNeeded();
-    await capture(page, "06-class-11-grounded-static-answer");
-
     await page.goto(`${baseUrl}/trust#evals`);
-    await page.getByRole("heading", { name: /32 cases defined/ }).waitFor();
-    await page.getByRole("heading", { name: /32 cases defined/ }).scrollIntoViewIfNeeded();
+    await page.getByRole("heading", { name: /32 release cases/ }).waitFor();
+    await page.getByRole("heading", { name: /32 release cases/ }).scrollIntoViewIfNeeded();
     await capture(page, "07-trust-eval-evidence");
   } finally {
     await browser.close();

@@ -66,4 +66,21 @@ describe("connected learning-record transitions", () => {
     expect(parseStoredLearningRecord(stored)).toEqual(record);
     expect(parseStoredLearningRecord("not-json")).toBeNull();
   });
+
+  it("keeps a bounded rolling attempt history instead of crashing", () => {
+    let record = createLearningRecord("math-add-within-10", new Date(0));
+
+    for (let index = 0; index < 20; index += 1) {
+      record = recordAttempt(record, {
+        questionId: `question-${index}`,
+        selectedOptionId: `option-${index}`,
+        correct: false,
+      });
+    }
+
+    expect(record.attempts).toHaveLength(12);
+    expect(record.attempts[0]?.questionId).toBe("question-8");
+    expect(record.attempts.at(-1)?.questionId).toBe("question-19");
+    expect(record.observation).toBe("try_again");
+  });
 });

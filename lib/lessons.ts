@@ -22,7 +22,7 @@ export type LessonPack = {
   allowedConfusionCodes: string[];
 };
 
-const reviewedAt = "2026-07-15T00:00:00.000Z";
+const registryTimestamp = "2026-07-15T00:00:00.000Z";
 
 export const sourceRegistry: SourceEntry[] = [
   {
@@ -33,10 +33,10 @@ export const sourceRegistry: SourceEntry[] = [
     rightsBasis: "original",
     license: "CC BY 4.0",
     url: null,
-    version: "1.0.0",
-    retrievedAt: reviewedAt,
+    version: "1.1.0",
+    retrievedAt: registryTimestamp,
     reviewedAt: null,
-    checksum: "content-version-math-1.0.0",
+    checksum: null,
   },
   {
     id: "kanni-cs-original-v1",
@@ -47,9 +47,9 @@ export const sourceRegistry: SourceEntry[] = [
     license: "CC BY 4.0",
     url: null,
     version: "1.0.0",
-    retrievedAt: reviewedAt,
+    retrievedAt: registryTimestamp,
     reviewedAt: null,
-    checksum: "content-version-cs-1.0.0",
+    checksum: null,
   },
   {
     id: "scert-subject-listing",
@@ -60,7 +60,7 @@ export const sourceRegistry: SourceEntry[] = [
     license: null,
     url: "https://scert.kerala.gov.in/standard-1/",
     version: "Public listing checked 2026-07-15",
-    retrievedAt: reviewedAt,
+    retrievedAt: registryTimestamp,
     reviewedAt: null,
     checksum: null,
   },
@@ -70,7 +70,7 @@ export const lessonPacks: Record<LessonId, LessonPack> = {
   "math-add-within-10": {
     id: "math-add-within-10",
     title: { ml: "10-നുള്ളിലെ കൂട്ടൽ", en: "Addition within 10" },
-    version: "math-1.0.0",
+    version: "math-1.1.0",
     allowedCheckIds: ["math-check-post-1"],
     allowedConfusionCodes: ["needs_counting_support"],
     sections: [
@@ -196,7 +196,7 @@ export const suggestedLinearSearchAnswers: Record<string, TutorResponse> = {
       citationIdsValid: true,
       ageFormatChecked: true,
       safetyRoute: "clear",
-      humanReview: "completed",
+      contentOrigin: "project_authored",
     },
     deepCheck: null,
   },
@@ -214,7 +214,7 @@ export const suggestedLinearSearchAnswers: Record<string, TutorResponse> = {
       citationIdsValid: true,
       ageFormatChecked: true,
       safetyRoute: "clear",
-      humanReview: "completed",
+      contentOrigin: "project_authored",
     },
     deepCheck: null,
   },

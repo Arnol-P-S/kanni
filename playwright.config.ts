@@ -22,8 +22,12 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "pnpm start --hostname 127.0.0.1 --port 3173",
+    command: "corepack pnpm start --hostname 127.0.0.1 --port 3173",
     url: "http://127.0.0.1:3173/api/health",
+    env: {
+      DEMO_SESSION_SECRET: "kanni-e2e-only-secret-with-at-least-32-characters",
+      DEMO_SECURE_COOKIES: "false",
+    },
     reuseExistingServer: false,
     timeout: 120_000,
   },

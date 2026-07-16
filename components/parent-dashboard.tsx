@@ -44,8 +44,16 @@ export function ParentDashboard() {
           <MessageCircle size={23} />
         </div>
         <div>
-          <p className="eyebrow">Try this once at home</p>
-          <h2 id="home-prompt-title">A short, teacher-informed prompt</h2>
+          <p className="eyebrow">
+            {record.teacherStrategy
+              ? "Try this teacher-selected activity once at home"
+              : "Try this project-authored starter activity once at home"}
+          </p>
+          <h2 id="home-prompt-title">
+            {record.teacherStrategy
+              ? "A short, teacher-informed prompt"
+              : "A short project-authored prompt"}
+          </h2>
           <blockquote>{summary.homePrompt}</blockquote>
           <p>
             Keep it conversational. Stop if the learner is tired or does not
@@ -57,14 +65,17 @@ export function ParentDashboard() {
       <aside className="privacy-strip">
         <LockKeyhole size={21} aria-hidden="true" />
         <p>
-          The local record contains answer IDs, correctness, hint use, review
-          state, and teacher strategy. It does not contain the custom learner
-          question.
+          The local record contains answer IDs, correctness, hint use, an
+          activity observation, a possible-confusion code, review state, and
+          teacher strategy. It does not contain the custom learner question.
         </p>
       </aside>
 
       <a className="button primary" href={lessonHref}>
-        See the changed next activity <ArrowRight size={19} aria-hidden="true" />
+        {record.teacherStrategy
+          ? "See the teacher-selected next activity"
+          : "Return to the learner activity"} {" "}
+        <ArrowRight size={19} aria-hidden="true" />
       </a>
     </main>
   );

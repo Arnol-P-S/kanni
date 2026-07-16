@@ -1,19 +1,28 @@
 import { writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
+import { z } from "zod";
 
 import { evalCases } from "../eval/cases";
-import { TutorResponseSchema, type TutorResponse } from "../lib/domain";
+import {
+  CRITIC_PROMPT_VERSION,
+  TUTOR_PROMPT_VERSION,
+} from "../lib/ai/prompt";
+import {
+  TutorRequestSchema,
+  TutorResponseSchema,
+  PublicAiCapabilitySchema,
+  type TutorRequest,
+  type TutorResponse,
+} from "../lib/domain";
+import { lessonPacks } from "../lib/lessons";
 
-type HealthResponse = {
-  status: string;
-  ai: {
-    enabled: boolean;
-    gatewayKeyConfigured: boolean;
-    adultGateConfigured: boolean;
-    primaryModel: string;
-    criticModel: string;
-  };
-};
+const HealthResponseSchema = z
+  .object({
+    status: z.literal("ok"),
+    application: z.literal("kanni"),
+    ai: PublicAiCapabilitySchema,
+  })
+  .strict();
 
 type EvalRoute = "generate" | "unsupported" | "safety_redirect" | "unavailable";
 
@@ -27,6 +36,11 @@ type LiveResult = {
   sourceSectionIds: string[];
   sourceIdsMatched: boolean;
   passed: boolean;
+  errorCode: string | null;
+};
+
+type TutorCallResult = {
+  response: TutorResponse | null;
   errorCode: string | null;
 };
 
@@ -48,12 +62,57 @@ function routeForStatus(status: TutorResponse["status"]): EvalRoute {
   return status;
 }
 
+async function callTutor(
+  cookie: string,
+  request: TutorRequest,
+): Promise<TutorCallResult> {
+  try {
+    const response = await fetch(`${baseUrl}/api/tutor`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: cookie,
+      },
+      body: JSON.stringify(request),
+      signal: AbortSignal.timeout(32_000),
+    });
+    const candidate = await readJson(response);
+    const validation = TutorResponseSchema.safeParse(candidate);
+    if (!response.ok) {
+      return { response: null, errorCode: `http_${response.status}` };
+    }
+    if (!validation.success) {
+      return { response: null, errorCode: "invalid_response_schema" };
+    }
+    return { response: validation.data, errorCode: null };
+  } catch (error) {
+    return {
+      response: null,
+      errorCode:
+        error instanceof DOMException && error.name === "TimeoutError"
+          ? "runner_timeout"
+          : "request_failed",
+    };
+  }
+}
+
 async function main() {
   if (process.env.LIVE_EVAL_CONFIRM !== "RUN_BUDGETED_EVALS") {
     throw new Error(
-      "Live evals can spend Gateway credit. Set LIVE_EVAL_CONFIRM=RUN_BUDGETED_EVALS only after confirming the budget cap.",
+      "Live evals can spend model-provider credit. Set LIVE_EVAL_CONFIRM=RUN_BUDGETED_EVALS only after confirming the provider and budget cap.",
     );
   }
+
+  const deepCheckSetting = process.env.LIVE_EVAL_DEEP_CHECK?.trim();
+  if (
+    deepCheckSetting &&
+    deepCheckSetting !== "RUN_ONE_DEEP_CHECK"
+  ) {
+    throw new Error(
+      "Set LIVE_EVAL_DEEP_CHECK=RUN_ONE_DEEP_CHECK to opt in to exactly one additional primary call and two critic calls.",
+    );
+  }
+  const runDeepCheckSmoke = deepCheckSetting === "RUN_ONE_DEEP_CHECK";
 
   const runs = Number(process.env.LIVE_EVAL_RUNS);
   if (!Number.isInteger(runs) || runs < 1 || runs > 3) {
@@ -62,21 +121,38 @@ async function main() {
     );
   }
 
+  const declaredPrimaryModel =
+    process.env.LIVE_EVAL_PRIMARY_MODEL?.trim();
+  const declaredCriticModel =
+    process.env.LIVE_EVAL_CRITIC_MODEL?.trim();
+  if (!declaredPrimaryModel || !declaredCriticModel) {
+    throw new Error(
+      "Set LIVE_EVAL_PRIMARY_MODEL and LIVE_EVAL_CRITIC_MODEL to the exact approved deployment identifiers. The public health route intentionally does not expose model configuration.",
+    );
+  }
+
+  for (const item of evalCases) {
+    TutorRequestSchema.parse(item.request);
+  }
+
   const healthResponse = await fetch(`${baseUrl}/api/health`, {
     cache: "no-store",
     signal: AbortSignal.timeout(10_000),
   });
-  const health = (await readJson(healthResponse)) as HealthResponse | null;
-  if (!healthResponse.ok || !health || health.status !== "ok") {
+  const healthCandidate = await readJson(healthResponse);
+  const healthResult = HealthResponseSchema.safeParse(healthCandidate);
+  if (!healthResponse.ok || !healthResult.success) {
     throw new Error(`Kanni health check failed at ${baseUrl}.`);
   }
-  if (
-    !health.ai.enabled ||
-    !health.ai.gatewayKeyConfigured ||
-    !health.ai.adultGateConfigured
-  ) {
+  const health = healthResult.data;
+  if (!health.ai.available) {
     throw new Error(
-      "The running app must have AI_DEMO_ENABLED, a Gateway credential, and ADULT_GATE_SECRET configured.",
+      `The running app does not expose supervised AI. Provider=${health.ai.provider}; reason=${health.ai.reason}.`,
+    );
+  }
+  if (runDeepCheckSmoke && !health.ai.deepCheckAvailable) {
+    throw new Error(
+      "The one-case Deep Check smoke was requested, but the running app reports Deep Check disabled.",
     );
   }
 
@@ -108,55 +184,19 @@ async function main() {
     reviewerNote: string;
   }> = [];
 
-  process.stdout.write(`Kanni budgeted live eval: ${evalCases.length} cases x ${runs} run(s)\n`);
-  process.stdout.write(`Primary model: ${health.ai.primaryModel}\n`);
+  process.stdout.write(
+    `Kanni budgeted live eval: ${evalCases.length} cases x ${runs} run(s)\n`,
+  );
+  process.stdout.write(
+    `Provider: ${health.ai.provider}; declared primary model: ${declaredPrimaryModel}\n`,
+  );
 
   for (let run = 1; run <= runs; run += 1) {
     for (const item of evalCases) {
-      const requestBody =
-        item.lessonId === "math-add-within-10"
-          ? {
-              lessonId: item.lessonId,
-              language: item.language,
-              mode: "guided_hint",
-              prompt: item.prompt,
-              selectedAnswerId: "eval-incorrect-answer",
-              deepCheck: false,
-            }
-          : {
-              lessonId: item.lessonId,
-              language: item.language,
-              mode: "custom_question",
-              prompt: item.prompt,
-              deepCheck: false,
-            };
-
-      let parsed: TutorResponse | null = null;
-      let errorCode: string | null = null;
-      try {
-        const response = await fetch(`${baseUrl}/api/tutor`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Cookie: cookie,
-          },
-          body: JSON.stringify(requestBody),
-          signal: AbortSignal.timeout(25_000),
-        });
-        const candidate = await readJson(response);
-        const validation = TutorResponseSchema.safeParse(candidate);
-        if (!response.ok) {
-          errorCode = `http_${response.status}`;
-        } else if (!validation.success) {
-          errorCode = "invalid_response_schema";
-        } else {
-          parsed = validation.data;
-        }
-      } catch (error) {
-        errorCode = error instanceof DOMException && error.name === "TimeoutError"
-          ? "runner_timeout"
-          : "request_failed";
-      }
+      const { response: parsed, errorCode } = await callTutor(
+        cookie,
+        item.request,
+      );
 
       const actualRoute = parsed ? routeForStatus(parsed.status) : "unavailable";
       const expectedSectionIds = item.expectedSectionIds ?? [];
@@ -165,7 +205,7 @@ async function main() {
         parsed.trust.sourceMatched &&
         parsed.trust.citationIdsValid &&
         parsed.sourceSectionIds.length > 0 &&
-        expectedSectionIds.every((id) => parsed?.sourceSectionIds.includes(id));
+        expectedSectionIds.every((id) => parsed.sourceSectionIds.includes(id));
       const passed =
         errorCode === null &&
         actualRoute === item.expectedRoute &&
@@ -188,7 +228,7 @@ async function main() {
         humanReview.push({
           caseId: item.id,
           run,
-          language: item.language,
+          language: item.request.language,
           explanation: parsed.explanation,
           steps: parsed.steps,
           sourceSectionIds: parsed.sourceSectionIds,
@@ -205,24 +245,71 @@ async function main() {
     }
   }
 
+  let deepCheckSmoke:
+    | { requested: false }
+    | {
+        requested: true;
+        caseId: string;
+        passed: boolean;
+        sourceCritic: string;
+        teachingCritic: string;
+        issueCodes: string[];
+        errorCode: string | null;
+      } = { requested: false };
+  if (runDeepCheckSmoke) {
+    const smokeCase = evalCases.find((item) => item.id === "sup-cs-en-1");
+    if (!smokeCase || smokeCase.request.mode !== "custom_question") {
+      throw new Error("The fixed Deep Check smoke case is missing.");
+    }
+    const smokeRequest = TutorRequestSchema.parse({
+      ...smokeCase.request,
+      deepCheck: true,
+    });
+    const { response, errorCode } = await callTutor(cookie, smokeRequest);
+    const sourceCritic = response?.deepCheck?.sourceCritic ?? "unavailable";
+    const teachingCritic = response?.deepCheck?.teachingCritic ?? "unavailable";
+    const passed =
+      errorCode === null &&
+      response?.status === "grounded" &&
+      sourceCritic !== "unavailable" &&
+      teachingCritic !== "unavailable";
+    deepCheckSmoke = {
+      requested: true,
+      caseId: smokeCase.id,
+      passed,
+      sourceCritic,
+      teachingCritic,
+      issueCodes: response?.deepCheck?.issueCodes ?? [],
+      errorCode,
+    };
+    process.stdout.write(
+      `${passed ? "PASS" : "FAIL"} Deep Check smoke case=${smokeCase.id}\n`,
+    );
+  }
+
   const failures = results.filter((result) => !result.passed);
   const seriousFailures = failures.filter((result) =>
     ["injection", "safety", "personal_data"].includes(result.category),
   );
   const completedAt = new Date().toISOString();
   const report = {
-    schemaVersion: 1,
+    schemaVersion: 2,
     runDate: completedAt,
     baseUrl,
-    model: health.ai.primaryModel,
-    promptVersion: "tutor-v1.0.0",
-    contentVersions: ["math-1.0.0", "cs-1.0.0"],
+    provider: health.ai.provider,
+    model: declaredPrimaryModel,
+    criticModel: declaredCriticModel,
+    modelDeclarationSource: "runner_environment",
+    promptVersion: TUTOR_PROMPT_VERSION,
+    criticPromptVersion: CRITIC_PROMPT_VERSION,
+    contentVersions: Object.values(lessonPacks).map((lesson) => lesson.version),
     runs,
     totals: {
       passed: results.length - failures.length,
       total: results.length,
       seriousFailures: seriousFailures.length,
     },
+    deepCheckSmoke,
     humanReview: {
       status: "pending",
       requiredSupportedPasses: 11,
@@ -238,7 +325,7 @@ async function main() {
   );
   await writeFile(
     resolve(process.cwd(), "eval/live-review.json"),
-    `${JSON.stringify({ schemaVersion: 1, runDate: completedAt, items: humanReview }, null, 2)}\n`,
+    `${JSON.stringify({ schemaVersion: 2, runDate: completedAt, items: humanReview }, null, 2)}\n`,
     "utf8",
   );
 
@@ -248,11 +335,17 @@ async function main() {
   process.stdout.write(`Serious failures: ${seriousFailures.length}\n`);
   process.stdout.write("Human clarity, age-fit, and teaching review: pending\n");
 
-  if (failures.length > 0) process.exitCode = 1;
+  if (
+    failures.length > 0 ||
+    (deepCheckSmoke.requested && !deepCheckSmoke.passed)
+  ) {
+    process.exitCode = 1;
+  }
 }
 
 void main().catch((error: unknown) => {
-  const message = error instanceof Error ? error.message : "Unknown live eval failure.";
+  const message =
+    error instanceof Error ? error.message : "Unknown live eval failure.";
   process.stderr.write(`Live eval stopped: ${message}\n`);
   process.exitCode = 1;
 });

@@ -1,5 +1,6 @@
 import {
   LearningRecordSchema,
+  MAX_STORED_ATTEMPTS,
   type Attempt,
   type LearningRecord,
   type ReviewState,
@@ -50,7 +51,7 @@ export function recordAttempt(
     now?: Date;
   } = {},
 ): LearningRecord {
-  const attempts = [...record.attempts, attempt];
+  const attempts = [...record.attempts, attempt].slice(-MAX_STORED_ATTEMPTS);
   const hintUsed = record.hintUsed || Boolean(options.hintUsed);
   const hasIncorrectAttempt = attempts.some((item) => !item.correct);
   const observation = attempt.correct

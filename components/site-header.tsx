@@ -1,20 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { BookOpen, House, ShieldCheck, UsersRound } from "lucide-react";
+import { House, LogIn, ShieldCheck } from "lucide-react";
 
 import { NodesMark } from "@/components/nodes-mark";
 import { useLearningRecord } from "@/components/learning-record-provider";
 
 const navigation = [
   { href: "/", label: "Home", icon: House },
-  {
-    href: "/learn/class-1/add-within-10",
-    label: "Learn",
-    icon: BookOpen,
-  },
-  { href: "/teacher", label: "Teacher", icon: UsersRound },
-  { href: "/parent", label: "Parent", icon: UsersRound },
+  { href: "/login", label: "Four-role demo", icon: LogIn },
   { href: "/trust", label: "Trust", icon: ShieldCheck },
 ];
 
@@ -35,7 +29,11 @@ export function SiteHeader() {
           </span>
         </Link>
         <div className="header-actions">
-          <div className="language-switch" aria-label="Interface language">
+          <div
+            className="language-switch"
+            aria-label="Learner content language"
+            title="Learner content language"
+          >
             <button
               type="button"
               aria-pressed={language === "ml"}
@@ -52,7 +50,7 @@ export function SiteHeader() {
               English
             </button>
           </div>
-          <span className="concept-pill">Same-device concept demo</span>
+          <span className="concept-pill">Synthetic role-aware demo</span>
         </div>
       </div>
       <nav className="role-nav" aria-label="Main navigation">

@@ -4,148 +4,117 @@ import Link from "next/link";
 import {
   ArrowRight,
   BookOpenCheck,
-  Home as HomeIcon,
+  House as HomeIcon,
   School,
   ShieldCheck,
+  UserRoundCog,
 } from "lucide-react";
 
 import { NodesMark } from "@/components/nodes-mark";
-import { useLearningRecord } from "@/components/learning-record-provider";
+
+const roleProblems = [
+  {
+    title: "Student",
+    detail:
+      "Try first, ask for another explanation, explain your thinking, and question an inaccurate record.",
+    icon: BookOpenCheck,
+  },
+  {
+    title: "Teacher",
+    detail:
+      "Plan, differentiate, anticipate misconceptions, review evidence, and approve family support.",
+    icon: School,
+  },
+  {
+    title: "Parent",
+    detail:
+      "Understand the current goal, try one short home activity, and return a useful signal.",
+    icon: HomeIcon,
+  },
+  {
+    title: "Admin",
+    detail:
+      "Map trusted relationships, set policy, and monitor handoffs without ranking learners.",
+    icon: UserRoundCog,
+  },
+] as const;
 
 export function HomeContent() {
-  const { language } = useLearningRecord();
-  const isMalayalam = language === "ml";
-
   return (
     <main id="main-content">
-      <section className="hero page-shell">
+      <section className="hero page-shell revised-hero">
         <div className="hero-copy">
-          <p className="eyebrow">OpenAI Build Week concept demo</p>
+          <p className="eyebrow">OpenAI Build Week · Education</p>
           <h1>
-            One learning moment.
-            <span>Three useful next steps.</span>
+            One learning goal.
+            <span>Four people moving it forward.</span>
           </h1>
           <p className="hero-lead">
-            Kanni turns one learning moment into age-appropriate help for a
-            Kerala student, a clear signal for their teacher, and one useful
-            next step for their parent.
+            Kanni connects the student, teacher, parent, and school around one
+            reviewed next step. Each person sees only the part they need.
           </p>
           <div className="hero-actions">
-            <Link className="button primary" href="/learn/class-1/add-within-10">
-              Try Class 1 Mathematics
+            <Link className="button primary" href="/login">
+              Enter the four-role demo
               <ArrowRight size={19} aria-hidden="true" />
             </Link>
-            <Link
-              className="button secondary"
-              href="/learn/class-11/linear-search"
-            >
-              Try Class 11 Computer Science
+            <Link className="button secondary" href="/trust">
+              Read the safety boundaries
             </Link>
           </div>
           <p className="disclosure">
-            Uses synthetic profiles only. This is a same-device concept demo,
-            not an authentication or school access system.
+            Adult-operated synthetic profiles only. No real school, learner,
+            or family information is used.
           </p>
         </div>
-        <div className="hero-visual" aria-label="Student, teacher, and parent connected by one learning record">
+        <div
+          className="hero-visual support-circle-visual"
+          aria-label="Student, teacher, parent, and admin connected by one growth cycle"
+        >
           <NodesMark className="hero-mark" />
-          <div className="role-orbit student-orbit">
-            <BookOpenCheck aria-hidden="true" />
-            <span>Student</span>
-          </div>
-          <div className="role-orbit teacher-orbit">
-            <School aria-hidden="true" />
-            <span>Teacher</span>
-          </div>
-          <div className="role-orbit parent-orbit">
-            <HomeIcon aria-hidden="true" />
-            <span>Parent</span>
-          </div>
-          <p className="hero-visual-caption">One local learning record</p>
+          <div className="role-orbit student-orbit"><BookOpenCheck aria-hidden="true" /><span>Student</span></div>
+          <div className="role-orbit teacher-orbit"><School aria-hidden="true" /><span>Teacher</span></div>
+          <div className="role-orbit parent-orbit"><HomeIcon aria-hidden="true" /><span>Parent</span></div>
+          <div className="role-orbit admin-orbit"><UserRoundCog aria-hidden="true" /><span>Admin</span></div>
+          <p className="hero-visual-caption">One shared GrowthCycle</p>
         </div>
       </section>
 
-      <section className="page-shell section-block" aria-labelledby="learning-loop-title">
+      <section className="page-shell section-block" aria-labelledby="cycle-title">
         <div className="section-heading">
-          <p className="eyebrow">The connected loop</p>
-          <h2 id="learning-loop-title">The teacher’s choice reaches the next activity</h2>
+          <p className="eyebrow">The learning support cycle</p>
+          <h2 id="cycle-title">Every handoff changes what happens next</h2>
           <p>
-            The demo is built around one observable loop, not separate role
-            dashboards.
+            The demo follows one original fraction goal. It is specific enough
+            to test and general enough to show the future product structure.
           </p>
         </div>
-        <ol className="loop-grid">
+        <ol className="loop-grid revised-loop">
           {[
-            ["01", "Student attempts", "A fixed, age-appropriate activity records only the answer event."],
-            ["02", "Kanni helps", "A reviewed hint or grounded answer supports another try."],
-            ["03", "Teacher reviews", "The teacher sees activity evidence and selects one bounded strategy."],
-            ["04", "Home follows up", "The parent gets one plain-language activity without the learner prompt."],
+            ["01", "Admin maps", "A trusted teacher, learner, guardian, and language preference are connected."],
+            ["02", "Teacher publishes", "The teacher reviews a plan, misconceptions, supports, and a quick check."],
+            ["03", "Student explains", "The learner attempts, opens support, retries, and explains the choice."],
+            ["04", "Family responds", "A reviewed home activity returns one bounded signal to the teacher."],
           ].map(([number, title, detail]) => (
-            <li key={number}>
-              <span className="step-number">{number}</span>
-              <h3>{title}</h3>
-              <p>{detail}</p>
-            </li>
+            <li key={number}><span className="step-number">{number}</span><h3>{title}</h3><p>{detail}</p></li>
           ))}
         </ol>
       </section>
 
-      <section className="lesson-section">
+      <section className="role-problems-section">
         <div className="page-shell">
-          <div className="section-heading split-heading">
-            <div>
-              <p className="eyebrow">Two complete lesson slices</p>
-              <h2>Start with the learner view</h2>
-            </div>
-            <p>
-              Classes 2 to 10 and Class 12 are roadmap items. They are not
-              implemented in this prototype.
-            </p>
+          <div className="section-heading">
+            <p className="eyebrow">Different work, shared purpose</p>
+            <h2>Each role gets one clear next task</h2>
           </div>
-          <div className="lesson-grid">
-            <article className="lesson-card younger-card">
-              <div className="lesson-card-top">
-                <span className="grade-pill">Class 1</span>
-                <span className="preview-pill" lang="ml">മലയാളം ആദ്യം</span>
-              </div>
-              <div className="counter-preview" aria-hidden="true">
-                <span />
-                <span />
-                <b>+</b>
-                <span />
-                <span />
-                <span />
-              </div>
-              <h3 lang={isMalayalam ? "ml" : "en"}>
-                {isMalayalam ? "10-നുള്ളിലെ കൂട്ടൽ" : "Addition within 10"}
-              </h3>
-              <p>
-                Adult-assisted fixed choices, concrete counters, a reviewed
-                fallback hint, and a follow-up understanding check.
-              </p>
-              <Link href="/learn/class-1/add-within-10">
-                Open activity <ArrowRight size={18} aria-hidden="true" />
-              </Link>
-            </article>
-            <article className="lesson-card older-card">
-              <div className="lesson-card-top">
-                <span className="grade-pill">Class 11</span>
-                <span className="preview-pill">English first</span>
-              </div>
-              <div className="trace-preview" aria-label="Linear search checks 4, then finds 7">
-                <span className="checked">4</span>
-                <span className="found">7</span>
-                <span>9</span>
-              </div>
-              <h3>Linear search and algorithmic thinking</h3>
-              <p>
-                Reviewed answers work offline. Adult-supervised custom
-                questions stay inside one bundled lesson pack.
-              </p>
-              <Link href="/learn/class-11/linear-search">
-                Open activity <ArrowRight size={18} aria-hidden="true" />
-              </Link>
-            </article>
+          <div className="role-problem-grid">
+            {roleProblems.map(({ title, detail, icon: Icon }) => (
+              <article key={title}>
+                <Icon aria-hidden="true" />
+                <h3>{title}</h3>
+                <p>{detail}</p>
+              </article>
+            ))}
           </div>
         </div>
       </section>
@@ -153,15 +122,15 @@ export function HomeContent() {
       <section className="page-shell trust-callout">
         <ShieldCheck size={28} aria-hidden="true" />
         <div>
-          <h2>Built with visible limits</h2>
+          <h2>A community without a public social network</h2>
           <p>
-            No real child data, learner accounts, analytics, rankings, or
-            copied textbook content. AI output is hidden when its schema or
-            source IDs fail validation.
+            No public profiles, follower graph, leaderboard, open chat, direct
+            student messaging, or automated diagnosis. Community means a
+            private support circle around one learning goal.
           </p>
         </div>
-        <Link className="text-link" href="/trust">
-          Read the trust notes <ArrowRight size={18} aria-hidden="true" />
+        <Link className="text-link" href="/login">
+          Start with Admin <ArrowRight size={18} aria-hidden="true" />
         </Link>
       </section>
     </main>

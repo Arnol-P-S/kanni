@@ -58,5 +58,6 @@ export function verifyAdultGateToken(
 }
 
 export function getAdultGateSecret(): string | null {
-  return process.env.ADULT_GATE_SECRET?.trim() || null;
+  const secret = process.env.ADULT_GATE_SECRET?.trim();
+  return secret && secret.length >= 32 ? secret : null;
 }
