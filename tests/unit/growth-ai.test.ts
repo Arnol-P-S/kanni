@@ -25,7 +25,7 @@ describe("optional GrowthCycle AI", () => {
     expect(getGrowthAiCapability()).toEqual({
       available: false,
       provider: "disabled",
-      model: "openai/gpt-5.6-sol",
+      model: "openai/gpt-5.6-luna",
       reason: "disabled_by_flag",
     });
   });
@@ -99,6 +99,8 @@ describe("optional GrowthCycle AI", () => {
     );
     const support = await generateStudentSupportDraft("guided_questions");
     expect(support.origin).toBe("project_authored");
-    expect(support.support.explanation).toMatch(/three things/i);
+    expect(support.support.thinkingPrompts).toHaveLength(3);
+    expect(support.support.thinkingPrompts.every((prompt) => prompt.endsWith("?"))).toBe(true);
+    expect(support.support.explanation).not.toMatch(/answer is|choose one half/i);
   });
 });

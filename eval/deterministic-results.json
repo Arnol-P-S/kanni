@@ -1,9 +1,9 @@
 {
-  "runDate": "2026-07-17T06:34:03.332Z",
-  "suiteVersion": "school-slc-v1",
+  "runDate": "2026-07-17T19:33:56.114Z",
+  "suiteVersion": "school-maker-agency-rag-v3",
   "totals": {
-    "total": 32,
-    "passed": 32,
+    "total": 44,
+    "passed": 44,
     "failed": 0
   },
   "results": [
@@ -165,6 +165,66 @@
     {
       "id": "ai-04",
       "category": "ai_policy",
+      "passed": true
+    },
+    {
+      "id": "rag-01",
+      "category": "retrieval",
+      "passed": true
+    },
+    {
+      "id": "rag-02",
+      "category": "retrieval",
+      "passed": true
+    },
+    {
+      "id": "rag-03",
+      "category": "retrieval",
+      "passed": true
+    },
+    {
+      "id": "rag-04",
+      "category": "retrieval",
+      "passed": true
+    },
+    {
+      "id": "agency-01",
+      "category": "agency",
+      "passed": true
+    },
+    {
+      "id": "agency-02",
+      "category": "agency",
+      "passed": true
+    },
+    {
+      "id": "agency-03",
+      "category": "agency",
+      "passed": true
+    },
+    {
+      "id": "maker-01",
+      "category": "maker_agency",
+      "passed": true
+    },
+    {
+      "id": "maker-02",
+      "category": "maker_agency",
+      "passed": true
+    },
+    {
+      "id": "maker-03",
+      "category": "maker_agency",
+      "passed": true
+    },
+    {
+      "id": "maker-04",
+      "category": "maker_agency",
+      "passed": true
+    },
+    {
+      "id": "maker-05",
+      "category": "maker_agency",
       "passed": true
     }
   ]

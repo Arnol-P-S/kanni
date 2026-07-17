@@ -17,6 +17,8 @@ import type { Actor } from "@/lib/auth";
 import { copy } from "@/lib/i18n";
 import type { LearningCycleWithPeople } from "@/lib/school-data";
 
+type PortalCycle = Pick<LearningCycleWithPeople, "goal" | "status">;
+
 const roleIcons = {
   school_admin: UserRoundCog,
   teacher: School,
@@ -62,7 +64,7 @@ export function PortalChrome({
   children,
 }: {
   actor: Actor;
-  cycle: LearningCycleWithPeople | null;
+  cycle: PortalCycle | null;
   title: string;
   intro: string;
   children: ReactNode;

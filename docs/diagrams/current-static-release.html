@@ -60,8 +60,8 @@
 
     <div class="canvas">
       <div class="status-banner safe">
-        <span>Current release: persistent school accounts connect one complete learning-support cycle.</span>
-        <span class="pill">Docker school platform</span>
+        <span>Current release: four school accounts share one persistent, agency-centered learning cycle.</span>
+        <span class="pill">Grounded AI + reviewed fallback</span>
       </div>
 
       <div class="tier">
@@ -72,7 +72,7 @@
         <div class="tbody cols-4">
           <div class="node app"><svg class="ic"><use href="#user" /></svg><div class="nl">School administrator<small>accounts, relationships, handoff state</small></div></div>
           <div class="node app"><svg class="ic"><use href="#user" /></svg><div class="nl">Teacher<small>plan, differentiate, review, release</small></div></div>
-          <div class="node app"><svg class="ic"><use href="#user" /></svg><div class="nl">Student<small>attempt, support, revise, explain</small></div></div>
+          <div class="node app"><svg class="ic"><use href="#user" /></svg><div class="nl">Student<small>choose, create, critique, revise</small></div></div>
           <div class="node app"><svg class="ic"><use href="#user" /></svg><div class="nl">Parent<small>reviewed home activity and response</small></div></div>
         </div>
       </div>
@@ -87,8 +87,8 @@
         <div class="tbody cols-4">
           <div class="node app"><svg class="ic"><use href="#browser" /></svg><div class="nl">Next.js portals<small>server-rendered, role-specific workspaces</small></div></div>
           <div class="node app"><svg class="ic"><use href="#book" /></svg><div class="nl">Original learning content<small>reviewed plan and support presentations</small></div></div>
-          <div class="node route"><svg class="ic"><use href="#nodes" /></svg><div class="nl">Cycle state machine<small>teacher choice changes student and family tasks</small></div></div>
-          <div class="node data"><svg class="ic"><use href="#database" /></svg><div class="nl">PostgreSQL record<small>accounts, mappings, evidence, audit events</small></div></div>
+          <div class="node route"><svg class="ic"><use href="#nodes" /></svg><div class="nl">Cycle state machine<small>teacher choice changes support and scaffold level</small></div></div>
+          <div class="node data"><svg class="ic"><use href="#database" /></svg><div class="nl">PostgreSQL record<small>mappings, bounded artifacts, scaffold, audit events</small></div></div>
         </div>
       </div>
 
@@ -110,18 +110,19 @@
 
       <div class="tier">
         <div class="tlab h-slate">
-          <div class="tn">Optional model boundary</div>
-          <div class="td">non-authoritative drafting behind release controls</div>
+          <div class="tn">Grounded model boundary</div>
+          <div class="td">two non-authoritative calls behind release controls</div>
         </div>
-        <div class="tbody cols-3">
-          <div class="node blocked"><svg class="ic"><use href="#plug" /></svg><div class="nl">Disabled by default<small>the complete workflow uses reviewed content</small></div></div>
-          <div class="node route"><svg class="ic"><use href="#route" /></svg><div class="nl">OpenRouter adapter<small>one model, no retry, no provider fallback</small></div></div>
-          <div class="node ai"><svg class="ic"><use href="#brain" /></svg><div class="nl">Validated draft<small>strict object, allowlisted sources, deterministic gate</small></div></div>
+        <div class="tbody cols-4">
+          <div class="node data"><svg class="ic"><use href="#book" /></svg><div class="nl">Reviewed retrieval<small>only relevant original Kanni lesson sections</small></div></div>
+          <div class="node route"><svg class="ic"><use href="#route" /></svg><div class="nl">OpenRouter adapter<small>GPT-5.6 Luna • Azure • ZDR • no retry</small></div></div>
+          <div class="node ai"><svg class="ic"><use href="#brain" /></svg><div class="nl">Agency-checked scaffold<small>strict object, citations, no answer or artifact writing</small></div></div>
+          <div class="node app"><svg class="ic"><use href="#plug" /></svg><div class="nl">Reviewed fallback<small>complete workflow when AI is disabled or rejected</small></div></div>
         </div>
       </div>
 
       <div class="note-band">
-        <div class="note"><strong>Persistent source of truth</strong>PostgreSQL stores accounts, relationships, cycle state, and audit events.</div>
+        <div class="note"><strong>Persistent source of truth</strong>PostgreSQL stores accounts, relationships, bounded artifacts, cycle state, and audit events.</div>
         <div class="note"><strong>Internal data network</strong>The production database is not published to the host.</div>
         <div class="note"><strong>Hardened runtime</strong>The app runs non-root, read-only, with dropped capabilities and health checks.</div>
         <div class="note"><strong>Rights boundary</strong>Only original Kanni content is bundled. Textbook pages stay link-only.</div>

@@ -25,13 +25,14 @@ export type CycleInformation =
   | "school_members"
   | "teacher_plan"
   | "student_evidence"
+  | "student_artifact"
   | "family_activity"
   | "family_response";
 
 const visibleInformation: Record<SchoolRole, readonly CycleInformation[]> = {
   school_admin: ["school_members", "family_response"],
-  teacher: ["teacher_plan", "student_evidence", "family_response"],
-  student: ["teacher_plan", "student_evidence", "family_activity"],
+  teacher: ["teacher_plan", "student_evidence", "student_artifact", "family_response"],
+  student: ["teacher_plan", "student_evidence", "student_artifact", "family_activity"],
   parent: ["family_activity", "family_response"],
 };
 

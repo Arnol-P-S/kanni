@@ -105,16 +105,28 @@ async function main() {
 
     await signIn(page, accounts.student);
     await page.getByRole("button", { name: /1\/4\s*One quarter/ }).click();
-    await page.getByRole("button", { name: "Open support" }).click();
-    await page.getByRole("heading", { name: "Compare equal wholes" }).waitFor();
+    await page.getByRole("button", { name: "Open my scaffold" }).click();
+    await page.getByRole("heading", { name: "AI asks. You decide." }).waitFor();
     await capture(page, "05-student-teacher-selected-support");
+    await page.getByLabel(/Plan a fair share/).check();
+    await page.getByLabel(/Describe your first design/).fill(
+      "I used two same-sized paper snacks and divided them into halves and quarters for a fair sharing plan.",
+    );
+    await page
+      .getByLabel(/I did not clearly show that the wholes are the same size/)
+      .check();
+    await page.getByLabel(/Revise it and explain what changed/).fill(
+      "I marked both paper snacks as the same size, labelled every equal part, and added a second example.",
+    );
+    await page.locator(".maker-studio-card").scrollIntoViewIfNeeded();
+    await capture(page, "05b-student-maker-studio");
     await page.getByLabel(/1\/2\s*One half/).check();
     await page
       .getByLabel(
         "When the whole is the same size, more equal parts make each part smaller.",
       )
       .check();
-    await page.getByRole("button", { name: "Send to teacher" }).click();
+    await page.getByRole("button", { name: "Send my work to the teacher" }).click();
     await signOut(page);
 
     await signIn(page, accounts.teacher);
@@ -122,8 +134,11 @@ async function main() {
       .getByRole("heading", { name: "What happened in this activity" })
       .waitFor();
     await capture(page, "06-teacher-evidence-review");
+    await page.locator(".artifact-review-panel").scrollIntoViewIfNeeded();
+    await capture(page, "06b-teacher-artifact-review");
     await page.getByLabel(/Ask guided questions/).check();
-    await page.getByRole("button", { name: "Approve family activity" }).click();
+    await page.getByLabel(/Light/).check();
+    await page.getByRole("button", { name: "Approve family activity and next scaffold" }).click();
     await signOut(page);
 
     await signIn(page, accounts.parent);
@@ -137,7 +152,7 @@ async function main() {
     await page.setViewportSize({ width: 1440, height: 960 });
     await signIn(page, accounts.student);
     await page
-      .getByRole("heading", { name: "Use three comparison questions" })
+      .getByRole("heading", { name: "Start with one comparison question" })
       .waitFor();
     await capture(page, "08-student-changed-next-activity");
   } finally {

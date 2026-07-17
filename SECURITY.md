@@ -12,7 +12,7 @@ Kanni protects:
 
 - password hashes and server-side sessions
 - school, user, membership, teacher-student, and parent-student records
-- student learning evidence and teacher review
+- student learning evidence, bounded artifact text, and teacher review
 - parent-facing activity and bounded response
 - provider credentials and deployment secrets
 - audit-event integrity
@@ -44,11 +44,11 @@ The server Data Access Layer always combines the authenticated school ID with th
 | Role | Database scope | Allowed workflow |
 |---|---|---|
 | School administrator | current school | see accounts, mappings, and cycle handoff; preserve the current cycle and open the goal again |
-| Teacher | assigned teacher membership | plan, publish, review evidence, approve family activity |
-| Student | enrolled student membership | answer, open selected support, revise, explain, challenge the record |
+| Teacher | assigned teacher membership | plan, publish, review evidence and the artifact, choose the next scaffold, approve family activity |
+| Student | enrolled student membership | answer, open selected support, create and revise an artifact, explain, challenge the record |
 | Parent | linked guardian membership | see approved family handoff and return a bounded response |
 
-The administrator and parent portals do not expose student evidence. The parent never receives a model transcript, private teacher note, rank, diagnosis, or custom student prompt.
+The administrator and parent portals do not expose raw student evidence or artifact text. Both database queries use explicit field allowlists. The administrator selects only handoff state and assigned display names. The parent selects only the artifact type, fixed choices needed for its reviewed progress summary, support strategy, and family response. The parent never receives a model transcript, private teacher note, rank, diagnosis, or custom student prompt.
 
 Server Actions are directly reachable POST endpoints. Each action therefore validates its own input, authenticates the actor, requires the exact role, loads a relationship-scoped record, and repeats membership and state preconditions in the database write.
 
@@ -60,7 +60,9 @@ The learning cycle is a persisted state machine:
 draft -> active -> waiting_teacher_review -> waiting_family -> complete
 ```
 
-Database `updateMany` preconditions make one-shot handoffs idempotent and reject stale or out-of-order writes. Security-sensitive workflow updates and their audit events commit in the same Prisma transaction. Starting a goal again archives the previous cycle and creates a new record instead of deleting evidence. Audit events record login, logout, plan publication, evidence submission, record challenges, family approval, family response, and new-cycle creation without logging passwords, tokens, provider keys, or free-text student conversations.
+Database `updateMany` preconditions make one-shot handoffs idempotent and reject stale or out-of-order writes. Security-sensitive workflow updates and their audit events commit in the same Prisma transaction. Starting a goal again archives the previous cycle and creates a new record instead of deleting evidence. Audit events record login, logout, plan publication, evidence submission, record challenges, scaffold decisions, family approval, family response, and new-cycle creation without logging passwords, tokens, provider keys, or artifact text.
+
+Student artifact fields accept 30 to 600 Unicode characters. The server rejects links, email addresses, and phone-like content before persistence. React escapes the stored text when the assigned teacher reads it. The current release does not send artifact text to AI.
 
 ## Optional AI boundary
 
@@ -68,16 +70,19 @@ AI is disabled by default and is not required for the learning cycle.
 
 When enabled:
 
-- only `openai/gpt-5.6-sol` through the configured OpenRouter adapter is allowed
+- only the allowlisted GPT-5.6 models are accepted, with `openai/gpt-5.6-luna` as the cost-controlled default and `openai/gpt-5.6-sol` as an explicit operator override
 - credentials remain server-side
 - production also requires explicit spend-limit and rate-limit confirmations
 - calls use one approved fractions context and the selected support strategy
-- learner identity, email, answer history, family response, session, and school membership are not sent
+- learner identity, email, answer history, artifact text, family response, session, and school membership are not sent
 - output must match a strict Zod object and allowlisted source identifiers
 - student support also passes a deterministic content and strategy gate
 - retries, recursive agents, tools, web access, and provider fallback are disabled
 - database claims limit teacher drafting and student support to one provider request per learning cycle
 - timeout, provider error, malformed output, or failed content checks return reviewed project-authored content
+- retrieved context contains only reviewed, original Kanni lesson sections
+- generated citation IDs must be a subset of the sections retrieved for that request
+- student output must remain a Socratic scaffold and is hidden if it states the final choice
 - AI output is a draft and cannot publish a plan or change authorization
 
 OpenRouter routing settings request Azure-only, Zero Data Retention-capable processing, deny provider data collection, require parameter support, and disable provider fallback. The operator must still confirm the selected route and current provider policy before release.
@@ -101,7 +106,7 @@ The backup helper creates owner-readable files with a restrictive process umask.
 
 ## Data handling
 
-Kanni stores accounts, memberships, relationship mappings, fixed-choice learning evidence, teacher review, family response, locale, sessions, throttling state, and audit events in PostgreSQL.
+Kanni stores accounts, memberships, relationship mappings, fixed-choice learning evidence, bounded student artifact drafts and revisions, teacher review, family response, locale, sessions, throttling state, and audit events in PostgreSQL.
 
 Kanni does not create public profiles, social feeds, direct student messaging, rankings, ability labels, automated grades, academic-stream decisions, career recommendations, or crisis conversations.
 

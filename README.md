@@ -2,7 +2,7 @@
 
 Kanni is a connected learning-support platform for schools. It gives students, teachers, parents, and school administrators separate accounts and a shared learning cycle with role-appropriate information.
 
-One teacher decision changes what the student sees next. The student's evidence returns to the assigned teacher. The parent receives only the teacher-reviewed home activity and can send one bounded response. The school administrator can see accounts, relationships, and the current handoff without receiving the student's learning evidence.
+One teacher decision changes what the student sees next. The student chooses a maker path, creates a first design, critiques it, and revises it. The assigned teacher reviews that work and decides how much scaffold comes next. The parent receives only a safe summary and teacher-reviewed home activity. The school administrator sees accounts, relationships, handoff state, and scaffold policy without receiving the student's raw work.
 
 ## The complete slice
 
@@ -10,10 +10,10 @@ The current release implements one complete school workflow around an original f
 
 1. The school administrator sees the active accounts and teacher-student-parent relationships.
 2. The assigned teacher reviews the learning plan, anticipates likely misconceptions, chooses a support strategy, and publishes the activity.
-3. The assigned student makes a first choice, opens the teacher-selected support, revises the answer, and explains the reasoning.
-4. The teacher reviews that evidence, chooses the next support, and approves a family activity.
-5. The linked parent sees a plain summary and the approved home activity, then returns a bounded response.
-6. The student's next view reflects the teacher's reviewed choice.
+3. The assigned student makes a first choice, opens the teacher-selected scaffold, chooses what to make, creates a first design, critiques it, and revises it.
+4. The teacher reviews the artifact and mathematics evidence, chooses the next support and scaffold level, and approves a family activity.
+5. The linked parent sees the kind of artifact created and the approved home activity, but not the raw artifact text, then returns a bounded response.
+6. The student's next view reflects the teacher's reviewed support. A new cycle inherits the guided, light, or independent scaffold level chosen by the teacher.
 
 When a school leader opens the goal again, Kanni archives the previous cycle and creates a new draft. Earlier evidence is preserved instead of reset in place.
 
@@ -86,7 +86,7 @@ pnpm db:studio
 
 Kanni works fully with `GROWTH_AI_ENABLED=false`. Reviewed project-authored plans and supports remain available when no provider is configured, the provider times out, output is malformed, or the deterministic content gate rejects it.
 
-The optional teacher-plan and student-support drafts use the exact allowlisted model `openai/gpt-5.6-sol` through OpenRouter. Kanni sends only the bundled fractions context and selected support strategy. It does not send a learner name, email, answer record, family response, session, or school membership.
+The optional teacher-plan and student-support drafts use the allowlisted `openai/gpt-5.6-luna` model through OpenRouter by default. Luna is the deliberate choice for this bounded structured-output task because it costs less than Sol. Kanni retrieves only relevant sections from the reviewed, original fractions lesson pack, then rejects generated citations that were not retrieved. It does not send a learner name, email, answer record, family response, session, or school membership.
 
 Codex credit cannot pay for application API calls. It pays for development work performed in Codex. OpenRouter needs its own balance. A $10 ceiling is suitable for controlled judging when AI is optional, each learning cycle can claim each AI draft only once, retries and provider fallback are disabled, and an account spend limit plus host rate limit are active. Exact usage still depends on current provider pricing.
 
@@ -94,7 +94,7 @@ To enable AI after those controls exist:
 
 ```dotenv
 GROWTH_AI_PROVIDER=openrouter
-GROWTH_AI_MODEL=openai/gpt-5.6-sol
+GROWTH_AI_MODEL=openai/gpt-5.6-luna
 OPENROUTER_API_KEY=replace-me
 GROWTH_AI_ENABLED=true
 GROWTH_AI_RATE_LIMIT_CONFIRMED=true
@@ -121,7 +121,7 @@ pnpm diagrams
 
 The Playwright suite resets the isolated `kanni_test` database, applies migrations, and seeds review accounts. It covers the complete four-account handoff, wrong-role denial, generic login failure, English-Malayalam switching at 360 pixels, and serious or critical Axe findings.
 
-The deterministic evaluation contains 32 cases across authorization, workflow transitions, language selection, information visibility, and AI release policy. Results are written to `eval/deterministic-results.json`.
+The 44-case deterministic evaluation covers authorization, workflow transitions, language selection, information visibility, AI release policy, curriculum retrieval, learner-agency guards, artifact completion, and scaffold fading. Results are written to `eval/deterministic-results.json`.
 
 ## Architecture
 
@@ -129,7 +129,7 @@ The application follows a few deliberate patterns:
 
 - Data Access Layer: authenticated actor and relationship-scoped queries live in server-only modules.
 - State Machine: database status and write preconditions enforce valid learning-cycle handoffs.
-- Strategy: teacher support choices map to reviewed student and family presentations.
+- Strategy: teacher support choices and scaffold levels map to reviewed student and family presentations.
 - Adapter: the optional AI provider sits behind one server-only boundary and returns schema-checked drafts.
 - Unit of Work: multi-record changes and their audit events use Prisma transactions.
 - Policy Object: role capabilities, visible information, and AI release gates are explicit and testable.
@@ -166,9 +166,9 @@ The app is exposed on port 3001 by default. Put a reviewed reverse proxy or mana
 
 ## Privacy and school readiness
 
-Kanni stores only the data needed for the connected learning cycle: school accounts, memberships, assigned relationships, fixed-choice evidence, teacher review, family response, locale, sessions, and audit events.
+Kanni stores only the data needed for the connected learning cycle: school accounts, memberships, assigned relationships, fixed-choice evidence, the student's bounded artifact draft and revision, teacher review, family response, locale, sessions, and audit events.
 
-It does not create public profiles, ranks, feeds, direct student messaging, ability labels, academic-stream decisions, career recommendations, or automated grades. Parents do not receive raw student prompts or teacher-only evidence. Administrators do not receive student evidence through the current portal.
+It does not create public profiles, ranks, feeds, direct student messaging, ability labels, academic-stream decisions, career recommendations, or automated grades. Raw artifact text is visible only to the student and assigned teacher. Parents and administrators receive safe workflow summaries instead.
 
 This repository is production-shaped, not a claim that one codebase alone makes a school deployment legally or operationally ready. A real deployment still needs local policy review, identity lifecycle, password recovery or SSO, data retention, backup and restore, incident response, and approval for processing student data. See [Security](SECURITY.md), `/privacy`, and `/terms`.
 
@@ -204,6 +204,6 @@ compose.production.yaml  application, migration, and database topology
 - Each user currently has one active membership. The schema supports multiple memberships, but account-time school selection is not implemented.
 - Password reset, MFA, school SSO, email delivery, backups, monitoring, and automated retention are deployment integrations, not hidden claims.
 - Malayalam copy needs final review by a native Malayalam educator before a real school release.
-- AI supports drafting only. It cannot publish a plan, change authorization, grade a student, or contact a family.
+- AI supports plan drafting and curriculum-grounded Socratic questions only. It never receives or writes the student's artifact, and it cannot publish a plan, change authorization, grade a student, or contact a family.
 
 These boundaries preserve a complete, useful learning cycle while keeping the path to school integration explicit.

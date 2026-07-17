@@ -6,6 +6,7 @@ import {
   CycleStatus,
   FamilyResponse,
   ReviewStatus,
+  ScaffoldLevel,
   SchoolRole,
 } from "@prisma/client";
 import { redirect } from "next/navigation";
@@ -23,12 +24,24 @@ import {
   FractionAnswerSchema,
   PROJECT_AUTHORED_PLAN,
   PROJECT_AUTHORED_SUPPORTS,
+  ScaffoldLevelSchema,
+  StudentArtifactSubmissionSchema,
   SupportStrategySchema,
+  getProjectAuthoredSupport,
 } from "@/lib/growth-cycle";
 
 function portal(role: SchoolRole, notice?: string): never {
   const route = role === SchoolRole.school_admin ? "admin" : role;
   redirect(`/portal/${route}${notice ? `?notice=${notice}` : ""}`);
+}
+
+function promptsForScaffold(
+  prompts: readonly string[],
+  level: ScaffoldLevel,
+): string[] {
+  if (level === ScaffoldLevel.independent) return [];
+  if (level === ScaffoldLevel.light) return prompts.slice(-1);
+  return [...prompts];
 }
 
 async function cycleForMembership(
@@ -154,7 +167,7 @@ export async function draftTeacherPlanWithAiAction(): Promise<never> {
   });
   if (claimed.count !== 1) portal(actor.role, "plan-locked");
 
-  const result = await generateTeacherPlanDraft();
+  const result = await generateTeacherPlanDraft(cycle.familyLocale);
   const updated = await db.learningCycle.updateMany({
     where: {
       id: cycle.id,
@@ -174,6 +187,7 @@ export async function draftTeacherPlanWithAiAction(): Promise<never> {
       misconceptionIds: result.draft.misconceptionIds,
       quickCheck: result.draft.quickCheck,
       familyDraft: result.draft.familyDraft,
+      planAgencyMove: result.draft.agencyMove,
       sourceSectionIds: result.draft.sourceSectionIds,
       version: { increment: 1 },
     },
@@ -204,6 +218,7 @@ export async function restoreProjectAuthoredPlanAction(): Promise<never> {
       misconceptionIds: PROJECT_AUTHORED_PLAN.misconceptionIds,
       quickCheck: PROJECT_AUTHORED_PLAN.quickCheck,
       familyDraft: PROJECT_AUTHORED_PLAN.familyDraft,
+      planAgencyMove: PROJECT_AUTHORED_PLAN.agencyMove,
       sourceSectionIds: PROJECT_AUTHORED_PLAN.sourceSectionIds,
       version: { increment: 1 },
     },
@@ -246,7 +261,10 @@ export async function useStudentSupportAction(): Promise<never> {
     portal(actor.role, "answer-first");
   }
   if (cycle.supportUsed) portal(actor.role, "support-open");
-  const reviewedSupport = PROJECT_AUTHORED_SUPPORTS[cycle.selectedSupport];
+  const reviewedSupport = getProjectAuthoredSupport(
+    cycle.selectedSupport,
+    actor.locale,
+  );
   const claimed = await db.learningCycle.updateMany({
     where: {
       id: cycle.id,
@@ -259,13 +277,24 @@ export async function useStudentSupportAction(): Promise<never> {
       supportUsed: true,
       supportOrigin: ContentOrigin.project_authored,
       supportExplanation: reviewedSupport.explanation,
+      supportThinkingPrompts: promptsForScaffold(
+        reviewedSupport.thinkingPrompts,
+        cycle.scaffoldLevel,
+      ),
+      supportHandoffPrompt: reviewedSupport.handoffPrompt,
       supportSourceIds: reviewedSupport.sourceSectionIds,
       version: { increment: 1 },
     },
   });
   if (claimed.count !== 1) portal(actor.role, "support-open");
+  if (cycle.scaffoldLevel === ScaffoldLevel.independent) {
+    portal(actor.role, "independent-start");
+  }
 
-  const result = await generateStudentSupportDraft(cycle.selectedSupport);
+  const result = await generateStudentSupportDraft(
+    cycle.selectedSupport,
+    actor.locale,
+  );
   if (result.origin === "gpt_5_6") {
     await db.learningCycle.updateMany({
       where: {
@@ -278,6 +307,11 @@ export async function useStudentSupportAction(): Promise<never> {
       data: {
         supportOrigin: ContentOrigin.gpt_5_6,
         supportExplanation: result.support.explanation,
+        supportThinkingPrompts: promptsForScaffold(
+          result.support.thinkingPrompts,
+          cycle.scaffoldLevel,
+        ),
+        supportHandoffPrompt: result.support.handoffPrompt,
         supportSourceIds: result.support.sourceSectionIds,
         version: { increment: 1 },
       },
@@ -288,7 +322,7 @@ export async function useStudentSupportAction(): Promise<never> {
 
 export async function recordRevisionAction(formData: FormData): Promise<never> {
   const actor = await requireActor(SchoolRole.student);
-  const parsed = z
+  const evidence = z
     .object({
       answer: FractionAnswerSchema,
       explanation: ExplanationChoiceSchema,
@@ -297,7 +331,15 @@ export async function recordRevisionAction(formData: FormData): Promise<never> {
       answer: formData.get("answer"),
       explanation: formData.get("explanation"),
     });
-  if (!parsed.success) portal(actor.role, "complete-evidence");
+  const artifact = StudentArtifactSubmissionSchema.safeParse({
+    makerPath: formData.get("makerPath"),
+    artifactDraft: formData.get("artifactDraft"),
+    artifactCritique: formData.get("artifactCritique"),
+    artifactRevision: formData.get("artifactRevision"),
+  });
+  if (!evidence.success || !artifact.success) {
+    portal(actor.role, "complete-maker-evidence");
+  }
   const cycle = await cycleForMembership(
     actor.schoolId,
     "studentMembershipId",
@@ -314,8 +356,13 @@ export async function recordRevisionAction(formData: FormData): Promise<never> {
         revisedAnswer: null,
       },
       data: {
-        revisedAnswer: parsed.data.answer,
-        explanationChoice: parsed.data.explanation,
+        makerPath: artifact.data.makerPath,
+        artifactDraft: artifact.data.artifactDraft,
+        artifactCritique: artifact.data.artifactCritique,
+        artifactRevision: artifact.data.artifactRevision,
+        artifactSubmittedAt: new Date(),
+        revisedAnswer: evidence.data.answer,
+        explanationChoice: evidence.data.explanation,
         status: CycleStatus.waiting_teacher_review,
         evidenceSubmittedAt: new Date(),
         version: { increment: 1 },
@@ -329,6 +376,11 @@ export async function recordRevisionAction(formData: FormData): Promise<never> {
         action: "cycle.student_evidence_submitted",
         entityType: "learning_cycle",
         entityId: cycle.id,
+        metadata: {
+          makerPath: artifact.data.makerPath,
+          artifactCritique: artifact.data.artifactCritique,
+          scaffoldLevel: cycle.scaffoldLevel,
+        },
       },
     });
     return true;
@@ -375,7 +427,12 @@ export async function flagStudentDisagreementAction(): Promise<never> {
 export async function reviewStudentEvidenceAction(formData: FormData): Promise<never> {
   const actor = await requireActor(SchoolRole.teacher);
   const strategy = SupportStrategySchema.safeParse(formData.get("nextSupport"));
-  if (!strategy.success) portal(actor.role, "invalid-strategy");
+  const scaffold = ScaffoldLevelSchema.safeParse(
+    formData.get("nextScaffoldLevel"),
+  );
+  if (!strategy.success || !scaffold.success) {
+    portal(actor.role, "invalid-next-support");
+  }
   const cycle = await cycleForMembership(
     actor.schoolId,
     "teacherMembershipId",
@@ -390,10 +447,12 @@ export async function reviewStudentEvidenceAction(formData: FormData): Promise<n
         status: CycleStatus.waiting_teacher_review,
         revisedAnswer: { not: null },
         explanationChoice: { not: null },
+        artifactRevision: { not: null },
       },
       data: {
         teacherReviewStatus: ReviewStatus.reviewed,
         nextSupport: strategy.data,
+        nextScaffoldLevel: scaffold.data,
         familyBriefApproved: true,
         status: CycleStatus.waiting_family,
         reviewedAt: new Date(),
@@ -408,7 +467,10 @@ export async function reviewStudentEvidenceAction(formData: FormData): Promise<n
         action: "cycle.family_brief_approved",
         entityType: "learning_cycle",
         entityId: cycle.id,
-        metadata: { nextSupport: strategy.data },
+        metadata: {
+          nextSupport: strategy.data,
+          nextScaffoldLevel: scaffold.data,
+        },
       },
     });
     return true;
@@ -474,7 +536,8 @@ export async function startFreshCycleAction(): Promise<never> {
   if (!cycle) portal(actor.role, "cycle-missing");
   if (cycle.status === CycleStatus.draft) portal(actor.role, "cycle-ready");
 
-  const support = PROJECT_AUTHORED_SUPPORTS.fraction_strips;
+  const inheritedSupport = cycle.nextSupport ?? cycle.selectedSupport;
+  const support = PROJECT_AUTHORED_SUPPORTS[inheritedSupport];
   await db.$transaction(async (transaction) => {
     const archived = await transaction.learningCycle.updateMany({
       where: {
@@ -507,10 +570,14 @@ export async function startFreshCycleAction(): Promise<never> {
         misconceptionIds: PROJECT_AUTHORED_PLAN.misconceptionIds,
         quickCheck: PROJECT_AUTHORED_PLAN.quickCheck,
         familyDraft: PROJECT_AUTHORED_PLAN.familyDraft,
+        planAgencyMove: PROJECT_AUTHORED_PLAN.agencyMove,
         sourceSectionIds: PROJECT_AUTHORED_PLAN.sourceSectionIds,
-        selectedSupport: "fraction_strips",
+        selectedSupport: inheritedSupport,
+        scaffoldLevel: cycle.nextScaffoldLevel ?? cycle.scaffoldLevel,
         supportOrigin: ContentOrigin.project_authored,
         supportExplanation: support.explanation,
+        supportThinkingPrompts: support.thinkingPrompts,
+        supportHandoffPrompt: support.handoffPrompt,
         supportSourceIds: support.sourceSectionIds,
         teacherReviewStatus: ReviewStatus.pending,
         familyResponse: FamilyResponse.not_sent,

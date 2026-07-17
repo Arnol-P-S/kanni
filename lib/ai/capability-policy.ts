@@ -1,4 +1,8 @@
-const DEFAULT_MODEL = "openai/gpt-5.6-sol";
+const DEFAULT_MODEL = "openai/gpt-5.6-luna";
+const ALLOWED_MODELS = new Set([
+  DEFAULT_MODEL,
+  "openai/gpt-5.6-sol",
+]);
 
 export type GrowthAiEnvironment = Record<string, string | undefined>;
 
@@ -35,7 +39,7 @@ export function evaluateGrowthAiCapability(
       reason: "provider_disabled",
     };
   }
-  if (model !== DEFAULT_MODEL) {
+  if (!ALLOWED_MODELS.has(model)) {
     return {
       available: false,
       provider: "openrouter",

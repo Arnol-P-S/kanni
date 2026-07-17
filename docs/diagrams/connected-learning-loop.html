@@ -23,57 +23,57 @@
 
     <div class="canvas">
       <div class="status-banner safe">
-        <span>One persistent school record connects the student, teacher, and parent while keeping each view deliberately different.</span>
+        <span>One persistent school record connects student creation, teacher judgment, and a family invitation while keeping each view deliberately different.</span>
         <span class="pill">Implemented learning loop</span>
       </div>
 
       <div class="flow-row">
         <div class="flow-card student">
           <div class="head"><span class="step">1</span><svg class="ic"><use href="#user"/></svg></div>
-          <h3>Student attempt</h3>
-          <p>The signed-in student chooses one fixed answer. No score, timer, streak, ranking, or free text is required.</p>
+          <h3>Student chooses</h3>
+          <p>The signed-in student chooses a maker path and opens the current teacher-selected scaffold. There is no score, timer, streak, or rank.</p>
         </div>
         <div class="arrow-h"><svg viewBox="0 0 38 22"><line x1="1" y1="11" x2="29" y2="11" stroke="#0f766e" stroke-width="2.3"/><polygon points="28,5 38,11 28,17" fill="#0f766e"/></svg></div>
 
         <div class="flow-card system">
           <div class="head"><span class="step">2</span><svg class="ic"><use href="#choice"/></svg></div>
-          <h3>Evidence recorded</h3>
-          <p>Deterministic code records the choice and support use in the assigned PostgreSQL cycle. It does not infer ability.</p>
+          <h3>Student creates</h3>
+          <p>The learner writes a first design. Bounded validation checks the artifact without inferring ability or asking AI to write it.</p>
         </div>
         <div class="arrow-h"><svg viewBox="0 0 38 22"><line x1="1" y1="11" x2="29" y2="11" stroke="#0f766e" stroke-width="2.3"/><polygon points="28,5 38,11 28,17" fill="#0f766e"/></svg></div>
 
         <div class="flow-card student">
           <div class="head"><span class="step">3</span><svg class="ic"><use href="#hint"/></svg></div>
-          <h3>Support and revision</h3>
-          <p>The teacher-selected support opens. The student revises the answer and selects the reason that matches the thinking.</p>
+          <h3>Critique and revision</h3>
+          <p>The student critiques the first design, revises it, and completes a final math self-check. The artifact remains the learner's work.</p>
         </div>
         <div class="arrow-h"><svg viewBox="0 0 38 22"><line x1="1" y1="11" x2="29" y2="11" stroke="#0f766e" stroke-width="2.3"/><polygon points="28,5 38,11 28,17" fill="#0f766e"/></svg></div>
 
         <div class="flow-card teacher">
           <div class="head"><span class="step">4</span><svg class="ic"><use href="#review"/></svg></div>
           <h3>Teacher review</h3>
-          <p>The assigned teacher sees first choice, support, revised choice, explanation, and any record challenge.</p>
+          <p>The assigned teacher sees the maker path, first design, student critique, revision, self-check, and any record challenge.</p>
         </div>
         <div class="arrow-h"><svg viewBox="0 0 38 22"><line x1="1" y1="11" x2="29" y2="11" stroke="#0f766e" stroke-width="2.3"/><polygon points="28,5 38,11 28,17" fill="#0f766e"/></svg></div>
 
         <div class="flow-card teacher">
           <div class="head"><span class="step">5</span><svg class="ic"><use href="#strategy"/></svg></div>
-          <h3>Next support choice</h3>
-          <p>The teacher chooses a reviewed strategy that changes both the family activity and the student's next view.</p>
+          <h3>Next scaffold choice</h3>
+          <p>The teacher chooses the next support and scaffold level. Kanni suggests a reduction but never reduces support automatically.</p>
         </div>
         <div class="arrow-h"><svg viewBox="0 0 38 22"><line x1="1" y1="11" x2="29" y2="11" stroke="#0f766e" stroke-width="2.3"/><polygon points="28,5 38,11 28,17" fill="#0f766e"/></svg></div>
 
         <div class="flow-card parent">
           <div class="head"><span class="step">6</span><svg class="ic"><use href="#home"/></svg></div>
           <h3>Parent handoff</h3>
-          <p>The linked parent receives one reviewed home activity and returns a bounded signal. Raw evidence stays out.</p>
+          <p>The linked parent receives one reviewed invitation and returns a bounded signal. Raw artifact text stays out.</p>
         </div>
         <div class="arrow-h"><svg viewBox="0 0 38 22"><line x1="1" y1="11" x2="29" y2="11" stroke="#0f766e" stroke-width="2.3"/><polygon points="28,5 38,11 28,17" fill="#0f766e"/></svg></div>
 
         <div class="flow-card student">
           <div class="head"><span class="step">7</span><svg class="ic"><use href="#activity"/></svg></div>
           <h3>Changed next activity</h3>
-          <p>The student returns to guided questions, fraction strips, or an explain-to-someone task chosen by the teacher.</p>
+          <p>The next cycle inherits guided, light, or independent scaffolding. Independent mode makes no model call.</p>
         </div>
       </div>
 
@@ -82,18 +82,18 @@
           <path d="M1370 2v27c0 16-12 25-28 25H58c-16 0-28-9-28-25V14" fill="none" stroke="#0f766e" stroke-width="2.4" stroke-dasharray="7 5"/>
           <polygon points="22,16 30,2 38,16" fill="#0f766e"/>
         </svg>
-        <span>The selected strategy returns to the learner as real behavior, so the learning link continues.</span>
+        <span>The teacher's support and scaffold choices return to the learner as real behavior, so agency can grow without removing help too early.</span>
       </div>
 
       <div class="record-card">
         <svg class="ic"><use href="#database"/></svg>
         <div>
           <h3>Versioned PostgreSQL learning record</h3>
-          <p>school • assigned memberships • goal • fixed choices • support used • explanation • review • strategy • family response • timestamps</p>
+          <p>school • assigned memberships • goal • maker path • bounded artifact • critique • revision • scaffold • review • family response • timestamps</p>
         </div>
         <div class="exclude">
           <h3><strong>Deliberately excluded</strong></h3>
-          <p>public profile • social graph • custom prompt • model transcript • rank • diagnosis • automated grade • career decision</p>
+          <p>public profile • social graph • model-written artifact • transcript • rank • diagnosis • automated grade • career decision</p>
         </div>
       </div>
 

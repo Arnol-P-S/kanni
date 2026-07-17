@@ -7,11 +7,21 @@ import {
   publishTeacherPlan,
   recordFamilyResponse,
   recordFirstAnswer,
+  recordMakerArtifact,
   recordRevision,
   recordSupportUsed,
   reviewStudentEvidence,
   PROJECT_AUTHORED_SUPPORT,
 } from "@/lib/growth-cycle";
+
+const makerSubmission = {
+  makerPath: "fair_share_plan",
+  artifactDraft:
+    "I divided two equal paper snacks into halves and quarters for a fair sharing plan.",
+  artifactCritique: "whole_size_unclear",
+  artifactRevision:
+    "I marked both paper snacks as the same size before dividing and added labels to each equal part.",
+} as const;
 
 describe("GrowthCycle transitions", () => {
   it("connects admin mapping, teacher publication, student evidence, review, and family response", () => {
@@ -24,12 +34,13 @@ describe("GrowthCycle transitions", () => {
       PROJECT_AUTHORED_SUPPORT,
       "project_authored",
     );
+    cycle = recordMakerArtifact(cycle, makerSubmission);
     cycle = recordRevision(
       cycle,
       "one_half",
       "same_whole_more_equal_parts",
     );
-    cycle = reviewStudentEvidence(cycle, "guided_questions");
+    cycle = reviewStudentEvidence(cycle, "guided_questions", "light");
     cycle = recordFamilyResponse(cycle, "tried");
 
     expect(cycle.plan.status).toBe("published");
@@ -72,9 +83,30 @@ describe("GrowthCycle transitions", () => {
     expect(
       recordSupportUsed(cycle, PROJECT_AUTHORED_SUPPORT, "project_authored"),
     ).toBe(cycle);
+    cycle = recordMakerArtifact(cycle, makerSubmission);
     cycle = recordRevision(cycle, "one_half", "same_whole_more_equal_parts");
-    cycle = reviewStudentEvidence(cycle, "explain_to_someone");
+    cycle = reviewStudentEvidence(cycle, "explain_to_someone", "independent");
     cycle = recordFamilyResponse(cycle, "tried");
     expect(recordFamilyResponse(cycle, "contact_teacher")).toBe(cycle);
+  });
+
+  it("requires a private create, critique, revise artifact before evidence", () => {
+    let cycle = mapSupportCircle(createGrowthCycle(), "en");
+    cycle = publishTeacherPlan(cycle, "fraction_strips");
+    cycle = recordFirstAnswer(cycle, "one_quarter");
+    cycle = recordSupportUsed(
+      cycle,
+      PROJECT_AUTHORED_SUPPORT,
+      "project_authored",
+    );
+    expect(() =>
+      recordRevision(cycle, "one_half", "same_whole_more_equal_parts"),
+    ).toThrow(/create, critique, and revise/i);
+    expect(() =>
+      recordMakerArtifact(cycle, {
+        ...makerSubmission,
+        artifactDraft: "Email me at learner@example.com with my plan.",
+      }),
+    ).toThrow(/email addresses/i);
   });
 });

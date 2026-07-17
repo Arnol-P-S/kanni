@@ -1,13 +1,14 @@
 import { CycleStatus, SchoolRole } from "@prisma/client";
 import type { Metadata } from "next";
-import { CheckCircle2, MessageCircleMore } from "lucide-react";
+import { CheckCircle2, MessageCircleMore, ShieldCheck } from "lucide-react";
 
 import { recordFamilyResponseAction } from "@/app/actions/learning-cycle";
 import { PortalChrome, WaitingCard } from "@/components/portal-chrome";
 import { requireActor } from "@/lib/auth";
 import { growthSupportPresentations } from "@/lib/growth-support-presentations";
 import { copy } from "@/lib/i18n";
-import { getLearningCycleForActor } from "@/lib/school-data";
+import { makerPathPresentations } from "@/lib/maker-challenge";
+import { getLearningCycleSummaryForActor } from "@/lib/school-data";
 
 export const metadata: Metadata = { title: "Parent workspace" };
 
@@ -17,13 +18,16 @@ export default async function ParentPortalPage({
   searchParams: Promise<{ notice?: string }>;
 }) {
   const actor = await requireActor(SchoolRole.parent);
-  const cycle = await getLearningCycleForActor(actor);
+  const cycle = await getLearningCycleSummaryForActor(actor);
   const locale = actor.locale;
   const { notice } = await searchParams;
   const support = cycle
     ? growthSupportPresentations[cycle.nextSupport ?? cycle.selectedSupport]
     : null;
   const familyLocale = locale;
+  const makerPath = cycle?.makerPath
+    ? makerPathPresentations[cycle.makerPath]
+    : null;
 
   return (
     <PortalChrome
@@ -43,11 +47,13 @@ export default async function ParentPortalPage({
             <p className="eyebrow">{copy(locale, { en: "What happened", ml: "എന്താണ് സംഭവിച്ചത്" })}</p>
             <h2>{copy(locale, { en: "The learner compared one half and one quarter", ml: "പഠിതാവ് ഒരു പകുതിയും ഒരു കാലും താരതമ്യം ചെയ്തു" })}</h2>
             <p>{copy(locale, { en: `The first choice was ${cycle.firstAnswer === "one_half" ? "one half" : "one quarter"}. After using the teacher-selected support, the revised choice was ${cycle.revisedAnswer === "one_half" ? "one half" : "one quarter"}.`, ml: `ആദ്യ തിരഞ്ഞെടുപ്പ് ${cycle.firstAnswer === "one_half" ? "ഒരു പകുതി" : "ഒരു കാൽ"} ആയിരുന്നു. അധ്യാപകൻ തിരഞ്ഞെടുത്ത പിന്തുണ ഉപയോഗിച്ച ശേഷം പുതുക്കിയ തിരഞ്ഞെടുപ്പ് ${cycle.revisedAnswer === "one_half" ? "ഒരു പകുതി" : "ഒരു കാൽ"} ആയി.` })}</p>
+            {makerPath ? <p className="family-maker-summary"><strong>{copy(locale, { en: "They also created", ml: "അവർ നിർമ്മിച്ചതും" })} {copy(locale, makerPath.familySummary)}.</strong> {copy(locale, { en: "Ask what they changed after checking the first design.", ml: "ആദ്യ രൂപകൽപ്പന പരിശോധിച്ച ശേഷം എന്താണ് മാറ്റിയതെന്ന് ചോദിക്കുക." })}</p> : null}
           </section>
 
           <section className="portal-card family-activity-card">
             <div className="family-activity-heading"><MessageCircleMore aria-hidden="true" /><div><p className="eyebrow">{copy(locale, { en: "Try this once at home", ml: "വീട്ടിൽ ഒരിക്കൽ ഇത് ചെയ്യുക" })}</p><h2 lang={familyLocale}>{support?.familyTitle[familyLocale]}</h2></div></div>
             <p lang={familyLocale} className="family-activity-detail">{support?.familyDetail[familyLocale]}</p>
+            {makerPath ? <p>{copy(locale, { en: `Invite the learner to show ${makerPath.familySummary.en} using paper or safe household objects. Ask questions, but let the learner lead.`, ml: `${makerPath.familySummary.ml} പേപ്പറോ സുരക്ഷിതമായ വീട്ടുപകരണങ്ങളോ ഉപയോഗിച്ച് കാണിക്കാൻ പഠിതാവിനെ ക്ഷണിക്കുക. ചോദ്യങ്ങൾ ചോദിക്കാം, പക്ഷേ പഠിതാവ് നയിക്കട്ടെ.` })}</p> : null}
             <p className="family-stop-note">{copy(locale, { en: "Keep it short. Stop if the learner is tired or does not want to continue.", ml: "പ്രവർത്തനം ചെറുതാക്കുക. പഠിതാവ് ക്ഷീണിതനാണെങ്കിൽ അല്ലെങ്കിൽ തുടരാൻ ആഗ്രഹിക്കുന്നില്ലെങ്കിൽ നിർത്തുക." })}</p>
 
             {cycle.familyResponse === "not_sent" ? (
@@ -60,6 +66,11 @@ export default async function ParentPortalPage({
             ) : (
               <div className="family-response-complete"><CheckCircle2 aria-hidden="true" /><div><strong>{copy(locale, { en: "Response sent", ml: "പ്രതികരണം അയച്ചു" })}</strong><p>{cycle.familyResponse === "tried" ? copy(locale, { en: "We tried the activity.", ml: "ഞങ്ങൾ പ്രവർത്തനം ചെയ്തു." }) : cycle.familyResponse === "need_another_idea" ? copy(locale, { en: "We asked for another idea.", ml: "ഞങ്ങൾ മറ്റൊരു ആശയം ചോദിച്ചു." }) : copy(locale, { en: "We asked the teacher to contact us.", ml: "അധ്യാപകൻ ബന്ധപ്പെടണമെന്ന് ആവശ്യപ്പെട്ടു." })}</p></div></div>
             )}
+          </section>
+
+          <section className="portal-card family-boundary-card">
+            <ShieldCheck aria-hidden="true" />
+            <div><p className="eyebrow">{copy(locale, { en: "A useful boundary", ml: "പ്രയോജനകരമായ പരിധി" })}</p><h2>{copy(locale, { en: "Support without surveillance", ml: "നിരീക്ഷണമില്ലാത്ത പിന്തുണ" })}</h2><p>{copy(locale, { en: "You receive the learning goal, the kind of artifact created, what changed, and the teacher-reviewed home step. Kanni does not show you the raw artifact text, AI transcript, rank, or diagnosis.", ml: "പഠനലക്ഷ്യം, നിർമ്മിച്ച സൃഷ്ടിയുടെ തരം, ഉണ്ടായ മാറ്റം, അധ്യാപകൻ പരിശോധിച്ച വീട്ടുപ്രവർത്തനം എന്നിവയാണ് നിങ്ങൾക്ക് ലഭിക്കുന്നത്. അസംസ്കൃത സൃഷ്ടി എഴുത്ത്, AI സംഭാഷണം, റാങ്ക്, അല്ലെങ്കിൽ രോഗനിർണ്ണയം കണ്ണി കാണിക്കില്ല." })}</p></div>
           </section>
         </div>
       )}

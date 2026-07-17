@@ -5,6 +5,8 @@ import type {
   SchoolCapability,
 } from "@/lib/permissions";
 import type { GrowthAiEnvironment } from "@/lib/ai/capability-policy";
+import type { FractionsSectionId } from "@/lib/curriculum/fractions-foundation";
+import type { SupportStrategy } from "@/lib/growth-cycle";
 
 type AuthorizationCase = {
   kind: "authorization";
@@ -53,15 +55,39 @@ type AiPolicyCase = {
     | "release_controls_missing";
 };
 
+type RetrievalCase = {
+  kind: "retrieval";
+  query: string;
+  expectedIds: FractionsSectionId[];
+};
+
+type AgencyCase = {
+  kind: "agency";
+  strategy: SupportStrategy;
+};
+
+type MakerAgencyCase = {
+  kind: "maker_agency";
+  scenario:
+    | "student_chooses_path"
+    | "create_critique_revise_required"
+    | "teacher_controls_next_scaffold"
+    | "fresh_cycle_inherits_scaffold"
+    | "raw_artifact_is_private";
+};
+
 export type EvaluationCase = (
   | AuthorizationCase
   | WorkflowCase
   | LanguageCase
   | PrivacyCase
   | AiPolicyCase
+  | RetrievalCase
+  | AgencyCase
+  | MakerAgencyCase
 ) & {
   id: string;
-  category: "authorization" | "workflow" | "language" | "privacy" | "ai_policy";
+  category: "authorization" | "workflow" | "language" | "privacy" | "ai_policy" | "retrieval" | "agency" | "maker_agency";
 };
 
 export const evalCases: EvaluationCase[] = [
@@ -97,4 +123,16 @@ export const evalCases: EvaluationCase[] = [
   { id: "ai-02", category: "ai_policy", kind: "ai_policy", environment: { GROWTH_AI_ENABLED: "true", GROWTH_AI_PROVIDER: "openrouter" }, expectedReason: "missing_credentials" },
   { id: "ai-03", category: "ai_policy", kind: "ai_policy", environment: { GROWTH_AI_ENABLED: "true", GROWTH_AI_PROVIDER: "openrouter", OPENROUTER_API_KEY: "redacted", GROWTH_AI_MODEL: "unapproved/model" }, expectedReason: "model_not_allowed" },
   { id: "ai-04", category: "ai_policy", kind: "ai_policy", environment: { NODE_ENV: "production", GROWTH_AI_ENABLED: "true", GROWTH_AI_PROVIDER: "openrouter", OPENROUTER_API_KEY: "redacted", GROWTH_AI_MODEL: "openai/gpt-5.6-sol" }, expectedReason: "release_controls_missing" },
+  { id: "rag-01", category: "retrieval", kind: "retrieval", query: "compare half and quarter using equal wholes", expectedIds: ["fractions-goal"] },
+  { id: "rag-02", category: "retrieval", kind: "retrieval", query: "guided questions with fraction strips and the space one part takes", expectedIds: ["fractions-visual"] },
+  { id: "rag-03", category: "retrieval", kind: "retrieval", query: "anticipate denominator misconceptions", expectedIds: ["fractions-misconceptions"] },
+  { id: "rag-04", category: "retrieval", kind: "retrieval", query: "rank this learner and recommend a career", expectedIds: [] },
+  { id: "agency-01", category: "agency", kind: "agency", strategy: "fraction_strips" },
+  { id: "agency-02", category: "agency", kind: "agency", strategy: "guided_questions" },
+  { id: "agency-03", category: "agency", kind: "agency", strategy: "explain_to_someone" },
+  { id: "maker-01", category: "maker_agency", kind: "maker_agency", scenario: "student_chooses_path" },
+  { id: "maker-02", category: "maker_agency", kind: "maker_agency", scenario: "create_critique_revise_required" },
+  { id: "maker-03", category: "maker_agency", kind: "maker_agency", scenario: "teacher_controls_next_scaffold" },
+  { id: "maker-04", category: "maker_agency", kind: "maker_agency", scenario: "fresh_cycle_inherits_scaffold" },
+  { id: "maker-05", category: "maker_agency", kind: "maker_agency", scenario: "raw_artifact_is_private" },
 ];

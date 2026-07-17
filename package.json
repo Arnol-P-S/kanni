@@ -28,7 +28,7 @@
     "env:production:check": "node --import tsx scripts/validate-production-environment.ts",
     "db:test:prepare": "prisma migrate reset --force",
     "eval": "node --import tsx scripts/run-evals.ts",
-    "eval:live": "node --import tsx scripts/run-live-evals.ts",
+    "eval:live": "node --conditions=react-server --import tsx scripts/run-live-evals.ts",
     "diagrams": "node --import tsx scripts/render-rich-diagrams.ts",
     "screenshots": "node --import tsx scripts/capture-submission-screenshots.ts"
   },

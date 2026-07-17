@@ -44,6 +44,25 @@ enum SupportStrategy {
   explain_to_someone
 }
 
+enum ScaffoldLevel {
+  guided
+  light
+  independent
+}
+
+enum MakerPath {
+  fair_share_plan
+  fraction_pattern
+  teach_with_objects
+}
+
+enum ArtifactCritique {
+  evidence_missing
+  whole_size_unclear
+  explanation_unclear
+  ready_to_test
+}
+
 enum FractionAnswer {
   one_half
   one_quarter
@@ -188,23 +207,33 @@ model LearningCycle {
   misconceptionIds      Json
   quickCheck            String            @db.VarChar(500)
   familyDraft           String            @db.VarChar(700)
+  planAgencyMove        String            @default("Ask for a prediction, show only the selected scaffold, then ask the learner to explain.") @db.VarChar(300)
   sourceSectionIds      Json
   selectedSupport       SupportStrategy   @default(fraction_strips)
+  scaffoldLevel         ScaffoldLevel      @default(guided)
   firstAnswer           FractionAnswer?
   supportUsed           Boolean           @default(false)
   supportOrigin         ContentOrigin     @default(project_authored)
   supportExplanation    String            @db.VarChar(700)
+  supportThinkingPrompts Json              @default("[]")
+  supportHandoffPrompt  String            @default("Use what you noticed to choose again and explain your reason.") @db.VarChar(260)
   supportSourceIds      Json
+  makerPath             MakerPath?
+  artifactDraft         String?           @db.VarChar(700)
+  artifactCritique      ArtifactCritique?
+  artifactRevision      String?           @db.VarChar(700)
   revisedAnswer         FractionAnswer?
   explanationChoice     ExplanationChoice?
   disagreedWithRecord   Boolean           @default(false)
   teacherReviewStatus   ReviewStatus      @default(pending)
   nextSupport           SupportStrategy?
+  nextScaffoldLevel     ScaffoldLevel?
   familyBriefApproved   Boolean           @default(false)
   familyResponse        FamilyResponse    @default(not_sent)
   version               Int               @default(1)
   publishedAt           DateTime?
   evidenceSubmittedAt   DateTime?
+  artifactSubmittedAt   DateTime?
   reviewedAt            DateTime?
   familyRespondedAt     DateTime?
   school                School            @relation(fields: [schoolId], references: [id], onDelete: Cascade)

@@ -29,7 +29,10 @@ export const ProductionEnvironmentSchema = z
     REVIEW_ACCESS_VISIBLE: z.literal("false"),
     KANNI_SEED_LOCAL_ACCOUNTS: z.literal("false"),
     GROWTH_AI_PROVIDER: z.enum(["disabled", "openrouter"]),
-    GROWTH_AI_MODEL: z.literal("openai/gpt-5.6-sol"),
+    GROWTH_AI_MODEL: z.enum([
+      "openai/gpt-5.6-luna",
+      "openai/gpt-5.6-sol",
+    ]),
     OPENROUTER_API_KEY: z.string().max(512),
     GROWTH_AI_ENABLED: BooleanFlag,
     GROWTH_AI_RATE_LIMIT_CONFIRMED: BooleanFlag,

@@ -66,11 +66,12 @@
       <div class="va"><svg viewBox="0 0 22 28"><line x1="11" y1="1" x2="11" y2="19" stroke="#0f766e" stroke-width="2.4"/><polygon points="6,18 11,27 16,18" fill="#0f766e"/></svg></div>
 
       <div class="tier">
-        <div class="tlab h-amber"><div class="tn">Optional AI adapter</div><div class="td">drafting only, disabled by default</div></div>
-        <div class="tbody cols-4">
-          <div class="node route"><svg class="ic"><use href="#shield"/></svg><div class="nl">Release policy<small>flag, exact model, key, spend, rate</small></div></div>
-          <div class="node ai"><svg class="ic"><use href="#brain"/></svg><div class="nl">OpenRouter route<small>Azure only requested, no fallback</small></div></div>
-          <div class="node guard"><svg class="ic"><use href="#check"/></svg><div class="nl">Output gate<small>Zod, source IDs, strategy checks</small></div></div>
+        <div class="tlab h-amber"><div class="tn">Bounded AI adapter</div><div class="td">two non-authoritative moments per cycle</div></div>
+        <div class="tbody cols-5">
+          <div class="node route"><svg class="ic"><use href="#shield"/></svg><div class="nl">Release policy<small>flag, allowlisted model, key, spend, rate</small></div></div>
+          <div class="node data"><svg class="ic"><use href="#database"/></svg><div class="nl">Reviewed retrieval<small>relevant original sections, versioned locally</small></div></div>
+          <div class="node ai"><svg class="ic"><use href="#brain"/></svg><div class="nl">GPT-5.6 Luna<small>OpenRouter • Azure • ZDR • no retry</small></div></div>
+          <div class="node guard"><svg class="ic"><use href="#check"/></svg><div class="nl">Agency output gate<small>Zod • retrieved citations • no final choice</small></div></div>
           <div class="node app"><svg class="ic"><use href="#fallback"/></svg><div class="nl">Reviewed fallback<small>complete path without provider access</small></div></div>
         </div>
       </div>
@@ -79,7 +80,7 @@
         <div class="note"><strong>Source of truth</strong>The browser never owns the authoritative learning record.</div>
         <div class="note"><strong>Identity evolution</strong>School SSO, MFA, and recovery fit ahead of the existing session layer.</div>
         <div class="note"><strong>Scale evolution</strong>Multiple app replicas require a shared cache and stable Server Action key.</div>
-        <div class="note"><strong>Human control</strong>AI cannot publish, grade, authorize, or contact a family.</div>
+        <div class="note"><strong>Human control</strong>AI asks and drafts. It cannot publish, answer for a learner, grade, authorize, or contact a family.</div>
       </div>
     </div>
   </body>

@@ -1,16 +1,20 @@
 import { SchoolRole } from "@prisma/client";
 import type { Metadata } from "next";
 import {
+  Bot,
   CheckCircle2,
   Link2,
   RefreshCw,
+  ShieldCheck,
   UsersRound,
 } from "lucide-react";
 
 import { startFreshCycleAction } from "@/app/actions/learning-cycle";
 import { PortalChrome, WaitingCard } from "@/components/portal-chrome";
+import { getGrowthAiCapability } from "@/lib/ai/growth-ai";
 import { requireActor } from "@/lib/auth";
 import { copy } from "@/lib/i18n";
+import { scaffoldLevelPresentations } from "@/lib/maker-challenge";
 import { getAdminWorkspace } from "@/lib/school-data";
 
 export const metadata: Metadata = { title: "School workspace" };
@@ -27,6 +31,7 @@ export default async function AdminPortalPage() {
   const workspace = await getAdminWorkspace(actor);
   const locale = actor.locale;
   const cycle = workspace?.cycle ?? null;
+  const ai = getGrowthAiCapability();
 
   return (
     <PortalChrome
@@ -74,7 +79,19 @@ export default async function AdminPortalPage() {
               <div><span>{copy(locale, { en: "Student", ml: "വിദ്യാർത്ഥി" })}</span><strong>{cycle.studentMembership.user.displayName}</strong></div>
               <div><span>{copy(locale, { en: "Parent", ml: "രക്ഷിതാവ്" })}</span><strong>{cycle.guardianMembership?.user.displayName ?? copy(locale, { en: "Not assigned", ml: "നിയമിച്ചിട്ടില്ല" })}</strong></div>
               <div><span>{copy(locale, { en: "Family language", ml: "കുടുംബ ഭാഷ" })}</span><strong>{cycle.familyLocale === "ml" ? "മലയാളം" : "English"}</strong></div>
+              <div><span>{copy(locale, { en: "Current scaffold", ml: "നിലവിലെ സഹായഘടന" })}</span><strong>{copy(locale, scaffoldLevelPresentations[cycle.scaffoldLevel].title)}</strong></div>
             </div>
+          </section>
+
+          <section className="portal-card ai-governance-card">
+            <div className="card-heading-row"><div><p className="eyebrow">{copy(locale, { en: "AI governance", ml: "AI ഭരണനിയന്ത്രണം" })}</p><h2>{copy(locale, { en: "Bounded by the learning cycle", ml: "പഠനചക്രത്തിന്റെ പരിധിയിൽ" })}</h2></div><span className={`status-badge ${ai.available ? "success" : "attention"}`}><Bot aria-hidden="true" />{ai.available ? copy(locale, { en: "Available", ml: "ലഭ്യമാണ്" }) : copy(locale, { en: "Fallback active", ml: "പകരം പിന്തുണ സജീവം" })}</span></div>
+            <div className="governance-list">
+              <div><ShieldCheck aria-hidden="true" /><span><strong>{copy(locale, { en: "Two bounded AI moments", ml: "പരിധിയുള്ള രണ്ട് AI ഘട്ടങ്ങൾ" })}</strong><small>{copy(locale, { en: "One teacher draft and one student scaffold per learning cycle.", ml: "ഓരോ പഠനചക്രത്തിലും ഒരു അധ്യാപക കരടും ഒരു വിദ്യാർത്ഥി പിന്തുണയും." })}</small></span></div>
+              <div><ShieldCheck aria-hidden="true" /><span><strong>{copy(locale, { en: "Reviewed curriculum only", ml: "പരിശോധിച്ച പാഠഭാഗം മാത്രം" })}</strong><small>{copy(locale, { en: "Generated text is hidden if its source IDs or safety checks fail.", ml: "ഉറവിട ഐഡികളോ സുരക്ഷാ പരിശോധനകളോ പരാജയപ്പെട്ടാൽ സൃഷ്ടിച്ച എഴുത്ത് മറയ്ക്കും." })}</small></span></div>
+              <div><ShieldCheck aria-hidden="true" /><span><strong>{copy(locale, { en: "Teacher-controlled fading", ml: "അധ്യാപകൻ നിയന്ത്രിക്കുന്ന സഹായക്കുറവ്" })}</strong><small>{copy(locale, { en: "Only the assigned teacher can reduce the next scaffold from guided to light or independent.", ml: "അടുത്ത സഹായം വഴികാട്ടിയോടെയുള്ളതിൽ നിന്ന് ലഘുവായതിലേക്കോ സ്വതന്ത്രമായതിലേക്കോ കുറയ്ക്കാൻ നിയുക്ത അധ്യാപകനു മാത്രമേ കഴിയൂ." })}</small></span></div>
+              <div><ShieldCheck aria-hidden="true" /><span><strong>{copy(locale, { en: "No raw learner conversation or artifact", ml: "അസംസ്കൃത സംഭാഷണമോ സൃഷ്ടിയോ ഇല്ല" })}</strong><small>{copy(locale, { en: "Parents and administrators receive workflow status, not student prompts, transcripts, or raw artifact text.", ml: "രക്ഷിതാക്കൾക്കും അഡ്മിനിസ്ട്രേറ്റർമാർക്കും പ്രവർത്തനനില മാത്രമാണ് ലഭിക്കുക; വിദ്യാർത്ഥിയുടെ പ്രോംപ്റ്റ്, സംഭാഷണം, അസംസ്കൃത സൃഷ്ടി എഴുത്ത് എന്നിവയല്ല." })}</small></span></div>
+            </div>
+            <p className="governance-model">{copy(locale, { en: `Configured model: ${ai.model}`, ml: `ക്രമീകരിച്ച മോഡൽ: ${ai.model}` })}</p>
           </section>
 
           <section className="portal-card people-card">

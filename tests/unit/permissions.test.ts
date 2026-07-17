@@ -20,5 +20,9 @@ describe("school role policy", () => {
     expect(roleCanSee(SchoolRole.student, "student_evidence")).toBe(true);
     expect(roleCanSee(SchoolRole.parent, "student_evidence")).toBe(false);
     expect(roleCanSee(SchoolRole.school_admin, "student_evidence")).toBe(false);
+    expect(roleCanSee(SchoolRole.teacher, "student_artifact")).toBe(true);
+    expect(roleCanSee(SchoolRole.student, "student_artifact")).toBe(true);
+    expect(roleCanSee(SchoolRole.parent, "student_artifact")).toBe(false);
+    expect(roleCanSee(SchoolRole.school_admin, "student_artifact")).toBe(false);
   });
 });
