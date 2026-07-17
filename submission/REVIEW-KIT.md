@@ -1,102 +1,100 @@
-# Adult reviewer kit
+# Kanni review kit
 
-Use synthetic profiles only. Do not enter a real child's name, school, location, contact detail, health detail, or story. This is usability and content feedback, not a test of educational effectiveness.
+## Review purpose
+
+Review the complete learning-support cycle with the provided review accounts. Use invented information only. This session checks usability, teaching language, privacy boundaries, and operational clarity. It is not a test of educational effectiveness.
 
 ## Before the session
 
-- Confirm the reviewer is at least 18.
-- Explain that Kanni is an independent concept demo, not a school service.
-- Ask permission before using any observation in the submission.
-- Reset the synthetic workspace.
-- Record only task time, one issue, one resulting change, and one permission-safe observation.
+- Start the isolated PostgreSQL service and seed the review accounts.
+- Restart the learning cycle from the school-administrator workspace.
+- Confirm that AI is disabled unless the session is specifically reviewing the provider path.
+- Explain that the accounts and fractions record are review data, not a real student record.
+- Obtain permission before recording a quote, screen, or observation.
 
-## Kerala teacher task
+## Teacher review
 
-Sign in as Asha and map the support circle. Switch to Meera, review and publish the fractions plan. Switch to Diya and complete the activity. Return to Meera, review the evidence, choose the next support, and approve the family brief.
+Ask the adult teacher reviewer to:
 
-Check:
+1. Sign in with the teacher account.
+2. Read the goal, success criteria, sequence, misconception labels, and quick check.
+3. Choose a support and publish.
+4. After student evidence is submitted, review it and choose the next support.
+5. Approve the family activity.
 
-- Is the fractions content accurate and age appropriate for the intended activity?
-- Are the success criteria, likely misconceptions, and quick check useful?
-- Does the evidence wording stay specific to this activity and avoid diagnosis?
-- Does the teacher retain a clear decision before student and family release?
-- Is any curriculum-alignment claim justified? Kanni does not claim SCERT alignment before approval.
+Record:
 
-## Parent task
+- Can the task be completed without help?
+- Is the teaching language accurate and respectful?
+- Are the likely misconceptions useful and non-diagnostic?
+- Does the evidence support the teacher's next decision?
+- Is the family activity appropriate and clear?
+- One issue found and one change made because of it.
 
-Open the prepared Arun parent view without help. Explain what happened, try the paper-folding activity, and choose one bounded response.
+## Parent review
 
-Check:
+Ask the adult parent reviewer to:
 
-- Is the activity summary clear and respectful?
-- Is the home activity simple enough to try once?
-- Is it clear that the view is not a score, rank, or diagnosis?
-- Are the privacy exclusions understandable?
-- Can the task be completed with low digital confidence on a phone?
+1. Sign in with the parent account.
+2. Switch between English and Malayalam.
+3. Explain what the learner worked on.
+4. Explain the home activity in their own words.
+5. Send one response.
 
-## Recent adult learner task
+Record:
 
-Use only a recent Kerala learner who is at least 18. Open Diya, make the initial choice, request another representation, revise, explain, and find the record-challenge control.
+- Can the task be completed without help?
+- Is the summary useful without exposing too much?
+- Is the activity possible with ordinary household materials?
+- Is the Malayalam understandable and natural?
+- Does the stop instruction feel clear and respectful?
+- One issue found and one change made because of it.
 
-Check:
+## Recent learner review
 
-- Is the learning goal clear before the first action?
-- Is asking for support easy and free of shame?
-- Does the visual help compare the same-sized whole?
-- Can the learner explain and challenge the activity record?
-- Is the difference between reviewed content and optional AI visible?
+Use an adult reviewer aged 18 or older.
 
-## Admin task
+Ask the reviewer to:
 
-Map the support circle, inspect handoff status, then try to find the learner's explanation.
+1. Sign in with the student account.
+2. Complete the first choice, support, revision, and explanation.
+3. Use the record-challenge control if anything feels inaccurate.
+4. Return after teacher review and describe what changed.
 
-Check:
+Record:
 
-- Is the relationship map understandable?
-- Does admin see enough operational information?
-- Is learner-level explanation correctly absent?
-- Does the demo avoid ranking, prediction, and public social features?
+- Can the task be completed without help?
+- Does the support help thinking without simply commanding the answer?
+- Is the interface respectful and free of ranking pressure?
+- Is the teacher-selected next activity clearly connected?
+- One issue found and one change made because of it.
 
-## Native Malayalam review
+## Technical and security review
 
-Review every fixed Malayalam string. Use this inventory from the repository root:
+Review:
 
-```bash
-rg -lP '[\x{0D00}-\x{0D7F}]' app components lib eval -g '*.ts' -g '*.tsx'
-```
+- password hashing and generic login failure
+- session token generation, hash storage, expiry, revocation, and cookie flags
+- school, role, and relationship scope on reads and writes
+- learning state preconditions and concurrent action behavior
+- administrator, parent, teacher, and student information filtering
+- optional AI inputs, output validation, content gate, provider policy, and fallback
+- Docker networks, runtime user, read-only filesystem, secrets, migrations, health checks, backups, and recovery notes
+- dependency and secret scans
+- 32 deterministic cases and database-backed browser tests
 
-Check natural wording, age fit, glyph rendering, English-Malayalam mixing, passage `lang` attributes, and consistent terms. Malayalam remains preview until this review passes.
+Do not include passwords, provider keys, session values, real personal data, or unsafe prompts in review notes.
 
-## Independent engineering and security review
+## Evidence record
 
-Use synthetic requests only. Review the signed sessions, signed workspace, Server Actions, role and relationship checks, parent filtering, optional OpenRouter construction, privacy notice, headers, dependency report, and threat model.
+For each reviewer, record:
 
-Check:
+- adult role and relevant experience
+- date and build revision
+- task completion without help: yes or no
+- time to completion
+- one issue found
+- one product change caused by the issue
+- one permission-safe observation suitable for the submission
 
-- Can a role call an action or open a portal outside its capability?
-- Can the correct role access an unmapped learner or family?
-- Are changed, expired, malformed, and oversized signed cookies rejected?
-- Are secrets absent from client bundles, logs, screenshots, health output, and reports?
-- Does optional AI remain off without all activation variables?
-- Do timeout, provider error, and invalid structured output return reviewed content?
-- Do public claims separate deterministic evals, live model evals, human reviews, and educational outcomes?
-
-Do not mark this independent review complete until an adult reviewer outside the implementation provides a dated result.
-
-## Session record
-
-| Field | Record |
-|---|---|
-| Session date | |
-| Reviewer role | |
-| Confirmed adult | Yes / No |
-| Independent of implementation | Yes / No |
-| Task completed without help | Yes / No |
-| Start time | |
-| Completion time | |
-| One issue found | |
-| One product change caused by the issue | |
-| Permission-safe observation | |
-| Permission to quote the observation | Yes / No |
-
-Do not describe a successful session as proof of better learning outcomes.
+Describe results as usability feedback. Do not claim academic improvement from a review session.

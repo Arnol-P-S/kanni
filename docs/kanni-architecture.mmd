@@ -1,26 +1,35 @@
 %% Compatibility overview only. The canonical architecture evidence is in
 %% docs/diagrams/render and docs/SYSTEM-DESIGN.md.
 flowchart TB
-  Student["Student activity"] --> Record[("Versioned synthetic local record")]
-  Record --> Teacher["Teacher review"]
-  Teacher --> Strategy["Bounded strategy choice"]
-  Strategy --> Next["Learner's next activity"]
-  Record --> Parent["Filtered parent prompt"]
-  Strategy --> Parent
+  Admin["School administrator"] --> App["Next.js 16 school platform"]
+  Teacher["Assigned teacher"] --> App
+  Student["Enrolled student"] --> App
+  Parent["Linked parent"] --> App
 
-  Fixed["Project-authored fixed content"] --> Student
-  Student --> API["Public Next.js routes"]
-  API --> Boundary["Strict schema, safety, privacy, and adult-gate boundaries"]
-  Boundary --> Capability["AI capability: unavailable"]
-  Capability --> Fallback["Fixed safety or unavailable response"]
+  App --> Auth["Opaque database sessions"]
+  App --> Policy["Role + relationship + state policy"]
+  Auth --> DB[("PostgreSQL 18")]
+  Policy --> DB
+  DB --> Cycle["Persistent learning cycle"]
 
-  Future["Future provider-neutral runtime"] -. "requires provider approval, moderation, rate and spend limits, and live evals" .-> Capability
+  Cycle --> Plan["Teacher plans and publishes"]
+  Plan --> Evidence["Student attempts, uses support, revises"]
+  Evidence --> Review["Teacher reviews and chooses next support"]
+  Review --> Family["Parent receives reviewed activity and responds"]
+  Family --> Next["Student sees changed next activity"]
+
+  App --> Gate{"AI release policy"}
+  Gate -->|disabled or failure| Fixed["Reviewed project-authored content"]
+  Gate -->|enabled| Adapter["OpenRouter adapter: GPT-5.6 Sol"]
+  Adapter --> Validate["Schema + sources + deterministic gate"]
+  Validate -->|pass| Draft["Teacher-reviewed draft"]
+  Validate -->|fail| Fixed
 
   classDef role fill:#ffffff,stroke:#0f766e,stroke-width:2px,color:#17324d;
   classDef control fill:#dff3ef,stroke:#0f766e,stroke-width:2px,color:#17324d;
-  classDef blocked fill:#fff3d6,stroke:#b42318,stroke-width:2px,color:#17324d;
+  classDef guard fill:#fff3d6,stroke:#f59e0b,stroke-width:2px,color:#17324d;
   classDef store fill:#edf5f2,stroke:#17324d,stroke-width:2px,color:#17324d;
-  class Student,Teacher,Parent,Next role;
-  class API,Boundary,Fixed,Fallback,Strategy control;
-  class Capability,Future blocked;
-  class Record store;
+  class Admin,Teacher,Student,Parent role;
+  class App,Cycle,Plan,Evidence,Review,Family,Next,Fixed,Draft control;
+  class Policy,Gate,Adapter,Validate guard;
+  class DB,Auth store;

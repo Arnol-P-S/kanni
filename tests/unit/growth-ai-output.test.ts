@@ -22,7 +22,7 @@ describe("student-facing GrowthCycle AI output gate", () => {
   beforeEach(() => {
     vi.resetModules();
     mocks.generateText.mockReset();
-    process.env.AI_DEMO_ENABLED = "true";
+    process.env.GROWTH_AI_ENABLED = "true";
     process.env.GROWTH_AI_PROVIDER = "openrouter";
     process.env.GROWTH_AI_MODEL = "openai/gpt-5.6-sol";
     process.env.OPENROUTER_API_KEY = "test-key-not-a-real-secret";

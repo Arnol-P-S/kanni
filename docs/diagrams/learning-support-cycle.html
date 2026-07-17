@@ -37,10 +37,10 @@
     </defs></svg>
 
     <div class="canvas">
-      <div class="status-banner safe"><span>Kanni turns one learning goal into four authorized tasks and a closed feedback loop.</span><span class="pill">Implemented Build Week slice</span></div>
+      <div class="status-banner safe"><span>Kanni turns one learning goal into four authorized tasks and a persistent feedback loop.</span><span class="pill">Complete school slice</span></div>
       <h1 class="cycle-title">The learning support cycle</h1>
       <div class="cycle-grid">
-        <article class="role-card admin"><div class="top"><span class="step">1</span><svg class="ic"><use href="#admin"/></svg><h2>Admin maps</h2></div><p>Connect the fictional teacher, learner, and guardian inside one organization and learning circle.</p><ul><li>Membership and policy</li><li>Family language</li><li>Aggregate handoff status only</li></ul></article>
+        <article class="role-card admin"><div class="top"><span class="step">1</span><svg class="ic"><use href="#admin"/></svg><h2>School connects</h2></div><p>Manage the school accounts and see the assigned teacher, enrolled student, and linked parent.</p><ul><li>Membership and relationships</li><li>Family language</li><li>Handoff state without evidence</li></ul></article>
         <article class="role-card teacher"><div class="top"><span class="step">2</span><svg class="ic"><use href="#teacher"/></svg><h2>Teacher publishes</h2></div><p>Review the learning goal, success criteria, likely misconceptions, first support, and quick check.</p><ul><li>Human decision before release</li><li>Bounded support choices</li><li>Reviewed static plan always works</li></ul></article>
         <article class="role-card student"><div class="top"><span class="step">3</span><svg class="ic"><use href="#student"/></svg><h2>Student explains</h2></div><p>Try one fractions comparison, ask for another representation, revise, and explain the choice.</p><ul><li>No score or rank</li><li>Can challenge the record</li><li>Activity evidence, not diagnosis</li></ul></article>
         <article class="role-card parent"><div class="top"><span class="step">4</span><svg class="ic"><use href="#home"/></svg><h2>Family responds</h2></div><p>Read the teacher-approved summary, try one short home activity, and return one bounded signal.</p><ul><li>No raw learner prompt</li><li>No model transcript</li><li>No private teacher notes</li></ul></article>
@@ -48,17 +48,17 @@
 
       <div class="state-band">
         <div class="node route"><svg class="ic"><use href="#rules"/></svg><div class="nl">Server Action boundary<small>Zod input schema and capability check for every mutation</small></div></div>
-        <div class="node data"><svg class="ic"><use href="#lock"/></svg><div class="nl">Signed GrowthCycle workspace<small>HMAC integrity • two-hour synthetic session • same-device continuity • no database • no real identity</small></div></div>
+        <div class="node data"><svg class="ic"><use href="#lock"/></svg><div class="nl">PostgreSQL learning cycle<small>Opaque session • school and membership scope • persistent state • audit events</small></div></div>
         <div class="node route"><svg class="ic"><use href="#rules"/></svg><div class="nl">Filtered read model<small>Each role receives only the view needed for its next task</small></div></div>
       </div>
       <div class="return-line">The parent signal returns to the teacher. The teacher-selected support becomes the learner's next activity.</div>
 
       <div class="ai-band">
-        <div class="node ai"><svg class="ic"><use href="#spark"/></svg><div class="nl">Optional GPT-5.6 draft<small>One teacher-plan draft or one student visual support. No recursive agent loop.</small></div></div>
-        <div class="node guard"><svg class="ic"><use href="#rules"/></svg><div class="nl">Bounded provider policy<small>Azure only • ZDR • no provider fallback • no retry • timeout</small></div></div>
+        <div class="node ai"><svg class="ic"><use href="#spark"/></svg><div class="nl">Optional GPT-5.6 draft<small>One teacher-plan draft or one strategy-specific student support. No recursive agent loop.</small></div></div>
+        <div class="node guard"><svg class="ic"><use href="#rules"/></svg><div class="nl">Bounded provider policy<small>Azure route • ZDR requested • no provider fallback • no retry • timeout</small></div></div>
         <div class="node app"><svg class="ic"><use href="#teacher"/></svg><div class="nl">Reviewed fallback<small>Any disabled, invalid, or failed call returns original Kanni content.</small></div></div>
       </div>
-      <div class="legend"><span class="lt">Design rule</span><span class="leg"><span class="sw" style="background:#cbd5e1"></span>Signed shared state</span><span class="leg"><span class="sw" style="background:#fde047"></span>Authorization boundary</span><span class="leg"><span class="sw" style="background:#5eead4"></span>Optional AI</span><span class="leg"><span class="sw" style="background:#86efac"></span>Always-available path</span></div>
+      <div class="legend"><span class="lt">Design rule</span><span class="leg"><span class="sw" style="background:#cbd5e1"></span>Persistent shared state</span><span class="leg"><span class="sw" style="background:#fde047"></span>Authorization boundary</span><span class="leg"><span class="sw" style="background:#5eead4"></span>Optional AI</span><span class="leg"><span class="sw" style="background:#86efac"></span>Always-available path</span></div>
     </div>
   </body>
 </html>

@@ -1,0 +1,238 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum SchoolRole {
+  school_admin
+  teacher
+  student
+  parent
+}
+
+enum Locale {
+  en
+  ml
+}
+
+enum CycleStatus {
+  draft
+  active
+  waiting_teacher_review
+  waiting_family
+  complete
+  archived
+}
+
+enum ContentOrigin {
+  project_authored
+  gpt_5_6
+}
+
+enum AiStatus {
+  not_requested
+  ready
+  unavailable
+}
+
+enum SupportStrategy {
+  fraction_strips
+  guided_questions
+  explain_to_someone
+}
+
+enum FractionAnswer {
+  one_half
+  one_quarter
+}
+
+enum ExplanationChoice {
+  same_whole_more_equal_parts
+  four_is_bigger
+  not_sure
+}
+
+enum ReviewStatus {
+  pending
+  reviewed
+}
+
+enum FamilyResponse {
+  not_sent
+  tried
+  need_another_idea
+  contact_teacher
+}
+
+model School {
+  id          String          @id @default(cuid())
+  slug        String          @unique @db.VarChar(80)
+  name        String          @db.VarChar(160)
+  state       String          @default("Kerala") @db.VarChar(80)
+  timezone    String          @default("Asia/Kolkata") @db.VarChar(64)
+  memberships Membership[]
+  cycles      LearningCycle[]
+  auditEvents AuditEvent[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+}
+
+model User {
+  id           String       @id @default(cuid())
+  email        String       @unique @db.VarChar(320)
+  displayName  String       @db.VarChar(120)
+  passwordHash String
+  locale       Locale       @default(en)
+  isActive     Boolean      @default(true)
+  memberships  Membership[]
+  sessions     Session[]
+  auditEvents  AuditEvent[]
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@index([isActive])
+}
+
+model Membership {
+  id                    String            @id @default(cuid())
+  schoolId              String
+  userId                String
+  role                  SchoolRole
+  isActive              Boolean           @default(true)
+  school                School            @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  user                  User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sessions              Session[]
+  teacherAssignments    TeacherStudent[]  @relation("TeacherAssignments")
+  studentTeachers       TeacherStudent[]  @relation("StudentTeachers")
+  guardianAssignments   GuardianStudent[] @relation("GuardianAssignments")
+  studentGuardians      GuardianStudent[] @relation("StudentGuardians")
+  teachingCycles        LearningCycle[]   @relation("CycleTeacher")
+  learningCycles        LearningCycle[]   @relation("CycleStudent")
+  guardianCycles        LearningCycle[]   @relation("CycleGuardian")
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+
+  @@unique([schoolId, userId, role])
+  @@index([schoolId, role, isActive])
+  @@index([userId, isActive])
+}
+
+model TeacherStudent {
+  id                    String     @id @default(cuid())
+  teacherMembershipId   String
+  studentMembershipId   String
+  teacherMembership     Membership @relation("TeacherAssignments", fields: [teacherMembershipId], references: [id], onDelete: Cascade)
+  studentMembership     Membership @relation("StudentTeachers", fields: [studentMembershipId], references: [id], onDelete: Cascade)
+  createdAt             DateTime   @default(now())
+
+  @@unique([teacherMembershipId, studentMembershipId])
+  @@index([studentMembershipId])
+}
+
+model GuardianStudent {
+  id                    String     @id @default(cuid())
+  guardianMembershipId  String
+  studentMembershipId   String
+  guardianMembership    Membership @relation("GuardianAssignments", fields: [guardianMembershipId], references: [id], onDelete: Cascade)
+  studentMembership     Membership @relation("StudentGuardians", fields: [studentMembershipId], references: [id], onDelete: Cascade)
+  createdAt             DateTime   @default(now())
+
+  @@unique([guardianMembershipId, studentMembershipId])
+  @@index([studentMembershipId])
+}
+
+model Session {
+  id            String     @id @default(cuid())
+  tokenHash     String     @unique @db.VarChar(64)
+  userId        String
+  membershipId  String
+  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  membership    Membership @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+  expiresAt     DateTime
+  lastSeenAt    DateTime   @default(now())
+  createdAt     DateTime   @default(now())
+
+  @@index([userId, expiresAt])
+  @@index([membershipId, expiresAt])
+  @@index([expiresAt])
+}
+
+model LoginThrottle {
+  keyHash      String   @id @db.VarChar(64)
+  failureCount Int      @default(0)
+  resetAt      DateTime
+  updatedAt    DateTime @updatedAt
+
+  @@index([resetAt])
+}
+
+model LearningCycle {
+  id                    String            @id @default(cuid())
+  schoolId              String
+  teacherMembershipId   String
+  studentMembershipId   String
+  guardianMembershipId  String?
+  title                 String            @db.VarChar(180)
+  subject               String            @db.VarChar(80)
+  gradeLabel            String            @db.VarChar(40)
+  goal                  String            @db.VarChar(320)
+  status                CycleStatus       @default(draft)
+  familyLocale          Locale            @default(ml)
+  planOrigin            ContentOrigin     @default(project_authored)
+  aiStatus              AiStatus          @default(not_requested)
+  planSuccessCriteria   Json
+  planLearningSequence  Json
+  misconceptionIds      Json
+  quickCheck            String            @db.VarChar(500)
+  familyDraft           String            @db.VarChar(700)
+  sourceSectionIds      Json
+  selectedSupport       SupportStrategy   @default(fraction_strips)
+  firstAnswer           FractionAnswer?
+  supportUsed           Boolean           @default(false)
+  supportOrigin         ContentOrigin     @default(project_authored)
+  supportExplanation    String            @db.VarChar(700)
+  supportSourceIds      Json
+  revisedAnswer         FractionAnswer?
+  explanationChoice     ExplanationChoice?
+  disagreedWithRecord   Boolean           @default(false)
+  teacherReviewStatus   ReviewStatus      @default(pending)
+  nextSupport           SupportStrategy?
+  familyBriefApproved   Boolean           @default(false)
+  familyResponse        FamilyResponse    @default(not_sent)
+  version               Int               @default(1)
+  publishedAt           DateTime?
+  evidenceSubmittedAt   DateTime?
+  reviewedAt            DateTime?
+  familyRespondedAt     DateTime?
+  school                School            @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  teacherMembership     Membership        @relation("CycleTeacher", fields: [teacherMembershipId], references: [id], onDelete: Restrict)
+  studentMembership     Membership        @relation("CycleStudent", fields: [studentMembershipId], references: [id], onDelete: Restrict)
+  guardianMembership    Membership?       @relation("CycleGuardian", fields: [guardianMembershipId], references: [id], onDelete: SetNull)
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+
+  @@index([schoolId, status, updatedAt])
+  @@index([teacherMembershipId, status])
+  @@index([studentMembershipId, status])
+  @@index([guardianMembershipId, status])
+}
+
+model AuditEvent {
+  id          String   @id @default(cuid())
+  schoolId    String
+  actorUserId String?
+  action      String   @db.VarChar(80)
+  entityType  String   @db.VarChar(80)
+  entityId    String   @db.VarChar(120)
+  metadata    Json?
+  school      School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  actorUser   User?    @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+  createdAt   DateTime @default(now())
+
+  @@index([schoolId, createdAt])
+  @@index([entityType, entityId, createdAt])
+  @@index([actorUserId, createdAt])
+}

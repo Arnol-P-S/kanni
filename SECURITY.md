@@ -1,191 +1,128 @@
-# Kanni security and safety model
+# Kanni security model
 
-Last updated: July 17, 2026
+## Scope
 
-## Release posture
+This document covers the current Kanni web application, PostgreSQL data model, password and session flow, role and relationship authorization, learning-cycle mutations, optional OpenRouter integration, and Docker deployment.
 
-Kanni is a concept demo intended for public testing with synthetic profiles. Its public deployment is not yet verified. It is not approved for real child data, school use, or automated academic decisions.
+The code is built for a controlled school review, but a school must complete its legal, privacy, identity, backup, monitoring, and incident-response work before processing real student data.
 
-Optional AI is off by default. The revised cycle has a bounded OpenRouter integration for an adult-operated GPT-5.6 plan draft or visual support. It uses fixed Kanni content, structured output, an Azure-only Zero Data Retention route, no provider fallback, no automatic retry, and a reviewed fallback. It has not been approved for real learner use or live-evaluated in this release.
+## Assets and boundaries
 
-The admin, teacher, student, and parent flow remains complete without a model request.
+Kanni protects:
 
-## Protected assets
+- password hashes and server-side sessions
+- school, user, membership, teacher-student, and parent-student records
+- student learning evidence and teacher review
+- parent-facing activity and bounded response
+- provider credentials and deployment secrets
+- audit-event integrity
 
-- a learner's safety and privacy
-- lesson and source integrity
-- separation between synthetic activity data and real identity
-- server secrets and provider credentials
-- the fixed AI budget and rate limit planned for a future runtime
-- the accuracy of public claims, eval results, and review status
-- the availability of project-authored fallback content
+The browser is untrusted. The HttpOnly cookie contains only a random opaque session token. The database stores its SHA-256 hash, membership binding, expiry, and last-seen time. Every portal page and every mutation resolves the actor again on the server.
 
-## Trust boundaries
+PostgreSQL is on an internal Docker network in the production topology. The application is the only public service. TLS and edge traffic controls belong at the deployment ingress.
 
-1. **Browser:** untrusted. It holds signed synthetic session and workspace cookies, but a person, extension, or script controls the client.
-2. **Role Server Actions:** untrusted form input reaches session, role, relationship, and Zod checks before a mutation.
-3. **Retained public route boundary:** untrusted input reaches `GET /api/health`, `POST /api/adult-gate`, and `POST /api/tutor`.
-4. **Server configuration:** trusted only when set through server-only environment variables. Health responses expose booleans and reason codes, not secret values.
-5. **Lesson registry:** trusted project-authored content with stable IDs. External textbook pages are link-only.
-6. **OpenRouter and routed model provider:** disabled by default and always a separate data, billing, retention, and policy boundary.
-7. **External links:** outside Kanni's control. Their content and privacy terms can change.
+## Authentication and sessions
 
-## Data classification
+- Emails are normalized and inputs are validated with Zod.
+- Passwords are hashed with bcrypt at cost 12.
+- A fixed dummy bcrypt hash reduces account-enumeration timing differences.
+- Invalid credentials return a generic message.
+- Login attempts are throttled by a server-secret HMAC of the account email and, when a trusted ingress is configured, the client network key.
+- Session tokens contain 256 bits of randomness and are stored only as SHA-256 hashes.
+- Session cookies are HttpOnly, SameSite=Lax, Secure in production, path-scoped to `/`, and expire after eight hours.
+- Expired sessions are rejected. Logout deletes the database session before clearing the cookie.
+- Disabled users, inactive memberships, mismatched user-membership pairs, and accounts with an ambiguous active membership are rejected.
 
-| Class | Examples | Current handling |
+Local review credentials are committed for reproducible judging. They are used only when `KANNI_SEED_LOCAL_ACCOUNTS=true` and must never be enabled for a real school environment. Production review-account display is off by default.
+
+## Authorization and privacy boundaries
+
+Proxy performs only an optimistic cookie-presence redirect. It is not trusted for authorization.
+
+The server Data Access Layer always combines the authenticated school ID with the role relationship:
+
+| Role | Database scope | Allowed workflow |
 |---|---|---|
-| Public | lesson text, source metadata, interface copy, eval category counts | Bundled in the app or repository. |
-| Signed same-device synthetic workspace | fictional mapping, plan state, option IDs, explanation ID, support use, teacher review, family language and response | HMAC-signed HttpOnly cookie with a two-hour lifetime. Rejected on tampering, but not encrypted identity storage. |
-| Synthetic session | fictional persona ID, adult confirmation, issue and expiry time | Separate HMAC-signed HttpOnly cookie. It demonstrates authorization logic, not identity proof. |
-| Transient restricted input | a future adult-supervised Class 11 custom question | AI is off, so the form cannot submit to a model. A future path must not persist or log the field. |
-| Secret | signing secret, provider key, hosting token | Server-only environment variables. Never expose through `NEXT_PUBLIC_`, health output, logs, screenshots, or reports. |
-| Prohibited | a real child's name, school, location, contact details, health data, private story, persistent identifier, raw transcript | Do not enter, collect, store, or use for Build Week testing. |
+| School administrator | current school | see accounts, mappings, and cycle handoff; preserve the current cycle and open the goal again |
+| Teacher | assigned teacher membership | plan, publish, review evidence, approve family activity |
+| Student | enrolled student membership | answer, open selected support, revise, explain, challenge the record |
+| Parent | linked guardian membership | see approved family handoff and return a bounded response |
 
-The synthetic session is not an account. The signature proves server issuance and integrity, not who is operating the browser.
+The administrator and parent portals do not expose student evidence. The parent never receives a model transcript, private teacher note, rank, diagnosis, or custom student prompt.
 
-## Threat model
+Server Actions are directly reachable POST endpoints. Each action therefore validates its own input, authenticates the actor, requires the exact role, loads a relationship-scoped record, and repeats membership and state preconditions in the database write.
 
-| Threat | Example | Present control | Remaining risk or required next control |
-|---|---|---|---|
-| Role escalation | A synthetic student opens the teacher portal or submits a teacher action. | Dynamic portals and every mutation require the expected role or broad capability. Browser coverage confirms a wrong-role portal redirects safely. | This is demo authorization, not production identity. Real use needs SSO or another reviewed identity flow. |
-| Cross-relationship access | A guardian or teacher uses the correct role against an unrelated learner. | Capability checks are followed by organization and assigned, enrolled, or linked relationship checks. | The demo has only one fixed circle. Production needs tenant-isolated identifiers, object-level tests, and audited membership changes. |
-| Session or workspace tampering | A tester edits a persona, mapping, or activity state in a cookie. | HMAC-SHA256 signatures, timing-safe comparison, strict Zod parsing, expiry checks, and cookie-size limits reject changed or malformed values. | A stolen cookie can still be replayed during its short lifetime. Use HTTPS and add revocation or server sessions for real accounts. |
-| Personal-data entry | A prompt contains a phone number, address, school, or name. | Strict length limits and fixed English/Malayalam pattern checks run before generation. AI is disabled. | Pattern checks cannot find every form. Keep real-child testing prohibited and add provider-approved moderation before a live runtime. |
-| High-risk disclosure | A learner says they may self-harm or reports abuse. | Ordered fixed rules return a project-authored card with trusted-adult guidance and 1098, 112, and 14416. No model writes the card. | Phrase matching has language and paraphrase limits. Human safety review is still required. |
-| Prompt injection | A user asks to ignore instructions, reveal a prompt, invent a source, or give an answer key. | Fixed rules abstain. Prompts delimit custom text as untrusted. Models receive no tools. | Run adversarial live evals before activation. |
-| Request-shape confusion | A client sends Class 11 free text as a Class 1 hint or invents an answer ID. | A strict discriminated Zod union and trusted guided IDs reject invalid combinations. | Keep schemas versioned when adding lesson modes. |
-| Model fabrication | A model invents a lesson section, check, or confusion code. | Server validation accepts allowlisted IDs only and hides invalid output. | A valid ID can still support a weak claim. Human eval and source critics remain necessary. |
-| Unsafe model output | A response repeats personal data, high-risk language, or a Class 1 answer. | Post-generation screening and Class 1 answer-leak checks reject it. | Screening is not proof of safety. Run predeclared live cases, complete human review, and keep fixed fallbacks. |
-| Cost amplification | A client repeatedly invokes the optional plan or support action. | AI is disabled by default, essential work has a static path, each action makes at most one call, and calls have no automatic retry. | Add host rate limits, concurrency controls, alerts, and an OpenRouter spend cap before activation. |
-| Provider or network failure | Timeout, refusal, 402, 429, or malformed response. | The route returns a fixed unavailable response and keeps project-authored content usable. | Test the deployed recovery path with the chosen provider. |
-| Cookie replay | A copied valid demo cookie is reused before expiry. | Two-hour expiry, HttpOnly, SameSite=Lax, Secure by default in production, and no real identity or sensitive data. | A production service needs server-side revocation, device and incident policy, and stronger identity assurance. |
-| Cross-site embedding | Another site frames the app. | `X-Frame-Options: DENY` and Content Security Policy `frame-ancestors 'none'`. | Recheck the deployed headers after every hosting change. |
-| Unapproved browser connection or content source | A changed client tries to load a remote script, image, frame, or API. | Content Security Policy restricts scripts, styles, fonts, images, connections, objects, forms, and base URLs. | The policy permits inline styles and production inline scripts for the current Next.js output. Recheck before a wider release. |
-| Browser capability access | The app requests camera, microphone, or location. | `Permissions-Policy` disables all three. | Recheck when adding any browser API. |
-| Referrer leakage | A link sends the current route as a referrer. | `Referrer-Policy: no-referrer`. | External sites still apply their own collection rules after navigation. |
-| Content-rights breach | A public textbook is copied into lesson context. | Source metadata distinguishes ingested from link-only; unknown rights cannot be ingested. | Human review must verify every new source and derived asset. |
-| Misleading evidence | A deterministic preflight is described as model quality. | Trust and submission copy separate deterministic, live-model, human-review, deployment, and educational evidence. | Recheck every public claim before submission. |
+## Workflow integrity
 
-## Current controls
+The learning cycle is a persisted state machine:
 
-- signed two-hour synthetic sessions with HttpOnly, SameSite=Lax cookies and Secure enabled by default in production
-- signed, size-limited `GrowthCycle` workspace with strict Zod parsing and tamper rejection
-- broad role capability checks followed by organization and relationship authorization
-- dynamic server rendering for every role portal
-- Zod validation for every role mutation
-- strict TypeScript and Zod schemas at request and response boundaries
-- Unicode normalization before prompt routing
-- lesson-specific request variants
-- fixed source, check, confusion, and critic issue-code allowlists
-- fixed safety and unavailable responses
-- no model tools, web search, file search, or previous-response chain
-- no automatic model retry
-- response token and timeout limits in both optional AI boundaries
-- `Cache-Control: no-store` on API responses
-- short-lived signed adult-gate design, unavailable while AI is off
-- no analytics SDK or request-body logging in the application
-- security headers for content policy, framing, cross-origin opener and resource policy, content sniffing, referrers, camera, microphone, and location
-- OpenRouter provider route constrained to Azure, ZDR, no provider data collection, and no fallback
-- no synthetic names, learner choices, family response, workspace token, or free-text learner prompt in the GrowthCycle AI request
-- deterministic role and lesson paths when AI is unavailable
+```text
+draft -> active -> waiting_teacher_review -> waiting_family -> complete
+```
 
-`store: false` in a provider request is not Zero Data Retention. A provider must not receive personal data from children under 13 without the required approved retention setup. See [OpenAI Under 18 API Guidance](https://developers.openai.com/api/docs/guides/safety-checks/under-18-api-guidance) and [OpenAI data controls](https://developers.openai.com/api/docs/guides/your-data#data-retention-controls-for-abuse-monitoring).
+Database `updateMany` preconditions make one-shot handoffs idempotent and reject stale or out-of-order writes. Security-sensitive workflow updates and their audit events commit in the same Prisma transaction. Starting a goal again archives the previous cycle and creates a new record instead of deleting evidence. Audit events record login, logout, plan publication, evidence submission, record challenges, family approval, family response, and new-cycle creation without logging passwords, tokens, provider keys, or free-text student conversations.
 
-## Provider release gate
+## Optional AI boundary
 
-Do not activate model calls outside local adult-operated judging until every item below has evidence:
+AI is disabled by default and is not required for the learning cycle.
 
-- host and provider use explicitly approved for this child-directed context
-- separate API funding approved, since Codex credit cannot pay application API usage
-- demo session configured with a random server-only secret of at least 32 characters
-- OpenRouter key stored server-side with an account spending limit
-- Azure-only Zero Data Retention route availability verified for the exact model
-- model-request logging disabled or redacted at every layer
-- retention behavior documented in `/privacy`
-- fixed prompts contain no real learner fields and generated claims remain inside the original fractions schema
-- fixed spend cap and host rate limit active
-- deployed actions pass role, relationship, privacy, route-selection, refusal, timeout, 402, 429, and malformed-output tests
-- live eval results and known failures published without unsafe prompts or model reasoning
-- adult teacher and native Malayalam reviews recorded
+When enabled:
 
-The emergency control is `AI_DEMO_ENABLED=false`. The safer revised default is `GROWTH_AI_PROVIDER=disabled`.
+- only `openai/gpt-5.6-sol` through the configured OpenRouter adapter is allowed
+- credentials remain server-side
+- production also requires explicit spend-limit and rate-limit confirmations
+- calls use one approved fractions context and the selected support strategy
+- learner identity, email, answer history, family response, session, and school membership are not sent
+- output must match a strict Zod object and allowlisted source identifiers
+- student support also passes a deterministic content and strategy gate
+- retries, recursive agents, tools, web access, and provider fallback are disabled
+- database claims limit teacher drafting and student support to one provider request per learning cycle
+- timeout, provider error, malformed output, or failed content checks return reviewed project-authored content
+- AI output is a draft and cannot publish a plan or change authorization
 
-## Internal self-review findings
+OpenRouter routing settings request Azure-only, Zero Data Retention-capable processing, deny provider data collection, require parameter support, and disable provider fallback. The operator must still confirm the selected route and current provider policy before release.
 
-This table records the July 17 code and design review. “Implemented” means the control is present in the working tree. It does not mean an independent reviewer approved it.
+## Docker and supply chain
 
-| Priority | Finding | Action in this tree | Evidence state |
-|---|---|---|---|
-| High for public AI | A synthetic session can be created by any adult tester, so repeated model actions could consume the OpenRouter balance. | Made plan and support generation one-shot per cycle, kept AI off by default, allowlisted one model, and made production capability require explicit rate-limit and spend-limit confirmations. | Application replay is bounded. A real host rule and OpenRouter key limit remain required before setting the confirmations. |
-| High | A valid structured student support could still contain unsafe or unrelated prose. | Added a strategy-specific deterministic content gate for required fraction concepts and disallowed links, contact requests, secrets, diagnosis, ranking, careers, medical advice, and high-risk terms. | Mocked output tests verify rejection and reviewed fallback. Human and live model review remain pending. |
-| Medium | Every synthetic role could reset the shared cycle. | Restricted the reset action and button to the synthetic tenant admin. | Code path and role journey reviewed. |
-| Medium | UI-hidden Server Actions could skip support, republish, replay a model call, or challenge a record before evidence existed. | Added domain preconditions and one-shot transitions, plus action-level replay checks before model construction. | Unit tests cover skipped and repeated transitions. |
-| Medium | Teacher support choices were stored but did not change the student or family behavior. | Added three trusted support presentations and used the teacher choices in both downstream views. | Desktop and mobile browser journey selects two non-default strategies and verifies both changed views. |
-| Blocker | The planned Vercel AI Gateway path conflicts with current restrictions for services directed at children. | Added a public capability decision, blocked the provider, disabled adult confirmation, and repeated the check in the adapter factory. | Implemented. Approval of a replacement host and provider remains pending. |
-| Blocker for future AI | Fixed phrase screens cannot identify every high-risk, abuse, or personal-data paraphrase. | Routed known cases before the adult gate, added normalized regression coverage, prohibited real-child testing, and kept every model provider hard-disabled. | Current static release is protected. Provider-approved classification and adversarial live evaluation are required before activation. |
-| Blocker for future AI | A valid lesson-section ID does not prove that every generated claim follows from that section. | Strictly reparse outputs, reject unknown IDs and off-topic content, show model origin, keep `sourceMatched` false for generated content, and keep AI disabled. | Source entailment and human release evidence remain mandatory before any `sourceMatched` live claim. |
-| High | Untrusted learner or candidate-answer text could terminate a prompt delimiter. | Serialized untrusted values as escaped JSON data and added prompt-boundary injection rules. | Regression and prompt tests added. |
-| High | A future adapter could return extra internal fields outside its SDK schema. | Centrally reparse tutor and critic output through strict Zod schemas and construct the response field by field. | Validation tests reject extra fields. |
-| High | Arbitrary Class 1 answer text could be placed in a model prompt. | Replaced it with strict trusted question and answer IDs and rejected mismatched or correct-answer hint requests. | Unit and route tests added. |
-| High | Class 1 Deep Check could turn one hint into three provider calls. | The Class 1 request schema accepts only `deepCheck: false`; Deep Check also has a server kill switch. | Schema and runtime tests added. |
-| High | A model could reveal the fixed Class 1 answer in a hint. | Added digit, English-word, and Malayalam-word answer-leak screening. | Unit tests added. |
-| High | A source critic without source text could not check grounding. | The critic prompt now receives only the trusted cited section text and kind-specific issue codes. | Prompt and validation tests added. |
-| High | The teacher strategy changed a banner but not the activity. | Class 1 now selects trusted question and visual data; Class 11 now selects a trace table, complete worked example, or explanation prompt. | Browser coverage added. |
-| Medium | A transitive Next.js PostCSS version had a published moderate advisory. | Pinned PostCSS 8.5.19 through a package-manager override and refreshed the lockfile. | Fresh dependency audit reports no known vulnerabilities. |
-| Medium | The public tutor route could read an unbounded request body before its capability check. | Added a streaming 8 KiB limit that returns 413 before schema parsing or classification. | Oversized-body route coverage added. Host rate limiting is still required. |
-| Medium | GitHub Actions used mutable major-version tags. | Pinned checkout, pnpm setup, and Node setup actions to the immutable commits behind their verified v6 tags. | Workflow token permissions remain read-only. |
-| Medium | The local record schema capped attempts at 12 while the learner could keep retrying. | Changed the record to a rolling 12-attempt history. | Transition coverage confirms the 13th and later attempts do not throw. |
-| Medium | Unknown-rights content could be marked for ingestion. | The source schema rejects `ingested` with an unknown rights basis. Third-party textbook pages remain link-only. | Schema and registry tests added. |
-| Medium | “Interface language” implied that every fixed string was translated. | Relabelled the control as learner-content language. | Browser label check added. |
-| Medium | Internal project authorship and independent human review were easy to confuse. | Trust and submission copy now state that teacher, parent, security, and native Malayalam reviews are pending. | Public copy updated. |
-| Medium | Privacy and prototype terms were mixed into one Trust page. | Added separate `/privacy` and `/terms` routes and linked them from the footer. | Type, lint, unit, deterministic eval, production build, and browser checks passed. |
+- Package versions and Docker base images are pinned.
+- Dependency installation uses the committed pnpm lockfile.
+- The production image uses a multi-stage build.
+- The runtime container is non-root and read-only, drops all capabilities, enables `no-new-privileges`, and has a bounded temporary filesystem.
+- PostgreSQL is not published to the host in the production Compose file.
+- Migrations run as a non-root user in a read-only, capability-dropped one-shot container before the app becomes healthy.
+- Application and database containers have health checks and resource bounds.
+- `.dockerignore` excludes all environment files, Git data, test artifacts, and local build output.
+- Secrets come from the private deployment environment, never from the image.
+- Deployment commands reject placeholder secrets and unsafe production configuration before Compose starts.
 
-Known pending work after this review:
+Production still needs a reverse proxy or managed ingress for TLS, malformed-request handling, request-size limits, and edge rate limiting. It also needs image scanning, log aggregation, alerting, scheduled backups, and restore exercises.
 
-- independent security review
-- adult teacher, parent, recent adult learner, and native Malayalam review
-- public deployment and header verification
-- provider-approved live model eval, only if supervised AI remains in scope
-- monitored private reporting contact before any wider release
+The backup helper creates owner-readable files with a restrictive process umask. Operators must still encrypt, retain, test, and remove backups under school policy.
 
-## Incident response for the prototype
+## Data handling
 
-If unsafe content, personal-data handling, unexpected provider traffic, or budget use is found:
+Kanni stores accounts, memberships, relationship mappings, fixed-choice learning evidence, teacher review, family response, locale, sessions, throttling state, and audit events in PostgreSQL.
 
-1. Set `AI_DEMO_ENABLED=false` and confirm `/api/health` reports unavailable.
-2. Preserve only non-sensitive technical evidence. Do not copy a child's message into an issue, log, screenshot, or chat.
-3. Record the route, release version, time, response status, and synthetic reproduction.
-4. Identify whether the first failure occurred in input routing, capability checks, provider handling, output validation, or interface copy.
-5. Add a synthetic regression case and test the recovery path.
-6. Publish a corrected limitation if a public claim was wrong.
+Kanni does not create public profiles, social feeds, direct student messaging, rankings, ability labels, automated grades, academic-stream decisions, career recommendations, or crisis conversations.
 
-Do not promise that Kanni contacted a parent, teacher, school, emergency service, or support line. The prototype does not make those contacts.
+The school remains responsible for lawful basis, notices, guardian or student rights where applicable, retention, deletion, access review, and incident communication. The current code does not yet automate data-retention deletion.
 
-## Security review status
+## Remaining risks before a real school launch
 
-Automated checks and an internal code review do not replace independent review. At the time of this document:
+| Priority | Remaining work |
+|---|---|
+| High | Replace local review accounts with school-managed identity, password recovery or SSO, MFA for privileged roles, and an audited account lifecycle. |
+| High | Complete local legal and child-privacy review, retention schedules, access requests, deletion, backups, restore tests, and incident response. |
+| High | Put the app behind TLS and trusted ingress controls. Configure and verify external rate limiting before enabling AI. |
+| Medium | Add administrator provisioning and relationship-change workflows with approval and audit coverage. |
+| Medium | Add trusted-proxy configuration for network-aware login throttling and test it against the chosen ingress. |
+| Medium | Add centralized security monitoring, session-management screens, forced logout, and suspicious-login alerts. |
+| Medium | Obtain native Malayalam educator review of every fixed string and learning-support presentation. |
 
-- external security review: not completed
-- Kerala teacher review: not completed
-- parent usability review: not completed
-- native Malayalam review: not completed
-- real-child testing: prohibited for this version
-- live model eval: not completed
-- public deployment review: not completed
+## Verification expectations
 
-Report these as pending. Do not convert them into pass claims.
+Before release, run lint, both TypeScript compilers, unit tests, deterministic evals, the production build, database-backed Playwright journeys, dependency audit, Docker configuration validation, and an image build. The browser suite must verify wrong-role denial, the complete four-account handoff, mobile language switching, generic login failure, and no serious or critical Axe findings.
 
-## Content and dependency reporting
+## Reporting a vulnerability
 
-Do not include secrets, real personal data, unsafe prompt text, or hidden model reasoning in a report. A safe report contains a synthetic reproduction, affected version, expected behavior, observed behavior, and impact.
-
-This repository does not publish a staffed security contact or response-time promise. Before a wider release, the owner must add a monitored private reporting channel and a disclosure policy.
-
-## Related documents
-
-- [System design](docs/SYSTEM-DESIGN.md)
-- [Privacy notice](app/privacy/page.tsx)
-- [Prototype terms](app/terms/page.tsx)
-- [Trust page](app/trust/page.tsx)
-- [Vercel Acceptable Use Policy](https://vercel.com/legal/acceptable-use-policy)
-- [Vercel AI Product Terms](https://vercel.com/legal/ai-product-terms)
+Do not open a public issue containing secrets or student information. Send the maintainer a minimal reproduction with the affected version, expected behavior, observed behavior, and impact. Use invented data only. Rotate exposed credentials immediately and preserve audit evidence without copying sensitive payloads into ordinary logs.

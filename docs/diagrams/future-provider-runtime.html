@@ -3,115 +3,83 @@
   <head>
     <meta charset="utf-8" />
     <link rel="stylesheet" href="rich.css" />
-    <style>
-      body { width: 1480px; }
-      .tlab { flex-basis: 194px; }
-    </style>
+    <style>body { width: 1480px; } .tlab { flex-basis: 194px; }</style>
   </head>
   <body>
-    <svg width="0" height="0" aria-hidden="true">
-      <defs>
-        <symbol id="browser" viewBox="0 0 24 24"><rect x="2.5" y="3.5" width="19" height="17" rx="2"/><path d="M3 8h18M7 6h.01M10 6h.01"/></symbol>
-        <symbol id="form" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 8h10M7 12h10M7 16h6"/></symbol>
-        <symbol id="filter" viewBox="0 0 24 24"><path d="M3 5h18l-7 8v6l-4 2v-8z"/></symbol>
-        <symbol id="shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m8.5 12 2.2 2.2 4.8-5"/></symbol>
-        <symbol id="lock" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"/></symbol>
-        <symbol id="book" viewBox="0 0 24 24"><path d="M3 5.5c3-1.3 6-.8 9 1v14c-3-1.8-6-2.3-9-1zM21 5.5c-3-1.3-6-.8-9 1v14c3-1.8 6-2.3 9-1z"/></symbol>
-        <symbol id="facade" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 8h8M8 12h8M8 16h8"/></symbol>
-        <symbol id="brain" viewBox="0 0 24 24"><path d="M9.5 4a3.5 3.5 0 0 0-6 2.5A3.5 3.5 0 0 0 4 13a4 4 0 0 0 5.5 4M14.5 4a3.5 3.5 0 0 1 6 2.5A3.5 3.5 0 0 1 20 13a4 4 0 0 1-5.5 4M9.5 4v16M14.5 4v16"/></symbol>
-        <symbol id="fork" viewBox="0 0 24 24"><path d="M6 3v4c0 3 2 5 5 5h7M6 21v-4c0-3 2-5 5-5M18 8l4 4-4 4"/></symbol>
-        <symbol id="plug" viewBox="0 0 24 24"><path d="M8 3v6M16 3v6M6 9h12v2a6 6 0 0 1-6 6v4"/></symbol>
-        <symbol id="cloud" viewBox="0 0 24 24"><path d="M5 19h13a4 4 0 0 0 .4-8 7 7 0 0 0-13.2-2A5 5 0 0 0 5 19z"/></symbol>
-        <symbol id="gauge" viewBox="0 0 24 24"><path d="M4 18a8 8 0 1 1 16 0M12 18l4-6"/><path d="M7 18h10"/></symbol>
-        <symbol id="clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v6l4 2"/></symbol>
-        <symbol id="check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8 12 2.5 2.5L16 9"/></symbol>
-        <symbol id="list" viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/></symbol>
-        <symbol id="fallback" viewBox="0 0 24 24"><path d="M5 5v5h5M19 19v-5h-5"/><path d="M6.5 16A7 7 0 0 0 18 9M17.5 8A7 7 0 0 0 6 15"/></symbol>
-      </defs>
-    </svg>
+    <svg width="0" height="0" aria-hidden="true"><defs>
+      <symbol id="browser" viewBox="0 0 24 24"><rect x="2.5" y="3.5" width="19" height="17" rx="2"/><path d="M3 8h18M7 6h.01M10 6h.01"/></symbol>
+      <symbol id="lock" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"/></symbol>
+      <symbol id="shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m8.5 12 2.2 2.2 4.8-5"/></symbol>
+      <symbol id="database" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v7c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12v7c0 1.7 3.6 3 8 3s8-1.3 8-3v-7"/></symbol>
+      <symbol id="container" viewBox="0 0 24 24"><path d="m12 2 9 5-9 5-9-5zM3 7v10l9 5 9-5V7M12 12v10"/></symbol>
+      <symbol id="route" viewBox="0 0 24 24"><circle cx="5" cy="5" r="2.5"/><circle cx="19" cy="12" r="2.5"/><circle cx="5" cy="19" r="2.5"/><path d="M7.5 5h4a4 4 0 0 1 4 4v1M7.5 19h4a4 4 0 0 0 4-4v-1"/></symbol>
+      <symbol id="brain" viewBox="0 0 24 24"><path d="M9.5 4a3.5 3.5 0 0 0-6 2.5A3.5 3.5 0 0 0 4 13a4 4 0 0 0 5.5 4M14.5 4a3.5 3.5 0 0 1 6 2.5A3.5 3.5 0 0 1 20 13a4 4 0 0 1-5.5 4M9.5 4v16M14.5 4v16"/></symbol>
+      <symbol id="check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8 12 2.5 2.5L16 9"/></symbol>
+      <symbol id="fallback" viewBox="0 0 24 24"><path d="M5 5v5h5M19 19v-5h-5"/><path d="M6.5 16A7 7 0 0 0 18 9M17.5 8A7 7 0 0 0 6 15"/></symbol>
+    </defs></svg>
 
     <div class="canvas">
-      <div class="status-banner">
-        <span>Activation requires approved child-directed-use terms, safety classification, source-entailment evidence, API funding, retention controls, rate limits, and live evals.</span>
-        <span class="pill">Target design • not deployed</span>
-      </div>
+      <div class="status-banner safe"><span>Production-shaped deployment keeps identity, learning state, and optional AI behind explicit, testable boundaries.</span><span class="pill">Current and next scale</span></div>
 
       <div class="tier">
-        <div class="tlab h-green"><div class="tn">Supervised browser</div><div class="td">no identity fields or prompt persistence</div></div>
-        <div class="tbody cols-3">
-          <div class="node app"><svg class="ic"><use href="#browser"/></svg><div class="nl">Project-authored lesson path<small>remains complete when AI is off</small></div></div>
-          <div class="node app"><svg class="ic"><use href="#form"/></svg><div class="nl">Bounded custom question<small>Class 11 only, maximum 400 Unicode code points</small></div></div>
-          <div class="node guard"><svg class="ic"><use href="#shield"/></svg><div class="nl">Age-appropriate disclosure<small>adult supervision and AI-can-be-wrong notice</small></div></div>
-        </div>
-      </div>
-
-      <div class="va"><svg viewBox="0 0 22 28"><line x1="11" y1="1" x2="11" y2="19" stroke="#0f766e" stroke-width="2.4"/><polygon points="6,18 11,27 16,18" fill="#0f766e"/></svg></div>
-
-      <div class="tier">
-        <div class="tlab h-orange"><div class="tn">Request boundary</div><div class="td">ordered deterministic controls</div></div>
-        <div class="tbody cols-5">
-          <div class="node guard compact"><span class="step">1</span><div class="nl">Strict request union<small>lesson-specific fields only</small></div></div>
-          <div class="node guard compact"><span class="step">2</span><div class="nl">Normalize and limit<small>NFC input, NFKC screening copy</small></div></div>
-          <div class="node guard compact"><span class="step">3</span><div class="nl">Safety classification<small>fixed rules plus an approved classifier</small></div></div>
-          <div class="node guard compact"><span class="step">4</span><div class="nl">Capability + adult gate<small>signed cookie for eligible model use</small></div></div>
-          <div class="node route compact"><span class="step">5</span><div class="nl">Exact lesson context<small>trusted local section IDs only</small></div></div>
-        </div>
-      </div>
-
-      <div class="va"><svg viewBox="0 0 22 28"><line x1="11" y1="1" x2="11" y2="19" stroke="#0f766e" stroke-width="2.4"/><polygon points="6,18 11,27 16,18" fill="#0f766e"/></svg></div>
-
-      <div class="tier">
-        <div class="tlab h-teal"><div class="tn">Tutor workflow Facade</div><div class="td">bounded application-controlled fanout</div></div>
-        <div class="tbody">
-          <div class="split">
-            <div class="node ai"><svg class="ic"><use href="#facade"/></svg><div class="nl">Primary tutor orchestration<small>one validated answer, no tools, no chaining, no retry</small></div></div>
-            <div class="split-label">optional<br/>after primary</div>
-            <div class="mini-stack">
-              <div class="node ai compact"><svg class="ic"><use href="#fork"/></svg><div class="nl">Source critic<small>cited text and source-only issue codes</small></div></div>
-              <div class="node ai compact"><svg class="ic"><use href="#brain"/></svg><div class="nl">Teaching + safety critic<small>age rules and teaching-only issue codes</small></div></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="va"><svg viewBox="0 0 22 28"><line x1="11" y1="1" x2="11" y2="19" stroke="#0f766e" stroke-width="2.4"/><polygon points="6,18 11,27 16,18" fill="#0f766e"/></svg></div>
-
-      <div class="tier">
-        <div class="tlab h-slate"><div class="tn">Provider boundary</div><div class="td">replaceable Adapter, policy-approved configuration</div></div>
+        <div class="tlab h-green"><div class="tn">School clients</div><div class="td">separate authenticated accounts</div></div>
         <div class="tbody cols-4">
-          <div class="node route"><svg class="ic"><use href="#plug"/></svg><div class="nl">Adapter factory<small>rechecks release capability before construction</small></div></div>
-          <div class="node ai"><svg class="ic"><use href="#cloud"/></svg><div class="nl">Approved provider<small>host and model selected only after terms approval</small></div></div>
-          <div class="node guard"><svg class="ic"><use href="#gauge"/></svg><div class="nl">Spend + rate controls<small>fixed cap, kill switches, host enforcement</small></div></div>
-          <div class="node guard"><svg class="ic"><use href="#clock"/></svg><div class="nl">Retention controls<small>document exact provider behavior, no ZDR claim without approval</small></div></div>
+          <div class="node app"><svg class="ic"><use href="#browser"/></svg><div class="nl">Administrator<small>accounts, mappings, handoff state</small></div></div>
+          <div class="node app"><svg class="ic"><use href="#browser"/></svg><div class="nl">Teacher<small>plan, differentiate, review</small></div></div>
+          <div class="node app"><svg class="ic"><use href="#browser"/></svg><div class="nl">Student<small>attempt, support, explain</small></div></div>
+          <div class="node app"><svg class="ic"><use href="#browser"/></svg><div class="nl">Parent<small>reviewed activity, bounded response</small></div></div>
         </div>
       </div>
-
       <div class="va"><svg viewBox="0 0 22 28"><line x1="11" y1="1" x2="11" y2="19" stroke="#0f766e" stroke-width="2.4"/><polygon points="6,18 11,27 16,18" fill="#0f766e"/></svg></div>
 
       <div class="tier">
-        <div class="tlab h-orange"><div class="tn">Response boundary</div><div class="td">generated text is untrusted until every check passes</div></div>
+        <div class="tlab h-orange"><div class="tn">Trusted ingress</div><div class="td">deployment integration boundary</div></div>
         <div class="tbody cols-4">
-          <div class="node guard"><svg class="ic"><use href="#check"/></svg><div class="nl">Structured schema<small>Zod validates shape, size, and invariants</small></div></div>
-          <div class="node guard"><svg class="ic"><use href="#list"/></svg><div class="nl">Allowlisted IDs<small>sections, checks, confusion, critic issues</small></div></div>
-          <div class="node guard"><svg class="ic"><use href="#filter"/></svg><div class="nl">Safety + entailment gate<small>PII, high risk, answer leaks, cited-claim support</small></div></div>
-          <div class="node app"><svg class="ic"><use href="#fallback"/></svg><div class="nl">Return or fixed fallback<small>invalid output stays hidden; project-authored path continues</small></div></div>
+          <div class="node guard"><svg class="ic"><use href="#lock"/></svg><div class="nl">TLS termination<small>school domain and secure transport</small></div></div>
+          <div class="node guard"><svg class="ic"><use href="#shield"/></svg><div class="nl">Traffic controls<small>rate and request-size limits</small></div></div>
+          <div class="node route"><svg class="ic"><use href="#route"/></svg><div class="nl">Trusted proxy identity<small>controlled forwarding headers</small></div></div>
+          <div class="node guard"><svg class="ic"><use href="#check"/></svg><div class="nl">Monitoring<small>health, alerts, incident evidence</small></div></div>
+        </div>
+      </div>
+      <div class="va"><svg viewBox="0 0 22 28"><line x1="11" y1="1" x2="11" y2="19" stroke="#0f766e" stroke-width="2.4"/><polygon points="6,18 11,27 16,18" fill="#0f766e"/></svg></div>
+
+      <div class="tier">
+        <div class="tlab h-teal"><div class="tn">Next.js application</div><div class="td">server-rendered portals and Server Actions</div></div>
+        <div class="tbody cols-4">
+          <div class="node app"><svg class="ic"><use href="#container"/></svg><div class="nl">Non-root container<small>read-only, capabilities dropped</small></div></div>
+          <div class="node guard"><svg class="ic"><use href="#lock"/></svg><div class="nl">Authentication DAL<small>opaque session, user, membership</small></div></div>
+          <div class="node route"><svg class="ic"><use href="#shield"/></svg><div class="nl">Authorization policy<small>school, role, relationship, state</small></div></div>
+          <div class="node route"><svg class="ic"><use href="#route"/></svg><div class="nl">Learning state machine<small>one valid handoff at a time</small></div></div>
+        </div>
+      </div>
+      <div class="va"><svg viewBox="0 0 22 28"><line x1="11" y1="1" x2="11" y2="19" stroke="#0f766e" stroke-width="2.4"/><polygon points="6,18 11,27 16,18" fill="#0f766e"/></svg></div>
+
+      <div class="tier">
+        <div class="tlab h-slate"><div class="tn">Persistent data</div><div class="td">internal Docker network</div></div>
+        <div class="tbody cols-4">
+          <div class="node data"><svg class="ic"><use href="#database"/></svg><div class="nl">PostgreSQL 18<small>accounts, sessions, relationships, cycles</small></div></div>
+          <div class="node data"><svg class="ic"><use href="#database"/></svg><div class="nl">Audit events<small>high-value security and workflow changes</small></div></div>
+          <div class="node route"><svg class="ic"><use href="#container"/></svg><div class="nl">Migration job<small>committed migrations before app health</small></div></div>
+          <div class="node guard"><svg class="ic"><use href="#fallback"/></svg><div class="nl">Backup and restore<small>operator schedule and tested recovery</small></div></div>
+        </div>
+      </div>
+      <div class="va"><svg viewBox="0 0 22 28"><line x1="11" y1="1" x2="11" y2="19" stroke="#0f766e" stroke-width="2.4"/><polygon points="6,18 11,27 16,18" fill="#0f766e"/></svg></div>
+
+      <div class="tier">
+        <div class="tlab h-amber"><div class="tn">Optional AI adapter</div><div class="td">drafting only, disabled by default</div></div>
+        <div class="tbody cols-4">
+          <div class="node route"><svg class="ic"><use href="#shield"/></svg><div class="nl">Release policy<small>flag, exact model, key, spend, rate</small></div></div>
+          <div class="node ai"><svg class="ic"><use href="#brain"/></svg><div class="nl">OpenRouter route<small>Azure only requested, no fallback</small></div></div>
+          <div class="node guard"><svg class="ic"><use href="#check"/></svg><div class="nl">Output gate<small>Zod, source IDs, strategy checks</small></div></div>
+          <div class="node app"><svg class="ic"><use href="#fallback"/></svg><div class="nl">Reviewed fallback<small>complete path without provider access</small></div></div>
         </div>
       </div>
 
       <div class="note-band">
-        <div class="note"><strong>Static-first</strong>The model path never becomes a dependency for completing the two lessons.</div>
-        <div class="note"><strong>Provider-neutral</strong>A provider SDK stays behind one narrow application Adapter.</div>
-        <div class="note"><strong>Bounded checks</strong>One primary and two optional critics. No recursive agent creation.</div>
-        <div class="note"><strong>No prompt persistence</strong>Custom questions are transient and excluded from the learning record.</div>
-      </div>
-
-      <div class="legend">
-        <span class="lt">Color key</span>
-        <span class="leg"><span class="sw" style="background:#86efac"></span>Application</span>
-        <span class="leg"><span class="sw" style="background:#5eead4"></span>AI workflow</span>
-        <span class="leg"><span class="sw" style="background:#fde047"></span>Routing</span>
-        <span class="leg"><span class="sw" style="background:#fdba74"></span>Guardrails</span>
-        <span class="leg"><span class="sw" style="background:#cbd5e1"></span>Provider boundary</span>
+        <div class="note"><strong>Source of truth</strong>The browser never owns the authoritative learning record.</div>
+        <div class="note"><strong>Identity evolution</strong>School SSO, MFA, and recovery fit ahead of the existing session layer.</div>
+        <div class="note"><strong>Scale evolution</strong>Multiple app replicas require a shared cache and stable Server Action key.</div>
+        <div class="note"><strong>Human control</strong>AI cannot publish, grade, authorize, or contact a family.</div>
       </div>
     </div>
   </body>

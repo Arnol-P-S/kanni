@@ -60,20 +60,20 @@
 
     <div class="canvas">
       <div class="status-banner safe">
-        <span>Current release: every main role has a complete project-authored path and model traffic is blocked.</span>
-        <span class="pill">Static-safe release</span>
+        <span>Current release: persistent school accounts connect one complete learning-support cycle.</span>
+        <span class="pill">Docker school platform</span>
       </div>
 
       <div class="tier">
         <div class="tlab h-green">
           <div class="tn">People</div>
-          <div class="td">same-device concept roles</div>
+          <div class="td">separate password accounts</div>
         </div>
         <div class="tbody cols-4">
-          <div class="node app"><svg class="ic"><use href="#user" /></svg><div class="nl">Class 1 learner<small>fixed choices, adult assisted</small></div></div>
-          <div class="node app"><svg class="ic"><use href="#user" /></svg><div class="nl">Class 11 learner<small>project-authored lesson questions</small></div></div>
-          <div class="node app"><svg class="ic"><use href="#user" /></svg><div class="nl">Teacher view<small>activity review and strategy</small></div></div>
-          <div class="node app"><svg class="ic"><use href="#user" /></svg><div class="nl">Parent view<small>filtered home activity</small></div></div>
+          <div class="node app"><svg class="ic"><use href="#user" /></svg><div class="nl">School administrator<small>accounts, relationships, handoff state</small></div></div>
+          <div class="node app"><svg class="ic"><use href="#user" /></svg><div class="nl">Teacher<small>plan, differentiate, review, release</small></div></div>
+          <div class="node app"><svg class="ic"><use href="#user" /></svg><div class="nl">Student<small>attempt, support, revise, explain</small></div></div>
+          <div class="node app"><svg class="ic"><use href="#user" /></svg><div class="nl">Parent<small>reviewed home activity and response</small></div></div>
         </div>
       </div>
 
@@ -85,10 +85,10 @@
           <div class="td">Next.js 16 + React 19</div>
         </div>
         <div class="tbody cols-4">
-          <div class="node app"><svg class="ic"><use href="#browser" /></svg><div class="nl">Learner activities<small>counters, number line, trace</small></div></div>
-          <div class="node app"><svg class="ic"><use href="#book" /></svg><div class="nl">Original lesson packs<small>two small, versioned packs</small></div></div>
-          <div class="node route"><svg class="ic"><use href="#nodes" /></svg><div class="nl">Strategy behavior<small>teacher choice changes the next activity</small></div></div>
-          <div class="node data"><svg class="ic"><use href="#database" /></svg><div class="nl">Local learning record<small>synthetic IDs, no prompt or identity</small></div></div>
+          <div class="node app"><svg class="ic"><use href="#browser" /></svg><div class="nl">Next.js portals<small>server-rendered, role-specific workspaces</small></div></div>
+          <div class="node app"><svg class="ic"><use href="#book" /></svg><div class="nl">Original learning content<small>reviewed plan and support presentations</small></div></div>
+          <div class="node route"><svg class="ic"><use href="#nodes" /></svg><div class="nl">Cycle state machine<small>teacher choice changes student and family tasks</small></div></div>
+          <div class="node data"><svg class="ic"><use href="#database" /></svg><div class="nl">PostgreSQL record<small>accounts, mappings, evidence, audit events</small></div></div>
         </div>
       </div>
 
@@ -96,13 +96,13 @@
 
       <div class="tier">
         <div class="tlab h-orange">
-          <div class="tn">Public server boundary</div>
-          <div class="td">strict routes, no request-body logging in application code</div>
+          <div class="tn">Application boundary</div>
+          <div class="td">authenticated Server Actions and scoped data access</div>
         </div>
         <div class="tbody cols-3">
-          <div class="node route"><svg class="ic"><use href="#health" /></svg><div class="nl">GET /api/health<small>public capability booleans and reason code</small></div></div>
-          <div class="node guard"><svg class="ic"><use href="#lock" /></svg><div class="nl">POST /api/adult-gate<small>503 while model capability is unavailable</small></div></div>
-          <div class="node guard"><svg class="ic"><use href="#shield" /></svg><div class="nl">POST /api/tutor<small>strict request, fixed safety route, no model call</small></div></div>
+          <div class="node route"><svg class="ic"><use href="#health" /></svg><div class="nl">Health and readiness<small>application and database state, no secret detail</small></div></div>
+          <div class="node guard"><svg class="ic"><use href="#lock" /></svg><div class="nl">Opaque DB sessions<small>bcrypt login, hashed token, expiry, revocation</small></div></div>
+          <div class="node guard"><svg class="ic"><use href="#shield" /></svg><div class="nl">Authorization policy<small>school, role, relationship, and state at every write</small></div></div>
         </div>
       </div>
 
@@ -110,20 +110,20 @@
 
       <div class="tier">
         <div class="tlab h-slate">
-          <div class="tn">Model boundary</div>
-          <div class="td">present in code, unreachable in release</div>
+          <div class="tn">Optional model boundary</div>
+          <div class="td">non-authoritative drafting behind release controls</div>
         </div>
         <div class="tbody cols-3">
-          <div class="node blocked"><svg class="ic"><use href="#plug" /></svg><div class="nl">AI_PROVIDER=disabled<small>fail-closed provider default</small></div></div>
-          <div class="node blocked"><svg class="ic"><use href="#route" /></svg><div class="nl">Gateway adapter blocked<small>child-directed-use policy conflict</small></div></div>
-          <div class="node blocked"><svg class="ic"><use href="#brain" /></svg><div class="nl">No model provider receives data<small>no primary call and no Deep Check</small></div></div>
+          <div class="node blocked"><svg class="ic"><use href="#plug" /></svg><div class="nl">Disabled by default<small>the complete workflow uses reviewed content</small></div></div>
+          <div class="node route"><svg class="ic"><use href="#route" /></svg><div class="nl">OpenRouter adapter<small>one model, no retry, no provider fallback</small></div></div>
+          <div class="node ai"><svg class="ic"><use href="#brain" /></svg><div class="nl">Validated draft<small>strict object, allowlisted sources, deterministic gate</small></div></div>
         </div>
       </div>
 
       <div class="note-band">
-        <div class="note"><strong>No database</strong>The record remains on the current browser and is not authenticated.</div>
-        <div class="note"><strong>No analytics</strong>No analytics SDK or learner-event telemetry is included.</div>
-        <div class="note"><strong>No real child data</strong>Only synthetic profiles are permitted during Build Week.</div>
+        <div class="note"><strong>Persistent source of truth</strong>PostgreSQL stores accounts, relationships, cycle state, and audit events.</div>
+        <div class="note"><strong>Internal data network</strong>The production database is not published to the host.</div>
+        <div class="note"><strong>Hardened runtime</strong>The app runs non-root, read-only, with dropped capabilities and health checks.</div>
         <div class="note"><strong>Rights boundary</strong>Only original Kanni content is bundled. Textbook pages stay link-only.</div>
       </div>
 

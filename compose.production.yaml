@@ -1,0 +1,125 @@
+name: kanni-production
+
+services:
+  db:
+    image: postgres:18.4-alpine@sha256:9a8afca54e7861fd90fab5fdf4c42477a6b1cb7d293595148e674e0a3181de15
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?set in .env.production}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set in .env.production}
+      POSTGRES_DB: ${POSTGRES_DB:?set in .env.production}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    volumes:
+      - kanni_production_data:/var/lib/postgresql
+    networks:
+      - data
+    mem_limit: 1g
+    cpus: 1.0
+
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: migrator
+    restart: "no"
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?schema=public
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - data
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runner
+    restart: unless-stopped
+    init: true
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?schema=public
+      DATABASE_POOL_SIZE: ${DATABASE_POOL_SIZE:-10}
+      AUTH_SECRET: ${AUTH_SECRET:?set in .env.production}
+      AUTH_TRUST_PROXY: ${AUTH_TRUST_PROXY:-false}
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:?set in .env.production}
+      REVIEW_ACCESS_VISIBLE: ${REVIEW_ACCESS_VISIBLE:-false}
+      GROWTH_AI_PROVIDER: ${GROWTH_AI_PROVIDER:-disabled}
+      GROWTH_AI_MODEL: ${GROWTH_AI_MODEL:-openai/gpt-5.6-sol}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      GROWTH_AI_ENABLED: ${GROWTH_AI_ENABLED:-false}
+      GROWTH_AI_RATE_LIMIT_CONFIRMED: ${GROWTH_AI_RATE_LIMIT_CONFIRMED:-false}
+      GROWTH_AI_SPEND_LIMIT_CONFIRMED: ${GROWTH_AI_SPEND_LIMIT_CONFIRMED:-false}
+    ports:
+      - "${APP_PORT:-3001}:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - data
+      - web
+    mem_limit: 1536m
+    cpus: 1.5
+
+  seed:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: migrator
+    profiles: ["tools"]
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?schema=public
+      KANNI_SEED_LOCAL_ACCOUNTS: ${KANNI_SEED_LOCAL_ACCOUNTS:-false}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-}
+      SEED_TEACHER_PASSWORD: ${SEED_TEACHER_PASSWORD:-}
+      SEED_STUDENT_PASSWORD: ${SEED_STUDENT_PASSWORD:-}
+      SEED_PARENT_PASSWORD: ${SEED_PARENT_PASSWORD:-}
+    command: ["node", "--import", "tsx", "prisma/seed.ts"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    networks:
+      - data
+
+networks:
+  data:
+    internal: true
+  web:
+
+volumes:
+  kanni_production_data:

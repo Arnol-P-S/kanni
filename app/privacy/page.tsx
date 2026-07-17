@@ -1,193 +1,26 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import {
-  Database,
-  ExternalLink,
-  LockKeyhole,
-  ShieldCheck,
-  TriangleAlert,
-} from "lucide-react";
 
-export const metadata: Metadata = {
-  title: "Privacy notice",
-  description:
-    "What the Kanni concept demo stores, does not collect, and would require before supervised AI can be enabled.",
-};
+import { PublicFooter } from "@/components/public-footer";
+import { PublicHeader } from "@/components/public-header";
+import { copy, getRequestLocale } from "@/lib/i18n";
 
-export default function PrivacyPage() {
+export const metadata: Metadata = { title: "Privacy" };
+
+export default async function PrivacyPage() {
+  const locale = await getRequestLocale();
   return (
-    <main id="main-content" className="page-shell trust-page legal-page">
-      <div className="trust-hero">
-        <div>
-          <p className="eyebrow">Prototype privacy notice · July 17, 2026</p>
-          <h1>Privacy starts with collecting less</h1>
-          <p>
-            Kanni uses synthetic profiles and a signed same-device workspace. Do
-            not enter a real learner&apos;s identity, contact details, health
-            information, school, location, or private story.
-          </p>
-        </div>
-        <LockKeyhole size={70} aria-hidden="true" />
-      </div>
-
-      <section className="trust-section" aria-labelledby="current-state-title">
-        <div className="trust-section-heading">
-          <ShieldCheck aria-hidden="true" />
-          <div>
-            <p className="eyebrow">Current release</p>
-            <h2 id="current-state-title">Every role works without a model</h2>
-          </div>
-        </div>
-        <p>
-          Optional AI is off by default. Admin mapping, teacher planning,
-          student activity support, teacher review, and the parent home activity
-          all use project-authored content without a model provider.
-        </p>
-        <p>
-          The $100 Build Week credit approved for Codex does not fund API calls
-          made by this application. A future model path needs separate API
-          funding and a fresh privacy and provider review. The configured
-          OpenRouter path must not be enabled for real learner use.
-        </p>
-      </section>
-
-      <section className="trust-section" aria-labelledby="device-data-title">
-        <div className="trust-section-heading">
-          <Database aria-hidden="true" />
-          <div>
-            <p className="eyebrow">Same-device record</p>
-            <h2 id="device-data-title">What this browser receives</h2>
-          </div>
-        </div>
-        <div className="trust-grid">
-          <article>
-            <h3>Stored in signed cookies</h3>
-            <ul>
-              <li>synthetic persona ID and two-hour session expiry</li>
-              <li>synthetic support-circle relationship mapping</li>
-              <li>fixed answer and explanation option IDs</li>
-              <li>support use, teacher plan and review state, and selected strategy</li>
-              <li>one bounded parent response and family language preference</li>
-            </ul>
-          </article>
-          <article>
-            <h3>Not stored in the local learning record</h3>
-            <ul>
-              <li>learner name, account, school, or location</li>
-              <li>phone number, email address, or home address</li>
-              <li>health information or a private disclosure</li>
-              <li>custom question or model transcript</li>
-              <li>score, rank, diagnosis, or inferred ability</li>
-            </ul>
-          </article>
-        </div>
-        <p>
-          The workspace cookie is signed so changed values are rejected, but it
-          is still held by the browser and is not encrypted learner storage.
-          Kanni has no account database. Ending the synthetic session removes
-          both demo cookies.
-        </p>
-      </section>
-
-      <section className="trust-section" aria-labelledby="server-data-title">
-        <div className="trust-section-heading">
-          <LockKeyhole aria-hidden="true" />
-          <div>
-            <p className="eyebrow">Server boundary</p>
-            <h2 id="server-data-title">API and log handling</h2>
-          </div>
-        </div>
-        <ul>
-          <li>
-            The application has no analytics SDK and its code does not log
-            request bodies.
-          </li>
-          <li>
-            API responses use <code>Cache-Control: no-store</code>.
-          </li>
-          <li>
-            A direct caller can send a request body to the retained public tutor route.
-            Kanni reads at most 8 KiB to validate and classify it. While AI is
-            off, the application does not persist, echo, or forward that body
-            to a model provider. The revised role workflow uses Server Actions
-            with session, role, and relationship checks.
-          </li>
-          <li>
-            The health route reports public capability booleans and reason
-            codes. It does not return secret values.
-          </li>
-          <li>
-            Hosting infrastructure may still create operational logs under the
-            host&apos;s own terms. Do not enter real personal data.
-          </li>
-          <li>
-            External links leave Kanni and are covered by the destination
-            site&apos;s privacy terms.
-          </li>
-        </ul>
-      </section>
-
-      <section className="trust-section" aria-labelledby="future-ai-title">
-        <div className="trust-section-heading">
-          <TriangleAlert aria-hidden="true" />
-          <div>
-            <p className="eyebrow">Optional supervised AI</p>
-            <h2 id="future-ai-title">What an enabled action sends</h2>
-          </div>
-        </div>
-        <p>
-          If an adult operator explicitly configures the OpenRouter path, Kanni
-          sends a fixed instruction and the bundled Kanni fractions context to
-          draft a teacher plan or visual support. It does not send the synthetic
-          person&apos;s name, chosen answer, family response, workspace cookie, or
-          a free-text learner prompt. The server requests an Azure-only Zero
-          Data Retention route, denies provider data collection, and disables
-          provider fallback and automatic application retries.
-        </p>
-        <p>
-          Those technical settings do not replace a legal, provider, and
-          deployment review. Real-child data and real-child testing remain
-          outside this prototype. The verified release path keeps optional AI
-          disabled and uses the same reviewed fallback after any provider error.
-        </p>
-        <p>
-          Read the official{" "}
-          <a href="https://developers.openai.com/api/docs/guides/safety-checks/under-18-api-guidance">
-            OpenAI Under 18 API Guidance{" "}
-            <ExternalLink size={15} aria-hidden="true" />
-          </a>{" "}
-          and{" "}
-          <a href="https://openrouter.ai/docs/guides/features/zdr">
-            OpenRouter Zero Data Retention controls{" "}
-            <ExternalLink size={15} aria-hidden="true" />
-          </a>
-          .
-        </p>
-      </section>
-
-      <section className="trust-section limits-section" aria-labelledby="choices-title">
-        <div className="trust-section-heading">
-          <ShieldCheck aria-hidden="true" />
-          <div>
-            <p className="eyebrow">Your choices</p>
-            <h2 id="choices-title">Use the demo without personal data</h2>
-          </div>
-        </div>
-        <ul>
-          <li>Use only the supplied synthetic profiles.</li>
-          <li>Choose fixed lesson questions instead of entering free text.</li>
-          <li>Use Switch demo account or Reset synthetic workspace to remove the signed demo state.</li>
-          <li>Stop using the prototype if its limits do not fit your use.</li>
-        </ul>
-        <div className="hero-actions">
-          <Link className="button primary" href="/trust">
-            Read Trust and limitations
-          </Link>
-          <Link className="button secondary" href="/terms">
-            Read prototype terms
-          </Link>
-        </div>
-      </section>
-    </main>
+    <>
+      <PublicHeader locale={locale} returnTo="/privacy" />
+      <main id="main-content" className="page-shell legal-page">
+        <p className="eyebrow">{copy(locale, { en: "Privacy", ml: "സ്വകാര്യത" })}</p>
+        <h1>{copy(locale, { en: "Only the information needed for learning support", ml: "പഠനപിന്തുണയ്ക്ക് ആവശ്യമായ വിവരങ്ങൾ മാത്രം" })}</h1>
+        <p>{copy(locale, { en: "Kanni stores school accounts, role memberships, approved teacher-student and parent-student links, learning-cycle responses, language preference, and security audit events in PostgreSQL.", ml: "സ്കൂൾ അക്കൗണ്ടുകൾ, ചുമതല അംഗത്വങ്ങൾ, അംഗീകരിച്ച അധ്യാപക-വിദ്യാർത്ഥി, രക്ഷിതാവ്-വിദ്യാർത്ഥി ബന്ധങ്ങൾ, പഠനചക്ര പ്രതികരണങ്ങൾ, ഭാഷാ മുൻഗണന, സുരക്ഷാ ഓഡിറ്റ് സംഭവങ്ങൾ എന്നിവ കണ്ണി PostgreSQL-ൽ സൂക്ഷിക്കുന്നു." })}</p>
+        <section><h2>{copy(locale, { en: "Account and session data", ml: "അക്കൗണ്ടും സെഷൻ വിവരങ്ങളും" })}</h2><p>{copy(locale, { en: "Passwords are stored as bcrypt hashes. The browser receives an HttpOnly session cookie. Server sessions expire and can be revoked. Login throttling keys are hashed before storage.", ml: "പാസ്‌വേഡുകൾ bcrypt ഹാഷുകളായി സൂക്ഷിക്കുന്നു. ബ്രൗസറിന് HttpOnly സെഷൻ കുക്കി ലഭിക്കുന്നു. സെഷനുകൾ കാലഹരണപ്പെടുകയും പിൻവലിക്കാനാകുകയും ചെയ്യും. ലോഗിൻ നിയന്ത്രണ കീകൾ സൂക്ഷിക്കുന്നതിന് മുമ്പ് ഹാഷ് ചെയ്യുന്നു." })}</p></section>
+        <section><h2>{copy(locale, { en: "Learning records", ml: "പഠന രേഖകൾ" })}</h2><p>{copy(locale, { en: "A learning cycle records fixed-choice answers, support used, teacher review, and the parent's bounded response. Kanni does not create public profiles, rankings, follower graphs, or direct student messaging.", ml: "പഠനചക്രത്തിൽ നിശ്ചിത ഉത്തരങ്ങൾ, ഉപയോഗിച്ച പിന്തുണ, അധ്യാപക പരിശോധന, രക്ഷിതാവിന്റെ പരിമിത പ്രതികരണം എന്നിവ രേഖപ്പെടുത്തുന്നു. പൊതു പ്രൊഫൈലുകൾ, റാങ്കിംഗ്, ഫോളോവർ ഗ്രാഫ്, വിദ്യാർത്ഥികൾക്കുള്ള നേരിട്ടുള്ള സന്ദേശം എന്നിവ കണ്ണി സൃഷ്ടിക്കുന്നില്ല." })}</p></section>
+        <section><h2>{copy(locale, { en: "Optional AI", ml: "ഐച്ഛിക AI" })}</h2><p>{copy(locale, { en: "AI features are off unless the school operator configures a separate provider key and release controls. When enabled, Kanni sends only the selected learning context needed for a bounded draft. Provider requests are not used for authentication or authorization.", ml: "സ്കൂൾ ഓപ്പറേറ്റർ പ്രത്യേക പ്രൊവൈഡർ കീയും റിലീസ് നിയന്ത്രണങ്ങളും ക്രമീകരിക്കുന്നതുവരെ AI സവിശേഷതകൾ ഓഫായിരിക്കും. പ്രവർത്തനക്ഷമമാക്കിയാൽ, പരിമിത കരടിനാവശ്യമായ തിരഞ്ഞെടുത്ത പഠനസന്ദർഭം മാത്രം കണ്ണി അയക്കും. പ്രൊവൈഡർ അഭ്യർത്ഥനകൾ തിരിച്ചറിയലിനോ അനുമതിക്കോ ഉപയോഗിക്കില്ല." })}</p></section>
+        <section><h2>{copy(locale, { en: "School responsibility", ml: "സ്കൂളിന്റെ ഉത്തരവാദിത്തം" })}</h2><p>{copy(locale, { en: "A school must set its retention period, obtain the permissions required in its jurisdiction, review who can access each learner, and provide a contact for corrections or deletion requests before using Kanni with real student data.", ml: "യഥാർത്ഥ വിദ്യാർത്ഥി വിവരങ്ങളുമായി കണ്ണി ഉപയോഗിക്കുന്നതിന് മുമ്പ് സ്കൂൾ നിലനിർത്തൽ കാലയളവ് നിശ്ചയിക്കുകയും ആവശ്യമായ അനുമതികൾ നേടുകയും ഓരോ പഠിതാവിനെയും ആരെല്ലാം കാണാമെന്ന് പരിശോധിക്കുകയും തിരുത്തൽ അല്ലെങ്കിൽ മായ്ക്കൽ അഭ്യർത്ഥനകൾക്കായി ബന്ധപ്പെടാനുള്ള മാർഗം നൽകുകയും വേണം." })}</p></section>
+      </main>
+      <PublicFooter locale={locale} />
+    </>
   );
 }

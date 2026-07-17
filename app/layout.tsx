@@ -7,9 +7,7 @@ import "@fontsource/noto-sans-malayalam/600.css";
 import "@fontsource/noto-sans-malayalam/700.css";
 import "./globals.css";
 
-import { LearningRecordProvider } from "@/components/learning-record-provider";
-import { SiteFooter } from "@/components/site-footer";
-import { SiteHeader } from "@/components/site-header";
+import { getRequestLocale } from "@/lib/i18n";
 
 export const metadata: Metadata = {
   title: {
@@ -17,23 +15,18 @@ export const metadata: Metadata = {
     template: "%s | Kanni",
   },
   description:
-    "One learning goal becomes a coordinated next step for a student, teacher, parent, and school.",
+    "Kanni connects students, teachers, parents, and school leaders around the next useful learning step.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getRequestLocale();
   return (
-    <html lang="en">
-      <body>
-        <LearningRecordProvider>
-          <SiteHeader />
-          {children}
-          <SiteFooter />
-        </LearningRecordProvider>
-      </body>
+    <html lang={locale}>
+      <body>{children}</body>
     </html>
   );
 }

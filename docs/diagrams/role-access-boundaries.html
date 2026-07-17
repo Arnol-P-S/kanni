@@ -36,31 +36,31 @@
     </defs></svg>
 
     <div class="canvas">
-      <div class="status-banner safe"><span>Role permission is necessary. Relationship authorization decides which shared cycle the role may touch.</span><span class="pill">Synthetic access model</span></div>
+      <div class="status-banner safe"><span>Role permission is necessary. School membership and assigned relationships decide which cycle the account may touch.</span><span class="pill">Database authorization</span></div>
       <h1 class="diagram-title">Role and relationship access boundaries</h1>
       <section class="boundary">
-        <span class="boundary-label">Kanni demo organization</span>
+        <span class="boundary-label">Kanni school tenant</span>
         <div class="access-grid">
-          <div class="cell head">Synthetic role</div><div class="cell head">Map support circle</div><div class="cell head">Plan instruction</div><div class="cell head">Submit activity evidence</div><div class="cell head">Review and release</div><div class="cell head">Read and respond to family brief</div>
-          <div class="cell role"><svg class="ic"><use href="#person"/></svg>Admin · Asha</div><div class="cell allow"><strong>Allow</strong>Organization membership and family language</div><div class="cell deny"><strong>Deny</strong>No lesson decision</div><div class="cell deny"><strong>Deny</strong>No learner action</div><div class="cell filtered"><strong>Aggregate only</strong>Handoff counts, no explanation</div><div class="cell deny"><strong>Deny</strong>No family brief</div>
-          <div class="cell role"><svg class="ic"><use href="#person"/></svg>Teacher · Meera</div><div class="cell deny"><strong>Deny</strong>No membership admin</div><div class="cell allow"><strong>Allow if assigned</strong>Draft, choose support, publish</div><div class="cell deny"><strong>Deny</strong>No learner action</div><div class="cell allow"><strong>Allow if assigned</strong>Review evidence and approve brief</div><div class="cell filtered"><strong>Signal only</strong>Bounded family response</div>
-          <div class="cell role"><svg class="ic"><use href="#person"/></svg>Student · Diya</div><div class="cell deny"><strong>Deny</strong>No membership admin</div><div class="cell deny"><strong>Deny</strong>No teacher plan edits</div><div class="cell allow"><strong>Allow if enrolled</strong>Attempt, support, revision, challenge</div><div class="cell deny"><strong>Deny</strong>No teacher approval</div><div class="cell deny"><strong>Deny</strong>No family response</div>
-          <div class="cell role"><svg class="ic"><use href="#person"/></svg>Guardian · Arun</div><div class="cell deny"><strong>Deny</strong>No membership admin</div><div class="cell deny"><strong>Deny</strong>No teacher plan edits</div><div class="cell deny"><strong>Deny</strong>No learner action</div><div class="cell deny"><strong>Deny</strong>No teacher approval</div><div class="cell allow"><strong>Allow if linked</strong>Approved brief and bounded response</div>
+          <div class="cell head">Account role</div><div class="cell head">School accounts</div><div class="cell head">Plan instruction</div><div class="cell head">Submit activity evidence</div><div class="cell head">Review and release</div><div class="cell head">Read and respond to family brief</div>
+          <div class="cell role"><svg class="ic"><use href="#person"/></svg>School admin</div><div class="cell allow"><strong>Allow in school</strong>Accounts, membership, relationships</div><div class="cell deny"><strong>Deny</strong>No lesson decision</div><div class="cell deny"><strong>Deny</strong>No student action</div><div class="cell filtered"><strong>Handoff only</strong>No student evidence</div><div class="cell deny"><strong>Deny</strong>No family brief</div>
+          <div class="cell role"><svg class="ic"><use href="#person"/></svg>Teacher</div><div class="cell deny"><strong>Deny</strong>No account administration</div><div class="cell allow"><strong>Allow if assigned</strong>Draft, choose support, publish</div><div class="cell deny"><strong>Deny</strong>No student action</div><div class="cell allow"><strong>Allow if assigned</strong>Review evidence and approve brief</div><div class="cell filtered"><strong>Signal only</strong>Bounded family response</div>
+          <div class="cell role"><svg class="ic"><use href="#person"/></svg>Student</div><div class="cell deny"><strong>Deny</strong>No account administration</div><div class="cell deny"><strong>Deny</strong>No teacher plan edits</div><div class="cell allow"><strong>Allow if enrolled</strong>Attempt, support, revision, challenge</div><div class="cell deny"><strong>Deny</strong>No teacher approval</div><div class="cell deny"><strong>Deny</strong>No family response</div>
+          <div class="cell role"><svg class="ic"><use href="#person"/></svg>Parent</div><div class="cell deny"><strong>Deny</strong>No account administration</div><div class="cell deny"><strong>Deny</strong>No teacher plan edits</div><div class="cell deny"><strong>Deny</strong>No student action</div><div class="cell deny"><strong>Deny</strong>No teacher approval</div><div class="cell allow"><strong>Allow if linked</strong>Approved activity and bounded response</div>
         </div>
       </section>
 
       <div class="flow">
-        <div class="node data"><svg class="ic"><use href="#cookie"/></svg><div class="nl">Signed session<small>Persona ID • adult confirmation • issued and expiry time</small></div></div><div class="arrow-h">→</div>
-        <div class="node route"><svg class="ic"><use href="#lock"/></svg><div class="nl">Broad capability check<small>Does this role have this application permission?</small></div></div><div class="arrow-h">→</div>
-        <div class="node route"><svg class="ic"><use href="#check"/></svg><div class="nl">Relationship check<small>Same organization and assigned, enrolled, or linked?</small></div></div><div class="arrow-h">→</div>
+        <div class="node data"><svg class="ic"><use href="#cookie"/></svg><div class="nl">Opaque server session<small>Random token hash • user • membership • expiry</small></div></div><div class="arrow-h">→</div>
+        <div class="node route"><svg class="ic"><use href="#lock"/></svg><div class="nl">Role policy<small>Does this active membership have the capability?</small></div></div><div class="arrow-h">→</div>
+        <div class="node route"><svg class="ic"><use href="#check"/></svg><div class="nl">Relationship scope<small>Same school and assigned, enrolled, or linked?</small></div></div><div class="arrow-h">→</div>
         <div class="node app"><svg class="ic"><use href="#filter"/></svg><div class="nl">Role-specific read or mutation<small>Only the minimum view and next task are returned.</small></div></div>
       </div>
 
       <div class="guards">
-        <article class="guard-card"><h3>Integrity, not identity</h3><p>HMAC signing rejects tampering. It does not prove who the tester is.</p></article>
-        <article class="guard-card"><h3>Same-device continuity</h3><p>A compact cookie carries the synthetic cycle. There is no server database.</p></article>
-        <article class="guard-card"><h3>Server-only secrets</h3><p>The session secret and optional OpenRouter key never enter the browser bundle.</p></article>
-        <article class="guard-card"><h3>Production gate</h3><p>Real use needs identity, tenant isolation, consent, retention, audit, recovery, and deletion design.</p></article>
+        <article class="guard-card"><h3>Password identity</h3><p>Bcrypt checks a school-issued credential. Local review credentials are disabled in real environments.</p></article>
+        <article class="guard-card"><h3>Persistent continuity</h3><p>PostgreSQL carries the cycle across devices and accounts. The browser never holds the source of truth.</p></article>
+        <article class="guard-card"><h3>Server-only secrets</h3><p>Session material, database credentials, and the optional provider key stay out of the browser bundle.</p></article>
+        <article class="guard-card"><h3>School integration gate</h3><p>Real use adds SSO or recovery, MFA, privacy approval, retention, backup, and incident operations.</p></article>
       </div>
       <div class="legend"><span class="lt">Cell key</span><span class="leg"><span class="sw" style="background:#86efac"></span>Allowed with relationship</span><span class="leg"><span class="sw" style="background:#fde047"></span>Filtered information</span><span class="leg"><span class="sw" style="background:#f0b1aa"></span>Denied</span></div>
     </div>

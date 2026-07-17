@@ -1,7 +1,10 @@
 allowBuilds:
+  '@prisma/engines': true
   esbuild@0.28.1: true
+  prisma: true
   sharp@0.34.5: true
   unrs-resolver@1.12.2: true
 minimumReleaseAge: 1440
 overrides:
+  '@hono/node-server': 1.19.13
   postcss: 8.5.19

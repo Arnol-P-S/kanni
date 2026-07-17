@@ -1,0 +1,16 @@
+node_modules
+.next
+out
+coverage
+playwright-report
+test-results
+.git
+.github
+.env*
+!.env.example
+!.env.production.example
+*.log
+*.tmp
+.DS_Store
+submission/screenshots
+docs/diagrams/render

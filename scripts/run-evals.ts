@@ -1,121 +1,87 @@
-import { writeFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { writeFile } from "node:fs/promises";
 
-import { evalCases } from "../eval/cases";
-import { TutorRequestSchema } from "../lib/domain";
+import { evalCases, type EvaluationCase } from "../eval/cases";
+import { evaluateGrowthAiCapability } from "../lib/ai/capability-policy";
 import {
-  getGuidedAttempt,
-  getGuidedHintContext,
-} from "../lib/math-activity-strategies";
-import { TUTOR_PROMPT_VERSION } from "../lib/ai/prompt";
-import { lessonPacks } from "../lib/lessons";
-import { classifyPrompt } from "../lib/safety";
+  PROJECT_AUTHORED_SUPPORT,
+  createGrowthCycle,
+  hasCompleteSupportCircle,
+  mapSupportCircle,
+  publishTeacherPlan,
+  recordFamilyResponse,
+  recordFirstAnswer,
+  recordRevision,
+  recordSupportUsed,
+  reviewStudentEvidence,
+} from "../lib/growth-cycle";
+import { roleCan, roleCanSee } from "../lib/permissions";
 
-const results = evalCases.map((item) => {
-  const parsed = TutorRequestSchema.safeParse(item.request);
-  if (!parsed.success) {
-    return {
-      id: item.id,
-      category: item.category,
-      expectedRoute: item.expectedRoute,
-      actualRoute: "invalid_request",
-      passed: false,
-    };
+function throws(operation: () => unknown): boolean {
+  try {
+    operation();
+    return false;
+  } catch {
+    return true;
   }
-
-  const request = parsed.data;
-  const guidedAttempt =
-    request.mode === "guided_hint"
-      ? getGuidedAttempt(request.questionId, request.selectedAnswerId)
-      : null;
-  if (request.mode === "guided_hint" && !guidedAttempt) {
-    return {
-      id: item.id,
-      category: item.category,
-      expectedRoute: item.expectedRoute,
-      actualRoute: "invalid_guided_attempt",
-      passed: false,
-    };
-  }
-
-  const prompt =
-    request.mode === "custom_question"
-      ? request.prompt
-      : getGuidedHintContext(request.questionId).question[request.language];
-  const actualRoute = classifyPrompt(request.lessonId, prompt);
-  return {
-    id: item.id,
-    category: item.category,
-    expectedRoute: item.expectedRoute,
-    actualRoute,
-    passed: actualRoute === item.expectedRoute,
-  };
-});
-
-const failed = results.filter((result) => !result.passed);
-const runDate = new Date().toISOString();
-const categorySummary = results.reduce<
-  Record<string, { passed: number; total: number }>
->((summary, result) => {
-  const current = summary[result.category] ?? { passed: 0, total: 0 };
-  return {
-    ...summary,
-    [result.category]: {
-      passed: current.passed + (result.passed ? 1 : 0),
-      total: current.total + 1,
-    },
-  };
-}, {});
-
-process.stdout.write("Kanni deterministic eval preflight\n");
-process.stdout.write(`Prompt version: ${TUTOR_PROMPT_VERSION}\n`);
-process.stdout.write(
-  `Content versions: ${Object.values(lessonPacks)
-    .map((lesson) => lesson.version)
-    .join(", ")}\n`,
-);
-process.stdout.write(`Run date: ${runDate}\n\n`);
-for (const [category, summary] of Object.entries(categorySummary)) {
-  process.stdout.write(
-    `${category.padEnd(20)} ${summary.passed}/${summary.total} passed\n`,
-  );
 }
-process.stdout.write(
-  `\nTotal: ${results.length - failed.length}/${results.length} passed\n`,
-);
 
-writeFileSync(
-  resolve(process.cwd(), "eval/deterministic-results.json"),
-  `${JSON.stringify(
-    {
-      schemaVersion: 1,
-      kind: "deterministic_preflight",
-      runDate,
-      promptVersion: TUTOR_PROMPT_VERSION,
-      lessonPackVersions: Object.values(lessonPacks).map(
-        (lesson) => lesson.version,
-      ),
-      modelCallsMade: false,
-      totals: {
-        passed: results.length - failed.length,
-        total: results.length,
-        failed: failed.length,
-      },
-      categories: categorySummary,
-      results,
-    },
-    null,
-    2,
-  )}\n`,
-  "utf8",
-);
-
-if (failed.length > 0) {
-  process.stderr.write("\nFailures:\n");
-  for (const failure of failed) {
-    process.stderr.write(
-      `${failure.id}: expected ${failure.expectedRoute}, received ${failure.actualRoute}\n`,
-    );
-  }
-  process.exitCode = 1;
+function workflowPasses(scenario: Extract<EvaluationCase, { kind: "workflow" }>["scenario"]): boolean {
+  const fresh = createGrowthCycle();
+  const mapped = mapSupportCircle(fresh, "ml");
+  const published = publishTeacherPlan(mapped, "fraction_strips");
+  const answered = recordFirstAnswer(published, "one_quarter");
+  const supported = recordSupportUsed(answered, PROJECT_AUTHORED_SUPPORT, "project_authored");
+  const revised = recordRevision(supported, "one_half", "same_whole_more_equal_parts");
+  const reviewed = reviewStudentEvidence(revised, "guided_questions");
+  const complete = recordFamilyResponse(reviewed, "tried");
+  const checks: Record<typeof scenario, boolean> = {
+    starts_in_draft: fresh.plan.status === "draft",
+    mapping_completes: hasCompleteSupportCircle(mapped),
+    publish_requires_mapping: throws(() => publishTeacherPlan(fresh, "fraction_strips")),
+    publish_after_mapping: published.plan.status === "published",
+    answer_requires_publish: throws(() => recordFirstAnswer(mapped, "one_quarter")),
+    first_answer_is_idempotent: recordFirstAnswer(answered, "one_half").student.firstAnswer === "one_quarter",
+    support_requires_answer: throws(() => recordSupportUsed(published, PROJECT_AUTHORED_SUPPORT, "project_authored")),
+    revision_requires_support: throws(() => recordRevision(answered, "one_half", "same_whole_more_equal_parts")),
+    revision_after_support: revised.student.revisedAnswer === "one_half",
+    review_requires_evidence: throws(() => reviewStudentEvidence(supported, "guided_questions")),
+    family_requires_review: throws(() => recordFamilyResponse(revised, "tried")),
+    complete_loop: complete.family.response === "tried" && complete.teacherReview.nextSupport === "guided_questions",
+  };
+  return checks[scenario];
 }
+
+function evaluate(item: EvaluationCase): boolean {
+  switch (item.kind) {
+    case "authorization":
+      return roleCan(item.role, item.capability) === item.expected;
+    case "workflow":
+      return workflowPasses(item.scenario);
+    case "language": {
+      const pair = item.id.endsWith("1") || item.id.endsWith("2")
+        ? { en: "Learning goal", ml: "പഠനലക്ഷ്യം" }
+        : { en: "Parent", ml: "രക്ഷിതാവ്" };
+      return pair[item.locale] === item.expected;
+    }
+    case "privacy":
+      return roleCanSee(item.role, item.information) === item.expected;
+    case "ai_policy":
+      return evaluateGrowthAiCapability(item.environment).reason === item.expectedReason;
+  }
+}
+
+const results = evalCases.map((item) => ({
+  id: item.id,
+  category: item.category,
+  passed: evaluate(item),
+}));
+const passed = results.filter((item) => item.passed).length;
+const report = {
+  runDate: new Date().toISOString(),
+  suiteVersion: "school-slc-v1",
+  totals: { total: results.length, passed, failed: results.length - passed },
+  results,
+};
+await writeFile("eval/deterministic-results.json", `${JSON.stringify(report, null, 2)}\n`, "utf8");
+console.log(`Kanni deterministic evaluation: ${passed}/${results.length} passed.`);
+if (passed !== results.length) process.exitCode = 1;

@@ -1,267 +1,170 @@
 {
-  "schemaVersion": 1,
-  "kind": "deterministic_preflight",
-  "runDate": "2026-07-16T22:47:18.951Z",
-  "promptVersion": "tutor-v1.2.0",
-  "lessonPackVersions": [
-    "math-1.1.0",
-    "cs-1.0.0"
-  ],
-  "modelCallsMade": false,
+  "runDate": "2026-07-17T06:34:03.332Z",
+  "suiteVersion": "school-slc-v1",
   "totals": {
-    "passed": 32,
     "total": 32,
+    "passed": 32,
     "failed": 0
-  },
-  "categories": {
-    "supported": {
-      "passed": 12,
-      "total": 12
-    },
-    "unsupported": {
-      "passed": 4,
-      "total": 4
-    },
-    "injection": {
-      "passed": 4,
-      "total": 4
-    },
-    "safety": {
-      "passed": 4,
-      "total": 4
-    },
-    "personal_data": {
-      "passed": 4,
-      "total": 4
-    },
-    "language_variation": {
-      "passed": 4,
-      "total": 4
-    }
   },
   "results": [
     {
-      "id": "sup-math-ml-1",
-      "category": "supported",
-      "expectedRoute": "generate",
-      "actualRoute": "generate",
+      "id": "auth-01",
+      "category": "authorization",
       "passed": true
     },
     {
-      "id": "sup-math-ml-2",
-      "category": "supported",
-      "expectedRoute": "generate",
-      "actualRoute": "generate",
+      "id": "auth-02",
+      "category": "authorization",
       "passed": true
     },
     {
-      "id": "sup-math-ml-3",
-      "category": "supported",
-      "expectedRoute": "generate",
-      "actualRoute": "generate",
+      "id": "auth-03",
+      "category": "authorization",
       "passed": true
     },
     {
-      "id": "sup-math-en-1",
-      "category": "supported",
-      "expectedRoute": "generate",
-      "actualRoute": "generate",
+      "id": "auth-04",
+      "category": "authorization",
       "passed": true
     },
     {
-      "id": "sup-math-en-2",
-      "category": "supported",
-      "expectedRoute": "generate",
-      "actualRoute": "generate",
+      "id": "auth-05",
+      "category": "authorization",
       "passed": true
     },
     {
-      "id": "sup-math-en-3",
-      "category": "supported",
-      "expectedRoute": "generate",
-      "actualRoute": "generate",
+      "id": "auth-06",
+      "category": "authorization",
       "passed": true
     },
     {
-      "id": "sup-cs-ml-1",
-      "category": "supported",
-      "expectedRoute": "generate",
-      "actualRoute": "generate",
+      "id": "auth-07",
+      "category": "authorization",
       "passed": true
     },
     {
-      "id": "sup-cs-ml-2",
-      "category": "supported",
-      "expectedRoute": "generate",
-      "actualRoute": "generate",
+      "id": "auth-08",
+      "category": "authorization",
       "passed": true
     },
     {
-      "id": "sup-cs-ml-3",
-      "category": "supported",
-      "expectedRoute": "generate",
-      "actualRoute": "generate",
+      "id": "flow-01",
+      "category": "workflow",
       "passed": true
     },
     {
-      "id": "sup-cs-en-1",
-      "category": "supported",
-      "expectedRoute": "generate",
-      "actualRoute": "generate",
+      "id": "flow-02",
+      "category": "workflow",
       "passed": true
     },
     {
-      "id": "sup-cs-en-2",
-      "category": "supported",
-      "expectedRoute": "generate",
-      "actualRoute": "generate",
+      "id": "flow-03",
+      "category": "workflow",
       "passed": true
     },
     {
-      "id": "sup-cs-en-3",
-      "category": "supported",
-      "expectedRoute": "generate",
-      "actualRoute": "generate",
+      "id": "flow-04",
+      "category": "workflow",
       "passed": true
     },
     {
-      "id": "off-1",
-      "category": "unsupported",
-      "expectedRoute": "unsupported",
-      "actualRoute": "unsupported",
+      "id": "flow-05",
+      "category": "workflow",
       "passed": true
     },
     {
-      "id": "off-2",
-      "category": "unsupported",
-      "expectedRoute": "unsupported",
-      "actualRoute": "unsupported",
+      "id": "flow-06",
+      "category": "workflow",
       "passed": true
     },
     {
-      "id": "off-3",
-      "category": "unsupported",
-      "expectedRoute": "unsupported",
-      "actualRoute": "unsupported",
+      "id": "flow-07",
+      "category": "workflow",
       "passed": true
     },
     {
-      "id": "off-4",
-      "category": "unsupported",
-      "expectedRoute": "unsupported",
-      "actualRoute": "unsupported",
+      "id": "flow-08",
+      "category": "workflow",
       "passed": true
     },
     {
-      "id": "inj-1",
-      "category": "injection",
-      "expectedRoute": "unsupported",
-      "actualRoute": "unsupported",
+      "id": "flow-09",
+      "category": "workflow",
       "passed": true
     },
     {
-      "id": "inj-2",
-      "category": "injection",
-      "expectedRoute": "unsupported",
-      "actualRoute": "unsupported",
+      "id": "flow-10",
+      "category": "workflow",
       "passed": true
     },
     {
-      "id": "inj-3",
-      "category": "injection",
-      "expectedRoute": "unsupported",
-      "actualRoute": "unsupported",
+      "id": "flow-11",
+      "category": "workflow",
       "passed": true
     },
     {
-      "id": "inj-4",
-      "category": "injection",
-      "expectedRoute": "unsupported",
-      "actualRoute": "unsupported",
+      "id": "flow-12",
+      "category": "workflow",
       "passed": true
     },
     {
-      "id": "safe-1",
-      "category": "safety",
-      "expectedRoute": "safety_redirect",
-      "actualRoute": "safety_redirect",
+      "id": "lang-01",
+      "category": "language",
       "passed": true
     },
     {
-      "id": "safe-2",
-      "category": "safety",
-      "expectedRoute": "safety_redirect",
-      "actualRoute": "safety_redirect",
+      "id": "lang-02",
+      "category": "language",
       "passed": true
     },
     {
-      "id": "safe-3",
-      "category": "safety",
-      "expectedRoute": "safety_redirect",
-      "actualRoute": "safety_redirect",
+      "id": "lang-03",
+      "category": "language",
       "passed": true
     },
     {
-      "id": "safe-4",
-      "category": "safety",
-      "expectedRoute": "safety_redirect",
-      "actualRoute": "safety_redirect",
+      "id": "lang-04",
+      "category": "language",
       "passed": true
     },
     {
-      "id": "pii-1",
-      "category": "personal_data",
-      "expectedRoute": "unsupported",
-      "actualRoute": "unsupported",
+      "id": "privacy-01",
+      "category": "privacy",
       "passed": true
     },
     {
-      "id": "pii-2",
-      "category": "personal_data",
-      "expectedRoute": "unsupported",
-      "actualRoute": "unsupported",
+      "id": "privacy-02",
+      "category": "privacy",
       "passed": true
     },
     {
-      "id": "pii-3",
-      "category": "personal_data",
-      "expectedRoute": "unsupported",
-      "actualRoute": "unsupported",
+      "id": "privacy-03",
+      "category": "privacy",
       "passed": true
     },
     {
-      "id": "pii-4",
-      "category": "personal_data",
-      "expectedRoute": "unsupported",
-      "actualRoute": "unsupported",
+      "id": "privacy-04",
+      "category": "privacy",
       "passed": true
     },
     {
-      "id": "lang-1",
-      "category": "language_variation",
-      "expectedRoute": "generate",
-      "actualRoute": "generate",
+      "id": "ai-01",
+      "category": "ai_policy",
       "passed": true
     },
     {
-      "id": "lang-2",
-      "category": "language_variation",
-      "expectedRoute": "generate",
-      "actualRoute": "generate",
+      "id": "ai-02",
+      "category": "ai_policy",
       "passed": true
     },
     {
-      "id": "lang-3",
-      "category": "language_variation",
-      "expectedRoute": "generate",
-      "actualRoute": "generate",
+      "id": "ai-03",
+      "category": "ai_policy",
       "passed": true
     },
     {
-      "id": "lang-4",
-      "category": "language_variation",
-      "expectedRoute": "generate",
-      "actualRoute": "generate",
+      "id": "ai-04",
+      "category": "ai_policy",
       "passed": true
     }
   ]

@@ -1,293 +1,255 @@
 # Kanni system design
 
-Last updated: July 17, 2026
+## 1. Outcome
 
-## Decision summary
-
-Kanni is an adult-operated, same-device concept demo for one connected learning-support cycle. A synthetic admin maps the support circle, a teacher publishes a fractions plan, a student attempts and explains, the teacher approves a family brief, and a linked parent returns one bounded signal. Each role sees a different authorized view of the same signed workspace.
-
-The complete cycle works with original Kanni content. Optional OpenRouter integration can draft a structured teacher plan or one visual student support when an adult operator explicitly enables it. The path is disabled by default, limited to one configured model and provider route, and always falls back to reviewed content. It is not a recursive agent system.
-
-Codex credits and API credits are different products. The approved $100 Codex credit can fund work done inside Codex. It cannot pay for model calls made by the Kanni application.
-
-## Scope
-
-Implemented judge path:
-
-- four fixed synthetic personas: organization admin, teacher, student, and guardian
-- signed two-hour synthetic sessions and a signed same-device `GrowthCycle`
-- role capability checks plus organization and relationship authorization
-- admin mapping and an aggregate handoff view
-- teacher planning, support choice, publishing, evidence review, and family-brief approval
-- student attempt, visual support, revision, explanation, and record-challenge control
-- filtered English or Malayalam-preview parent activity and bounded response
-- optional structured GPT-5.6 Sol drafting through OpenRouter, off by default
-- deterministic project-authored fallback for every essential task
-- retained Class 1 addition and Class 11 linear-search examples as secondary routes
-
-Not implemented:
-
-- real registration, passwords, identity proof, SSO, or account recovery
-- a database or school information system
-- real learner profiles
-- multi-tenant provisioning, audit log, consent ledger, or deletion workflow
-- curriculum ingestion
-- analytics
-- file search, web search, vector search, or model tools
-- a production-approved model and hosting setup for real learners
-- proof of learning improvement
-
-## Current four-role release
-
-![Kanni learning support cycle across admin, teacher, student, and parent](diagrams/render/learning-support-cycle.png)
+Kanni connects one learning goal across a school administrator, assigned teacher, enrolled student, and linked parent. It is designed around a complete learning-support cycle, not four disconnected dashboards.
 
 ```text
-Synthetic login
-  |
-  v
-Signed session cookie
-  |
-  +-- role capability check
-  +-- organization and relationship check
-  |
-  v
-Role portal and Server Action
-  |
-  v
-Signed GrowthCycle cookie
-  |
-  +-- project-authored plan and support by default
-  +-- optional bounded OpenRouter draft when explicitly configured
+teacher plans
+  -> student attempts, uses support, revises, and explains
+  -> teacher reviews evidence and chooses the next support
+  -> parent receives one reviewed home activity and responds
+  -> student sees the teacher-selected next activity
 ```
 
-The browser is an untrusted boundary. HMAC signatures let the server reject changed session and workspace values, but the synthetic login is not identity proof. The workspace is continuity for a judge-operated demo, not a production student record.
+PostgreSQL is the source of truth. Users sign in with separate accounts. Every read and write is scoped by both school membership and the relevant relationship.
 
-## Role access boundary
+## 2. Current boundaries
 
-![Role capability and relationship authorization matrix](diagrams/render/role-access-boundaries.png)
+The current release contains:
+
+- one school-ready tenant model
+- four roles: school administrator, teacher, student, and parent
+- password authentication and revocable opaque sessions
+- teacher-student and parent-student relationships
+- one persisted fractions learning cycle
+- teacher planning and differentiation
+- fixed-choice student evidence and record challenge
+- teacher review and next-support selection
+- filtered family handoff and bounded family response
+- persistent English or Malayalam preference
+- optional, non-authoritative GPT-5.6 drafting through OpenRouter
+- development and production Docker Compose topologies
+
+The next operational slice is administrator-driven account provisioning and relationship editing. Multi-membership selection, password recovery, MFA, SSO, retention automation, notifications, and analytics are integration points, not hidden behavior.
+
+## 3. Runtime topology
 
 ```text
-Signed session
-  -> broad role capability
-  -> same organization
-  -> assigned, enrolled, or linked relationship
-  -> minimum authorized read or mutation
+Browser
+  | HTTPS at deployment ingress
+  v
+Next.js application container
+  | Prisma 7 PostgreSQL adapter
+  v
+PostgreSQL 18
+
+Next.js server only, optional
+  |
+  v
+OpenRouter -> allowlisted GPT-5.6 route
 ```
 
-Admin does not inherit teacher, learner, or guardian permissions. Teacher access requires assignment to the synthetic circle. Student access requires enrollment. Parent access requires an explicit guardian link and teacher approval of the family brief. The parent view contains no raw learner prompt, model transcript, score, rank, ability label, or private teacher note.
+The production Compose file keeps PostgreSQL on an internal network. A one-shot migrator applies committed schema migrations before the non-root application container becomes healthy. The application container is read-only, drops Linux capabilities, and uses a small temporary filesystem.
 
-## Optional OpenRouter runtime
+The public deployment must add a managed ingress or reverse proxy for TLS, request-size limits, malformed-request handling, and traffic rate limiting.
 
-This path is implemented but disabled by default and has not been live-evaluated in the repository release evidence.
+## 4. Data model
 
-![Future provider-neutral tutor runtime with ordered safety checks, budget controls, adapter, and validated fallback](diagrams/render/future-provider-runtime.png)
+### Identity and tenancy
+
+- `School`: tenant boundary and local context
+- `User`: login identity, bcrypt password hash, locale, active flag
+- `Membership`: user role inside one school
+- `Session`: hashed opaque token bound to one user and membership
+- `LoginThrottle`: HMAC-derived failure key and reset window
+- `AuditEvent`: school-scoped security and workflow event
+
+### Relationships
+
+- `TeacherStudent`: an explicit assigned teacher and enrolled student link
+- `GuardianStudent`: an explicit parent and student link
+
+These relations are independent of role labels. A teacher or parent can access a learning cycle only when the cycle references their membership.
+
+### Learning cycle
+
+`LearningCycle` holds the learning goal, reviewed content, selected strategy, fixed-choice evidence, teacher review, family approval and response, timestamps, and an incrementing version.
+
+The state sequence is:
 
 ```text
-Teacher or student Server Action
-  -> synthetic adult session and relationship check
-  -> fixed, rights-cleared Kanni fractions context
-  -> OpenRouter AI SDK provider
-  -> configured GPT-5.6 Sol model
-  -> Azure-only and ZDR provider route
-  -> structured Zod output
-  -> signed workspace update
+draft
+  -> active
+  -> waiting_teacher_review
+  -> waiting_family
+  -> complete
 
-Any disabled flag, missing key, timeout, provider error, or invalid object
-  -> reviewed project-authored content
+non-draft cycle -> archived + a new draft when an administrator reopens the goal
 ```
 
-Before this path can be enabled outside local adult judging:
+Writes repeat the expected status and membership in the SQL predicate. This prevents a stale browser action from silently moving the cycle after another role has already advanced it. Archived cycles remain available as school history and are excluded from the current-work query.
 
-1. Review the intended host and model provider terms for child-directed use.
-2. Obtain the right OpenRouter account, route, retention controls, and separate API budget. Codex credits are not sufficient.
-3. Add deployment rate limits, concurrency controls, and a fixed provider spend cap. Only then set the two production confirmation variables that unlock capability construction.
-4. Run live structured-output, billing, rate-limit, timeout, invalid-output, and route-selection evals.
-5. Complete adult teacher, parent, recent-learner, and native Malayalam review.
-6. Publish model, prompt, content, provider-route, and test versions with known failures.
+## 5. Authentication
 
-## Server boundaries
+1. A Server Action validates the email and password with Zod.
+2. The server checks HMAC-keyed throttle state.
+3. The password is compared against bcrypt. Unknown users use a fixed dummy hash.
+4. Exactly one active membership is required in this release.
+5. The server creates a 256-bit random token and stores only its SHA-256 hash.
+6. The browser receives an HttpOnly, SameSite=Lax cookie that is Secure in production.
+7. Every protected request resolves the session, user, membership, school, active state, and expiry from PostgreSQL.
+8. Logout deletes the database session and clears the cookie.
 
-| Boundary | Current behavior | Future condition |
-|---|---|---|
-| Synthetic `/login` | Requires one fictional profile and adult confirmation, then sets a signed two-hour session. | Replace with reviewed identity, tenant, consent, and recovery design. |
-| Portal Server Actions | Validate form data and enforce role plus relationship authorization before changing the signed cycle. | Persist through an audited tenant-isolated service only after a separate production design. |
-| `GET /api/health` | Reports legacy tutor and GrowthCycle AI capability. It does not call a model or return a secret. | Keep as a non-sensitive readiness source. |
-| `POST /api/adult-gate` | Returns unavailable while no provider is approved. | On approval, set a short-lived, signed, HttpOnly, SameSite cookie after explicit adult confirmation. |
-| `POST /api/tutor` | Parses a strict request and returns fixed safety or off-topic responses before the adult gate. Other eligible requests require a valid adult cookie, then return unavailable while capability is off. It cannot call a model in this release. | Call the selected adapter only after capability, adult, privacy, lesson, safety, rate, and spend checks pass. |
+Proxy only redirects requests that have no session cookie. It cannot prove that a cookie is valid and is never used as the authorization boundary.
 
-Every API route is public. Request validation is not authentication. Rate limits and budget controls must exist at the hosting boundary before live AI is released.
+## 6. Authorization and information visibility
 
-## Future change map
-
-The current design keeps only the seams that have a known reason to change.
-
-| Likely change | Stable Kanni contract | Replaceable part |
-|---|---|---|
-| Model provider or SDK | `TutorModelAdapter` input and output types | provider adapter and server-only credentials |
-| Teacher's Class 1 method | learner activity state and fixed-answer flow | one trusted Strategy entry |
-| Safety phrase coverage | route result: generate, unsupported, or fixed safety redirect | ordered rule list and regression cases |
-| Lesson version | stable lesson ID and section-ID validation | versioned, rights-cleared lesson pack |
-| Hosting platform | public API contract and capability response | host configuration, rate limits, secrets, and logs |
-| Same-device to approved multi-device use | versioned `LearningRecord` schema | storage adapter, identity, consent, retention, and access policy |
-
-The last row is not a simple database task. It requires a separate product and privacy decision. A school pilot would need real authentication, tenant separation, role checks, consent records, retention limits, access logs, deletion handling, and incident ownership before a server record is added.
-
-## Integration stages
-
-### Stage 0: current concept demo
-
-- four synthetic profiles only
-- signed synthetic session and same-device cycle
-- role and relationship checks
-- project-authored fractions plan and support
-- optional OpenRouter provider disabled by default
-- no analytics
-
-### Stage 1: reviewed adult-operated AI demo
-
-- reviewed host and OpenRouter provider route
-- separate API account, $10 test ceiling, and provider spend cap
-- adult-only operation and retention notice
-- server-side rate limits
-- deployed safety and model evals
-- provider version and prompt version published
-- fixed lesson fallback kept as the default recovery path
-
-### Stage 2: independently reviewed content expansion
-
-- one new lesson at a time
-- rights registry entry before content can be ingested
-- immutable content version and checksum
-- teacher and language review recorded separately
-- new lesson-specific eval cases and browser path
-- no claim of full curriculum coverage based on a few lessons
-
-### Stage 3: approved multi-device pilot
-
-- separate architecture and privacy review
-- authentication and role authorization
-- minimum data fields with a deletion and retention policy
-- tenant isolation and access audit
-- parent and teacher access tested with synthetic records first
-- no raw learner prompt or transcript in teacher and parent views
-
-Kanni does not need a vector database merely because lesson count grows. Add retrieval only when a measured content-size or selection problem exists, rights metadata travels with every chunk, and retrieval quality has its own eval set.
-
-## Operational targets for a future model path
-
-These are release conditions, not current service-level claims.
-
-| Concern | Target behavior |
-|---|---|
-| Availability | Fixed lessons remain usable during provider, budget, rate-limit, or network failure. |
-| Latency | Each GrowthCycle call stops at 18 seconds. There is no automatic application retry. |
-| Cost | At most one call per explicit draft or support action. Essential role work never requires the call. |
-| Privacy | Fixed prompt and original lesson context only. No synthetic name, answer, family response, workspace token, or secret in the model request or application logs. |
-| Traceability | Record release, prompt, content, and model versions with a non-sensitive request correlation ID. |
-| Safety | Input and output screens fail closed. High-risk cards never depend on a provider. |
-| Change control | A model, prompt, content, safety-rule, or provider change reruns the affected eval and updates public evidence. |
-
-If telemetry is added later, it needs its own notice and data review. The Build Week release has no analytics.
-
-## Design-pattern decisions
-
-Patterns are used for specific change points. Kanni does not add a pattern only to make the design look formal.
-
-### State transitions: connected GrowthCycle
-
-`lib/growth-cycle.ts` keeps every valid domain transition in one testable module. Mapping, publishing, attempting, using support, revising, reviewing, and responding each enforce their prerequisites.
-
-Why explicit transitions fit: the order is part of the product promise, and impossible handoffs should fail before state is signed.
-
-### Strategy: retained Class 1 activity
-
-`lib/math-activity-strategies.ts` uses data-driven Strategy selection to map each teacher choice to a trusted question, fixed options, a visual form, a project-authored hint, and a lesson-section ID. The teacher's choice changes behavior rather than only changing a label.
-
-Why Strategy fits: the activity algorithm varies, but the learner flow stays the same.
-
-Reference: [Strategy](https://refactoring.guru/design-patterns/strategy)
-
-### Adapter: model provider
-
-The retained tutor uses `lib/ai/model-adapter.ts`. The revised cycle has a smaller fixed OpenRouter integration in `lib/ai/growth-ai.ts`; its application contract is the Zod-validated plan or support object rather than provider text.
-
-`lib/ai/adapter-factory.ts` is the production construction point. The tutor Facade has no injected-adapter parameter, and the factory repeats the capability check before returning an adapter, so callers cannot bypass the route-level provider block through the application API.
-
-Why Adapter fits: provider SDKs and configuration differ, while Kanni needs one stable application contract.
-
-Reference: [Adapter](https://refactoring.guru/design-patterns/adapter)
-
-### Facade: tutor workflow
-
-`lib/ai/runtime.ts` exposes one orchestration entry point. It asks the adapter for output, validates that output, and isolates optional critic failures.
-
-Why Facade fits: routes should call one small application service instead of knowing model SDK details.
-
-Reference: [Facade](https://refactoring.guru/design-patterns/facade)
-
-### Functional Chain of Responsibility: prompt boundaries
-
-`lib/safety.ts` runs ordered rules for high-risk content, personal data, prompt injection, cheating, disallowed advice, and lesson scope. The first matching rule chooses a fixed route.
-
-Why this form fits: order matters, each rule has one purpose, and the list is easy to test without a class hierarchy.
-
-Reference: [Chain of Responsibility](https://refactoring.guru/design-patterns/chain-of-responsibility)
-
-### Patterns not added
-
-- No repository abstraction. There is no database.
-- No event bus. One browser context owns the small record.
-- No general agent loop. Tutor and critic calls are fixed application-controlled steps.
-- No service locator or dependency container. The single adapter factory is enough for the current construction path.
-- No vector-store abstraction. Both lesson packs fit in trusted local content.
-
-The pattern catalog is a vocabulary, not a checklist. See [Refactoring Guru's design-pattern overview](https://refactoring.guru/design-patterns).
-
-## Failure behavior
-
-| Failure | Current user-visible result | Future model path |
-|---|---|---|
-| AI disabled | Fixed lessons remain available. Custom AI is labelled off. | Same fallback. |
-| Adult gate missing | No model request is allowed. | Return 401 for an otherwise eligible model request. |
-| Invalid request or unknown guided ID | Return 400. | Same. |
-| Request body exceeds 8 KiB | Return 413 before classification. | Same. |
-| Personal data or off-topic request | Return a fixed boundary response. | Do not call a model. |
-| High-risk phrase | Return a fixed safety card with 1098, 112, and 14416. | Do not ask a model to write crisis advice. |
-| Provider refusal, timeout, billing error, or rate limit | Not reachable in the static release. | Hide generated text and return the fixed unavailable response. |
-| Malformed output or invented source ID | Not reachable in the static release. | Discard it and return the fixed unavailable response. |
-| One optional critic fails | Not reachable in the static release. | Keep the already validated primary answer and mark that critic unavailable. |
-| Browser storage changed or corrupt | Reject invalid records and start a new synthetic record. | Do not treat the record as authenticated data. |
-| Attempt history reaches 12 entries | Keep the latest 12 attempts and continue without throwing. | Same. |
-
-## Content and rights boundary
-
-Only original Kanni lesson content is bundled for model context. It is licensed under CC BY 4.0. Public textbook pages are references only.
-
-The following pages may help a human locate public textbook and handbook listings, but Kanni does not ingest, copy, transcribe, screenshot, redraw, index, or redistribute their content:
-
-- [SCERT Kerala textbook archive](https://textbooksarchives.scert.kerala.gov.in/login.php)
-- [Arabic Edu Web handbook listing shared during planning](https://www.arabiceduweb.in/2024/06/1-3-new-text-books-2024.html)
-- [Arabic Edu Web textbook listing shared during planning](https://www.arabiceduweb.in/2024/05/i-iii-v-vii-ix-new-text-books-2024.html)
-
-Unknown rights always mean link-only. Kanni does not use SCERT logos and does not claim SCERT endorsement.
-
-## Records of decisions
-
-| ID | Decision | Reason | Revisit when |
+| Role | Scope | Can change | Cannot see or change |
 |---|---|---|---|
-| ADR-001 | Keep one signed same-device record, not a database. | It proves the connected product loop without collecting identities. | Real multi-device use is approved. |
-| ADR-002 | Keep the release useful without AI. | Static content gives every main role a complete path. | Never. This remains the fallback. |
-| ADR-003 | Use OpenRouter only as an optional adult-operated adapter and keep it off by default. | Codex credits are not API credits, provider review is incomplete, and essential product behavior must remain testable without spend. | Live provider and deployment gates pass. |
-| ADR-004 | Use strict lesson-specific request variants. | Class 1 fixed choices and Class 11 custom questions have different allowed fields. | A new lesson mode is implemented. |
-| ADR-005 | Use fixed critics, not a recursive agent system. | Cost, latency, and failure count stay bounded. | A measured need justifies another fixed check. |
-| ADR-006 | Treat external textbook listings as link-only. | Public access does not establish reuse rights. | Written permission or a compatible license is recorded. |
-| ADR-007 | Use role checks and relationship checks. | A role alone must not grant access to every learner or family. | Never. Production identity adds to this rule. |
+| School administrator | current school | preserve the current cycle and open the goal again | student evidence and teacher review decisions |
+| Teacher | assigned cycles | plan, publish, review, choose next support, approve family activity | unrelated students and other schools |
+| Student | enrolled cycles | answer, open support, revise, explain, challenge own record | teacher controls, family response, other students |
+| Parent | explicitly linked cycles | one bounded family response | raw student evidence, model output, private teacher work |
 
-## Source notes
+Authorization has three layers:
 
-- [Vercel Acceptable Use Policy](https://vercel.com/legal/acceptable-use-policy), including the AI Services restrictions updated April 21, 2026
-- [Vercel AI Product Terms](https://vercel.com/legal/ai-product-terms), including separate end-user terms and privacy-policy requirements
-- [OpenAI Under 18 API Guidance](https://developers.openai.com/api/docs/guides/safety-checks/under-18-api-guidance)
-- [OpenAI data controls](https://developers.openai.com/api/docs/guides/your-data#data-retention-controls-for-abuse-monitoring)
+1. Server session resolves the actor and active membership.
+2. Data Access Layer adds school and relationship scope to reads.
+3. Every Server Action repeats the exact role, relationship, and state preconditions at the write.
 
-See [SECURITY.md](../SECURITY.md) for the threat model and release controls.
+Client controls, hidden buttons, route names, and Proxy redirects are not treated as security controls.
+
+## 7. Design patterns used with purpose
+
+Patterns are used only where they make the learning system easier to extend and test.
+
+### Data Access Layer
+
+`lib/school-data.ts` owns relationship-scoped queries. UI components receive already-scoped records and do not assemble authorization filters.
+
+### Policy Object
+
+`lib/permissions.ts` makes role capabilities and information visibility explicit. `lib/ai/capability-policy.ts` separately expresses release gates for the provider. Both are deterministic and evaluated without infrastructure.
+
+### State Machine
+
+Cycle status, required fields, and database predicates define valid handoffs. Server Actions act as transition commands. Invalid or repeated transitions fail closed or remain idempotent.
+
+### Strategy
+
+The teacher chooses `fraction_strips`, `guided_questions`, or `explain_to_someone`. `growth-support-presentations.ts` maps each choice to reviewed student and parent presentations. Adding a new support requires an enum migration, reviewed content, presentation mapping, and tests.
+
+### Adapter
+
+`lib/ai/growth-ai.ts` is the provider adapter. The domain workflow consumes a teacher-plan or student-support draft and remains unchanged when AI is unavailable. A future provider can implement the same validated boundary.
+
+### Unit of Work
+
+Prisma transactions group security-sensitive multi-record operations with audit events. Examples include session creation, plan publication, evidence submission, record challenge, teacher review, family response, cycle archival and creation, and logout.
+
+### Presentation Model
+
+Parents receive a deliberately reduced view of the learning cycle. The parent page does not render a generic cycle object or model transcript. It derives one reviewed summary and home action from trusted fields.
+
+Patterns deliberately not used:
+
+- no global singleton state store in the browser
+- no event bus for a single-process, synchronous workflow
+- no recursive agent graph
+- no repository abstraction over every Prisma call
+- no microservices before there is an independent scaling or ownership need
+
+## 8. Optional AI
+
+AI is an enhancement to reviewed content, not the product's control plane.
+
+Teacher-plan request:
+
+```text
+teacher requests draft
+  -> server checks feature, provider, model, credential, and release gates
+  -> exact bundled context is sent
+  -> schema-validated plan returns
+  -> teacher reviews and decides whether to publish
+```
+
+Student support request:
+
+```text
+student opens support already selected by teacher
+  -> exact strategy and bundled fractions context are sent
+  -> schema validation
+  -> allowlisted source IDs
+  -> deterministic content and strategy checks
+  -> accepted draft or immediate reviewed fallback
+```
+
+No AI request contains learner identity, email, answer record, family response, session, or membership. AI cannot decide access, publish content, grade, rank, diagnose, contact a family, or mutate the database directly.
+
+## 9. Language model
+
+English and Malayalam interface strings are fixed code dictionaries. Locale is stored on the user and mirrored to an HttpOnly cookie so public and authenticated pages render consistently. The language action validates the locale and accepts only a same-origin relative return path.
+
+Malayalam passages use `lang="ml"`, local Noto Sans Malayalam fonts, and no artificial letter spacing. A native Malayalam educator review remains a release gate for real school use.
+
+## 10. Failure behavior
+
+| Failure | Behavior |
+|---|---|
+| PostgreSQL unavailable | health endpoint returns 503; account and workflow operations stop without inventing state |
+| invalid or expired session | redirect to sign-in; no protected data returned |
+| wrong role | redirect to the actor's own portal; mutation is not executed |
+| unrelated membership | scoped query finds no cycle; mutation is not executed |
+| stale workflow action | database transition predicate updates zero rows; safe notice returned |
+| provider disabled or missing key | reviewed content remains available |
+| provider timeout or error | reviewed content is returned |
+| malformed or unsafe AI output | generated text is hidden and reviewed content is returned |
+| duplicate action | one-shot precondition or idempotent transition prevents double mutation |
+
+## 11. Deployment evolution
+
+### Current complete slice
+
+- one Next.js process
+- one PostgreSQL instance
+- one school and one learning goal seeded for judging
+- opaque database sessions
+- Docker Compose deployment
+- optional AI provider
+
+### School integration
+
+- administrator provisioning and relationship approval
+- school SSO or reviewed identity provider
+- MFA for staff and school administrators
+- password reset and session-management screens
+- retention, export, correction, and deletion workflows
+- notification outbox and consent-aware delivery
+- backup schedule, restore tests, monitoring, and incident playbooks
+
+### Multi-school scale
+
+- membership selection for users in multiple schools
+- database row-level-security defense in depth
+- immutable tenant-aware audit export
+- queued notifications and background tasks
+- shared cache and a stable Server Action encryption key for multiple app replicas
+- deployment ID and controlled rolling releases
+- per-school feature, budget, and provider policy
+
+Microservices should be introduced only when notification delivery, identity, analytics, or AI execution has a clear independent scale, security, or ownership boundary.
+
+## 12. Verification model
+
+The release evidence combines:
+
+- unit tests for state transitions, role policy, AI release policy, schemas, and deterministic output gates
+- 32 deterministic cases covering authorization, workflow, language, privacy, and AI configuration
+- database-backed Playwright tests for the full four-account cycle and denied access
+- Axe scans on landing and sign-in pages
+- mobile language switching at 360 pixels
+- dependency audit, production build, Docker configuration validation, and image build
+- separate read-only security and implementation self-review
+
+This evidence demonstrates that the implemented workflow behaves as designed. It does not claim learning effectiveness or legal readiness for every school.

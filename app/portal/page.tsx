@@ -1,9 +1,8 @@
 import { redirect } from "next/navigation";
 
-import { demoPersonas, type DemoPersonaId } from "@/lib/demo-fixtures";
-import { requireDemoActor } from "@/lib/demo-server";
+import { homeForRole, requireActor } from "@/lib/auth";
 
 export default async function PortalPage() {
-  const actor = await requireDemoActor();
-  redirect(demoPersonas[actor.personaId as DemoPersonaId].homePath);
+  const actor = await requireActor();
+  redirect(homeForRole(actor.role));
 }

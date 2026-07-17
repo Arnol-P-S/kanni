@@ -7,7 +7,7 @@ const originalEnvironment = { ...process.env };
 describe("optional GrowthCycle AI", () => {
   beforeEach(() => {
     vi.resetModules();
-    delete process.env.AI_DEMO_ENABLED;
+    delete process.env.GROWTH_AI_ENABLED;
     delete process.env.GROWTH_AI_PROVIDER;
     delete process.env.GROWTH_AI_MODEL;
     delete process.env.OPENROUTER_API_KEY;
@@ -31,7 +31,7 @@ describe("optional GrowthCycle AI", () => {
   });
 
   it("requires both the OpenRouter provider selection and a credential", async () => {
-    process.env.AI_DEMO_ENABLED = "true";
+    process.env.GROWTH_AI_ENABLED = "true";
     process.env.GROWTH_AI_PROVIDER = "openrouter";
     const { getGrowthAiCapability } = await import("@/lib/ai/growth-ai");
     expect(getGrowthAiCapability()).toMatchObject({
@@ -42,7 +42,7 @@ describe("optional GrowthCycle AI", () => {
   });
 
   it("reports the exact model when all activation gates are present", async () => {
-    process.env.AI_DEMO_ENABLED = "true";
+    process.env.GROWTH_AI_ENABLED = "true";
     process.env.GROWTH_AI_PROVIDER = "openrouter";
     process.env.GROWTH_AI_MODEL = "openai/gpt-5.6-sol";
     process.env.OPENROUTER_API_KEY = "test-key-not-a-real-secret";
@@ -56,7 +56,7 @@ describe("optional GrowthCycle AI", () => {
   });
 
   it("rejects an unapproved model and requires release controls in production", async () => {
-    process.env.AI_DEMO_ENABLED = "true";
+    process.env.GROWTH_AI_ENABLED = "true";
     process.env.GROWTH_AI_PROVIDER = "openrouter";
     process.env.OPENROUTER_API_KEY = "test-key-not-a-real-secret";
     process.env.GROWTH_AI_MODEL = "another/model";

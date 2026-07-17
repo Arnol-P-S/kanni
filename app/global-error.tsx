@@ -23,10 +23,7 @@ export default function GlobalError({
             <ShieldAlert size={40} aria-hidden="true" />
             <p className="eyebrow">Temporary problem</p>
             <h1 id="global-error-title">Kanni needs another try.</h1>
-            <p>
-              No learner identity or conversation is stored by this prototype.
-              Reload the app, or return to the home page.
-            </p>
+            <p>Reload the page, or return home and sign in again if the problem continues.</p>
             <div className="hero-actions">
               <button className="button primary" type="button" onClick={unstable_retry}>
                 <RefreshCw size={18} aria-hidden="true" /> Reload Kanni

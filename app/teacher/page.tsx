@@ -1,12 +1,5 @@
-import type { Metadata } from "next";
-
-import { TeacherDashboard } from "@/components/teacher-dashboard";
-
-export const metadata: Metadata = {
-  title: "Teacher review",
-  description: "Review one activity and choose the learner's next strategy.",
-};
+import { redirect } from "next/navigation";
 
 export default function TeacherPage() {
-  return <TeacherDashboard />;
+  redirect("/portal/teacher");
 }

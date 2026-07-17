@@ -113,7 +113,7 @@ export const GrowthCycleSchema = z
   .object({
     version: z.literal(1),
     id: z.literal("growth-fractions-001"),
-    organizationId: z.literal("kanni-demo-community"),
+    organizationId: z.literal("kanni-community-school"),
     groupId: z.literal("learning-circle-a"),
     learnerId: z.literal("learner-diya"),
     mapping: z
@@ -167,7 +167,7 @@ export function createGrowthCycle(
   return GrowthCycleSchema.parse({
     version: 1,
     id: "growth-fractions-001",
-    organizationId: "kanni-demo-community",
+    organizationId: "kanni-community-school",
     groupId: "learning-circle-a",
     learnerId: "learner-diya",
     mapping: {

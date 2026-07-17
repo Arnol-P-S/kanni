@@ -1,12 +1,5 @@
-import type { Metadata } from "next";
-
-import { ParentDashboard } from "@/components/parent-dashboard";
-
-export const metadata: Metadata = {
-  title: "Parent handoff",
-  description: "One plain-language activity summary and one home prompt.",
-};
+import { redirect } from "next/navigation";
 
 export default function ParentPage() {
-  return <ParentDashboard />;
+  redirect("/portal/parent");
 }

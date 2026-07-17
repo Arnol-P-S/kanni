@@ -1,29 +1,17 @@
 import type { Metadata } from "next";
-import {
-  BookOpenCheck,
-  House,
-  School,
-  ShieldCheck,
-  UserRoundCog,
-} from "lucide-react";
+import { BookOpenCheck, House, School, UserRoundCog } from "lucide-react";
+import { redirect } from "next/navigation";
 
-import { loginDemo } from "@/app/actions/demo";
-import { demoPersonaList } from "@/lib/demo-fixtures";
+import { LoginForm } from "@/components/login-form";
+import { PublicFooter } from "@/components/public-footer";
+import { PublicHeader } from "@/components/public-header";
+import { getCurrentActor, homeForRole } from "@/lib/auth";
+import { copy, getRequestLocale } from "@/lib/i18n";
+import { reviewAccounts } from "@/lib/review-accounts";
 
-export const metadata: Metadata = { title: "Synthetic demo login" };
-
-const roleIcons = {
-  tenant_admin: UserRoundCog,
-  teacher: School,
-  student: BookOpenCheck,
-  guardian: House,
-} as const;
-
-const noticeCopy: Record<string, string> = {
-  "session-required": "Choose a synthetic profile to enter the demo.",
-  "confirmation-required":
-    "Adult confirmation and one synthetic profile are required.",
-  "account-switched": "The previous synthetic session has ended.",
+export const metadata: Metadata = {
+  title: "Sign in",
+  description: "Sign in to your Kanni school workspace.",
 };
 
 export default async function LoginPage({
@@ -31,71 +19,70 @@ export default async function LoginPage({
 }: {
   searchParams: Promise<{ notice?: string }>;
 }) {
+  const actor = await getCurrentActor();
+  if (actor) redirect(homeForRole(actor.role));
+  const locale = await getRequestLocale();
   const { notice } = await searchParams;
+  const showReviewAccess =
+    process.env.NODE_ENV !== "production" ||
+    process.env.REVIEW_ACCESS_VISIBLE === "true";
+
   return (
-    <main id="main-content" className="page-shell login-page">
-      <header className="login-heading">
-        <p className="eyebrow">Four people · one learning goal</p>
-        <h1>Choose a synthetic Kanni perspective</h1>
-        <p>
-          Each profile sees a different authorized part of the same learning
-          cycle. These are fictional accounts for adult testing only.
-        </p>
-      </header>
-
-      {notice && noticeCopy[notice] ? (
-        <p className="form-notice" role="status">{noticeCopy[notice]}</p>
-      ) : null}
-
-      <form action={loginDemo} className="persona-form">
-        <fieldset>
-          <legend>Select one demo profile</legend>
-          <div className="persona-grid">
-            {demoPersonaList.map((persona) => {
-              const Icon = roleIcons[persona.role];
-              return (
-                <label className="persona-card" key={persona.id}>
-                  <input
-                    type="radio"
-                    name="personaId"
-                    value={persona.id}
-                    required
-                  />
-                  <span className="persona-card-body">
-                    <span className="persona-icon" aria-hidden="true"><Icon /></span>
-                    <span>
-                      <strong>{persona.displayName}</strong>
-                      <small>{persona.roleLabel}</small>
-                    </span>
-                    <span className="persona-description">{persona.description}</span>
-                  </span>
-                </label>
-              );
+    <>
+      <PublicHeader locale={locale} returnTo="/login" />
+      <main id="main-content" className="login-layout page-shell">
+        <section className="login-product-panel">
+          <p className="eyebrow">
+            {copy(locale, { en: "Welcome back", ml: "വീണ്ടും സ്വാഗതം" })}
+          </p>
+          <h1>
+            {copy(locale, {
+              en: "Your next task is ready.",
+              ml: "നിങ്ങളുടെ അടുത്ത പ്രവർത്തി തയ്യാറാണ്.",
             })}
+          </h1>
+          <p>
+            {copy(locale, {
+              en: "Use your school account. Kanni will open the workspace connected to your role and learning circle.",
+              ml: "നിങ്ങളുടെ സ്കൂൾ അക്കൗണ്ട് ഉപയോഗിക്കുക. നിങ്ങളുടെ ചുമതലയ്ക്കും പഠനവലയത്തിനും അനുയോജ്യമായ പ്രവർത്തിസ്ഥലം കണ്ണി തുറക്കും.",
+            })}
+          </p>
+          <div className="login-role-row" aria-label="Kanni workspaces">
+            <span><UserRoundCog aria-hidden="true" />{copy(locale, { en: "School", ml: "സ്കൂൾ" })}</span>
+            <span><School aria-hidden="true" />{copy(locale, { en: "Teacher", ml: "അധ്യാപകൻ" })}</span>
+            <span><BookOpenCheck aria-hidden="true" />{copy(locale, { en: "Student", ml: "വിദ്യാർത്ഥി" })}</span>
+            <span><House aria-hidden="true" />{copy(locale, { en: "Parent", ml: "രക്ഷിതാവ്" })}</span>
           </div>
-        </fieldset>
+        </section>
 
-        <label className="adult-confirmation">
-          <input type="checkbox" name="adultConfirmed" required />
-          <span>
-            <strong>I am 18 or older.</strong>
-            I am testing this prototype myself. I will not enter real learner or
-            family information.
-          </span>
-        </label>
-
-        <button className="button primary login-submit" type="submit">
-          Enter synthetic workspace
-        </button>
-      </form>
-
-      <aside className="login-boundary">
-        <ShieldCheck size={22} aria-hidden="true" />
-        <p>
-          This flow demonstrates sessions and role checks. It is not open
-          registration, school SSO, or proof of a person’s real identity.
-        </p>
-      </aside>
-    </main>
+        <section className="login-card" aria-labelledby="sign-in-title">
+          <div className="login-card-heading">
+            <h2 id="sign-in-title">{copy(locale, { en: "Sign in", ml: "സൈൻ ഇൻ" })}</h2>
+            <p>{copy(locale, { en: "Enter the email and password issued by your school.", ml: "സ്കൂൾ നൽകിയ ഇമെയിലും പാസ്‌വേഡും നൽകുക." })}</p>
+          </div>
+          {notice === "signed-out" ? (
+            <p className="form-notice" role="status">
+              {copy(locale, { en: "You have signed out.", ml: "നിങ്ങൾ സൈൻ ഔട്ട് ചെയ്തു." })}
+            </p>
+          ) : notice === "session-required" ? (
+            <p className="form-notice" role="status">
+              {copy(locale, { en: "Sign in to continue.", ml: "തുടരാൻ സൈൻ ഇൻ ചെയ്യുക." })}
+            </p>
+          ) : null}
+          <LoginForm
+            accounts={showReviewAccess ? reviewAccounts : []}
+            copy={{
+              email: copy(locale, { en: "Email", ml: "ഇമെയിൽ" }),
+              password: copy(locale, { en: "Password", ml: "പാസ്‌വേഡ്" }),
+              submit: copy(locale, { en: "Open workspace", ml: "പ്രവർത്തിസ്ഥലം തുറക്കുക" }),
+              reviewTitle: copy(locale, { en: "Review access", ml: "പരിശോധനാ പ്രവേശനം" }),
+              reviewDetail: copy(locale, { en: "Choose an account to fill its local review credentials.", ml: "പ്രാദേശിക പരിശോധനാ വിവരങ്ങൾ പൂരിപ്പിക്കാൻ ഒരു അക്കൗണ്ട് തിരഞ്ഞെടുക്കുക." }),
+              useAccount: copy(locale, { en: "Use", ml: "ഉപയോഗിക്കുക" }),
+            }}
+          />
+        </section>
+      </main>
+      <PublicFooter locale={locale} />
+    </>
   );
 }

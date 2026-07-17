@@ -12,69 +12,15 @@ import {
   type SupportStrategy,
   type TeacherPlanDraft,
 } from "@/lib/growth-cycle";
+import {
+  evaluateGrowthAiCapability,
+  type GrowthAiCapability,
+} from "@/lib/ai/capability-policy";
 
-const DEFAULT_MODEL = "openai/gpt-5.6-sol";
-
-export type GrowthAiCapability = {
-  available: boolean;
-  provider: "openrouter" | "disabled";
-  model: string;
-  reason:
-    | "available"
-    | "disabled_by_flag"
-    | "provider_disabled"
-    | "missing_credentials"
-    | "model_not_allowed"
-    | "release_controls_missing";
-};
+export type { GrowthAiCapability } from "@/lib/ai/capability-policy";
 
 export function getGrowthAiCapability(): GrowthAiCapability {
-  const model = process.env.GROWTH_AI_MODEL?.trim() || DEFAULT_MODEL;
-  if (process.env.AI_DEMO_ENABLED !== "true") {
-    return {
-      available: false,
-      provider: "disabled",
-      model,
-      reason: "disabled_by_flag",
-    };
-  }
-  if ((process.env.GROWTH_AI_PROVIDER?.trim() || "disabled") !== "openrouter") {
-    return {
-      available: false,
-      provider: "disabled",
-      model,
-      reason: "provider_disabled",
-    };
-  }
-  if (model !== DEFAULT_MODEL) {
-    return {
-      available: false,
-      provider: "openrouter",
-      model,
-      reason: "model_not_allowed",
-    };
-  }
-  if (!process.env.OPENROUTER_API_KEY?.trim()) {
-    return {
-      available: false,
-      provider: "openrouter",
-      model,
-      reason: "missing_credentials",
-    };
-  }
-  if (
-    process.env.NODE_ENV === "production" &&
-    (process.env.GROWTH_AI_RATE_LIMIT_CONFIRMED !== "true" ||
-      process.env.GROWTH_AI_SPEND_LIMIT_CONFIRMED !== "true")
-  ) {
-    return {
-      available: false,
-      provider: "openrouter",
-      model,
-      reason: "release_controls_missing",
-    };
-  }
-  return { available: true, provider: "openrouter", model, reason: "available" };
+  return evaluateGrowthAiCapability(process.env);
 }
 
 function createGrowthModel() {
@@ -84,7 +30,7 @@ function createGrowthModel() {
     apiKey: process.env.OPENROUTER_API_KEY,
     compatibility: "strict",
     appName: "Kanni",
-    appUrl: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+    appUrl: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3001",
   });
   return openrouter(capability.model, {
     extraBody: {
@@ -118,7 +64,7 @@ export async function generateTeacherPlanDraft(): Promise<{
   try {
     const result = await generateText({
       model,
-      prompt: `You are drafting a teacher-reviewed learning plan for a synthetic adult-operated education demo. Use only the approved context. Do not diagnose, rank, grade, infer ability, or add facts. Keep every sentence short. Return only allowed source and misconception IDs.\n${lessonContext}`,
+      prompt: `You are drafting a teacher-reviewed learning plan inside a school learning platform. Use only the approved context. Do not diagnose, rank, grade, infer ability, or add facts. Keep every sentence short. Return only allowed source and misconception IDs.\n${lessonContext}`,
       output: Output.object({ schema: TeacherPlanDraftSchema }),
       temperature: 0.1,
       maxOutputTokens: 600,
