@@ -2952,6 +2952,33 @@ td {
   color: var(--ink-soft);
 }
 
+.ai-audit-metadata {
+  color: var(--teal-800);
+  font-size: 0.78rem;
+  font-weight: 750;
+}
+
+.completed-evidence-card,
+.student-evidence-trail-card,
+.completed-student-help {
+  scroll-margin-top: 24px;
+}
+
+.completed-student-help {
+  display: grid;
+  gap: 14px;
+  margin-top: 22px;
+  padding: 18px;
+  border: 1px solid #8fcfc2;
+  border-radius: 14px;
+  background: var(--teal-50);
+}
+
+.ai-provenance-card {
+  border-color: #8fcfc2;
+  background: linear-gradient(145deg, #ffffff 0%, var(--teal-50) 100%);
+}
+
 .critique-prompts,
 .reflection-question-list {
   margin-top: 12px;

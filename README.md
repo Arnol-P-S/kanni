@@ -224,6 +224,42 @@ explicit confirmation value:
 RUN_LIVE_AI_EVALS=I_UNDERSTAND_THIS_SPENDS_OPENROUTER_CREDIT corepack pnpm eval:live
 ```
 
+## Prepare the saved recording flow
+
+The video can use one complete, read-only learning flow instead of spending time
+typing on camera. Start the production Docker stack, keep the four existing role
+accounts and their teacher-parent mapping, then run:
+
+```bash
+KANNI_RECORDING_FLOW_CONFIRMATION=I_UNDERSTAND_THIS_CREATES_ONE_SYNTHETIC_RECORDING_FLOW \
+  docker compose -f compose.recording.yaml --env-file .env.production run --rm --build prepare
+```
+
+On a successful run, this command makes exactly two paid requests through the
+configured OpenRouter model: one teacher plan and one student thinking-coach
+response. Both results must pass the same schemas, source checks, and safety checks
+as the application before the database is changed. The command then creates
+`Rainwater Resilience Lab` with
+original Kanni curriculum and clearly synthetic learner work. On a repeat run, it
+replaces only an earlier studio carrying Kanni's recording-flow audit tag. A normal
+studio with the same title is left untouched. It does not reset accounts, mappings,
+passwords, or other studios. The one-off container enables student AI only for this
+fixed synthetic request; it does not change the production application's
+student-AI settings.
+
+The completed studio stores the returned model, prompt versions, source IDs, token
+counts, latency, and provider-reported cost. It contains the full handoff from
+administrator to teacher, learner, teacher review, and parent response, so each
+role can be recorded without creating content during the video.
+
+The first recording run also exposed a useful failure case: a schema-valid Luna
+response padded seven text fields with malformed glyphs at their maximum lengths.
+Kanni now rejects replacement characters, unexpected writing systems, invisible
+format controls, and text that reaches a declared output boundary. The saved flow
+keeps the real grounded plan and student questions, while a no-egress review task
+applies seven documented wording corrections and records a human-review audit
+event. That correction task has no provider key and makes zero AI requests.
+
 ## Verification
 
 Start the local database, then run:
@@ -246,7 +282,7 @@ also checks role denial, generic login errors, English and Malayalam switching,
 360-pixel layout, reduced motion, parent and administrator privacy, and serious
 or critical Axe findings. AI is disabled in the browser suite.
 
-The unit suite has 51 tests. The deterministic evaluation set has 51 cases covering curriculum rights,
+The unit suite has 61 tests. The deterministic evaluation set has 51 cases covering curriculum rights,
 retrieval, invented citations, learner agency, scaffold fading, unsupported
 requests, prompt injection, personal data, safety routing, role privacy, and
 Malayalam-English input. Live model evaluation is separate so ordinary tests do

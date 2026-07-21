@@ -7,6 +7,7 @@ import {
   FileSearch,
   MessageCircleQuestion,
   ShieldAlert,
+  Sparkles,
 } from "lucide-react";
 
 import { EmptyWorkspace, PortalChrome } from "@/components/portal-chrome";
@@ -83,17 +84,20 @@ export default async function StudentPortalPage({
                 initialStudentHelp={studentHelp?.success ? studentHelp.data : null}
               />
             </section>
-          ) : studio.status === StudioStatus.awaiting_teacher_review ? (
-            <section className="portal-card student-waiting-review-card">
-              <div className="card-heading-row"><div><p className="eyebrow">Work sent</p><h2>Your teacher is reviewing how your thinking changed</h2></div><Clock3 aria-hidden="true" /></div>
-              {studio.submission ? <div className="student-submission-recap"><article><span>Prediction</span><p>{studio.submission.prediction}</p></article><article><span>First version</span><p>{studio.submission.firstDraft}</p></article><article><span>Your critique</span><p>{studio.submission.selfCritique}</p></article><article><span>Revision</span><p>{studio.submission.revision}</p></article><article><span>Your reason</span><p>{studio.submission.explanation}</p></article><article><span>Reflection</span><p>{studio.submission.reflection}</p></article></div> : null}
-              <p className="privacy-inline-note">Only you and your assigned teacher can see this raw work. The parent and administrator views do not receive it.</p>
-            </section>
           ) : (
-            <section className="portal-card student-feedback-card">
-              <div className="card-heading-row"><div><p className="eyebrow">Teacher feedback</p><h2>Your next question is ready</h2></div><MessageCircleQuestion aria-hidden="true" /></div>
-              {studio.teacherReview ? <><blockquote>{studio.teacherReview.studentFeedback}</blockquote><div className="next-question-callout"><span>Think next</span><strong>{studio.teacherReview.nextQuestion}</strong></div><p>The next studio will begin with <strong>{studio.teacherReview.nextScaffoldLevel}</strong> support. Your teacher made that decision from this activity.</p></> : <p>Your teacher is finishing the review.</p>}
-            </section>
+            <>
+              <section className="portal-card student-evidence-trail-card">
+                <div className="card-heading-row"><div><p className="eyebrow">{studio.status === StudioStatus.awaiting_teacher_review ? "Work sent" : "Your evidence trail"}</p><h2>{studio.status === StudioStatus.awaiting_teacher_review ? "Your teacher is reviewing how your thinking changed" : "See what changed from your first idea to your revision"}</h2><p>The final version is only one part of the work. Your prediction, critique, and reason for changing it stay visible too.</p></div>{studio.status === StudioStatus.awaiting_teacher_review ? <Clock3 aria-hidden="true" /> : <CheckCircle2 aria-hidden="true" />}</div>
+                {studio.submission ? <><div className="student-submission-recap"><article><span>Prediction</span><p>{studio.submission.prediction}</p></article><article><span>First version</span><p>{studio.submission.firstDraft}</p></article><article><span>Your critique</span><p>{studio.submission.selfCritique}</p></article><article><span>Revision</span><p>{studio.submission.revision}</p></article><article><span>Your reason</span><p>{studio.submission.explanation}</p></article><article><span>Reflection</span><p>{studio.submission.reflection}</p></article></div><div className="evidence-context-row"><span><strong>Chosen route:</strong> {plan.interestHooks[studio.submission.interestHookIndex]?.title ?? "Student choice"}</span><span><strong>Maker path:</strong> {plan.makerChoices.find((choice) => choice.id === studio.submission?.makerChoiceId)?.title ?? studio.submission.makerChoiceId}</span><span><strong>Opened support:</strong> {studio.submission.supportOpened ? "Yes" : "No"}</span></div></> : null}
+                {studentHelp?.success ? <div className="completed-student-help"><div className="ai-thinking-heading"><Sparkles aria-hidden="true" /><span><strong>Creative questions you used</strong><small>These came after your first attempt. You still chose the test and wrote the revision.</small></span></div><div className="student-help-result"><p>{studentHelp.data.opening}</p><ol>{studentHelp.data.creativeSteps.map((creativeStep) => <li key={`${creativeStep.title}-${creativeStep.question}`}><span>{creativeStep.title}</span><strong>{creativeStep.question}</strong><p>{creativeStep.tryThis}</p><small>Source: {creativeStep.sourceSectionIds.join(", ")}</small></li>)}</ol><div className="student-help-self-check"><strong>Check it yourself</strong><p>{studentHelp.data.selfCheck}</p></div><small className="student-help-grounding">Grounded in {studentHelp.data.sourceSectionIds.join(", ")} · {studio.studentHelp?.promptVersion}</small></div></div> : null}
+                <p className="privacy-inline-note">Only you and your assigned teacher can see this raw work. The parent and administrator views do not receive it.</p>
+              </section>
+
+              {studio.status === StudioStatus.awaiting_teacher_review ? null : <section className="portal-card student-feedback-card">
+                <div className="card-heading-row"><div><p className="eyebrow">Teacher feedback</p><h2>Your next question is ready</h2></div><MessageCircleQuestion aria-hidden="true" /></div>
+                {studio.teacherReview ? <><blockquote>{studio.teacherReview.studentFeedback}</blockquote><div className="next-question-callout"><span>Think next</span><strong>{studio.teacherReview.nextQuestion}</strong></div><p>The next studio will begin with <strong>{studio.teacherReview.nextScaffoldLevel}</strong> support. Your teacher made that decision from this activity.</p></> : <p>Your teacher is finishing the review.</p>}
+              </section>}
+            </>
           )}
         </div>
       )}

@@ -18,6 +18,12 @@ COPY . .
 RUN pnpm db:generate
 RUN pnpm build
 
+FROM dependencies AS operator
+COPY . .
+RUN pnpm db:generate
+USER node
+CMD ["node", "--conditions=react-server", "--import", "tsx", "scripts/prepare-recording-flow.ts"]
+
 FROM base AS migrator
 COPY --from=dependencies --chown=node:node /app/node_modules ./node_modules
 COPY --chown=node:node package.json pnpm-lock.yaml pnpm-workspace.yaml prisma.config.ts ./

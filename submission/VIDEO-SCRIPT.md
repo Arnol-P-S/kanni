@@ -2,127 +2,124 @@
 
 Target length: 2 minutes 56 seconds. Narration and captions are in English.
 
-## Prepare the recording
+## Prepare once before recording
 
-Use adult-operated accounts and original school-authored curriculum. Do not show
-emails, passwords, environment files, provider keys, browser developer tools, or
-personal notifications.
+Use the saved `Rainwater Resilience Lab` flow. It contains original Kanni
+curriculum, synthetic learner work, one grounded GPT-5.6 teacher draft, one
+grounded GPT-5.6 thinking-coach draft, seven audited human-reviewed text
+corrections, a teacher review, and a parent response. The application creates the
+flow through the documented one-off Docker command. It keeps the existing role
+accounts and support-circle mapping.
 
-Before creating the recording state, confirm `/api/health` reports an available
-database, teacher AI, and student help. Student help remains off unless the school
-operator has reviewed external student-data processing and enabled both student
-release controls. Do this check before screen recording so no configuration or
-secret appears in the video.
+1. Confirm the production Docker application is healthy at
+   <http://localhost:3001/api/health>.
+2. Run the command in the README section titled “Prepare the saved recording
+   flow.” It makes exactly two paid OpenRouter requests and prints their recorded
+   cost without printing the key.
+3. Sign in to the administrator, teacher, student, and parent accounts in four
+   separate browser profiles or windows. Do not record sign-in or credentials.
+4. Open the completed flow in each workspace. Close the Quick guide, clear any
+   transient notice, and place each page at the section named below.
+5. Record short clips at 1920 by 1080 or higher. Use a browser zoom where the
+   important text is readable. Move the pointer slowly and scroll only when the
+   narration changes focus.
+6. Record the narration separately, then assemble the clips in this order. No
+   typing, provider wait, or live content creation is needed.
 
-Create these states through the real interface before recording clips:
-
-1. Keep the administrator, teacher, student, and parent accounts connected.
-2. As administrator, add one original curriculum pack and keep it active.
-3. As teacher, create a planning studio from that pack.
-4. Record the teacher AI request as one clip. Cut the waiting time, but do not fake
-   the returned state.
-5. Publish the plan. Record the student first attempt and AI-help request as a
-   separate clip, then complete and submit the work.
-6. Record the teacher review and parent response.
-7. Keep one final administrator clip showing the completed handoff and recorded AI
-   usage. The administrator view must not show the learner's raw work.
+Do not show environment files, keys, passwords, browser developer tools, account
+emails, personal notifications, SCERT material, or real child data.
 
 ## 0:00 to 0:13
 
-Screen: Landing page, Kanni mark, four roles, then the agency-loop diagram.
+Screen: Landing page, the four roles, then the learner-agency diagram.
 
-Narration: “Most school AI is built to deliver answers faster. Kanni takes another
-path: teachers gain leverage, while students make, test, question, and revise their
-own ideas.”
+Narration: “School AI should not make students passive. Kanni gives teachers more
+capacity while each learner predicts, builds, questions, tests, and revises. Here
+is one completed Class 8 flow.”
 
-## 0:13 to 0:34
+## 0:13 to 0:32
 
-Screen: Administrator workspace. Show role permissions, one connected support
-circle, and the active curriculum library. Briefly show the add-curriculum form,
-section count, version, checksum, and archive control.
+Screen: Administrator workspace. Show the four completed setup steps, the active
+rainwater curriculum with six sections, the completed studio handoff, and two
+recorded AI requests. Skip the account table because it contains sign-in emails.
 
-Narration: “The administrator manages real role accounts, responsibility mappings,
-and versioned curriculum. Content is split into checksummed sections. Teachers can
-reuse an active version, while an old version can be archived without rewriting a
-past learning record.”
+Narration: “The administrator connects four accountable roles and governs
+original, versioned curriculum. This rainwater design pack became six checksummed
+sections. The handoff board shows one completed studio, and AI operations records
+exactly two deliberate requests without exposing the learner’s raw work.”
 
-## 0:34 to 1:09
+## 0:32 to 1:04
 
-Screen: Teacher creates or opens the planning studio. Show the source sections and
-the AI boundary. Click the AI planning button, cut the waiting time, then show the
-persistent completed-request panel, model, prompt version, citations, cost, and the
-editable plan.
+Screen: Teacher workspace. Choose `Rainwater Resilience Lab`. Show the learning
+goal, curriculum source card, saved AI provenance, and two or three parts of the
+reviewed teacher plan. Do not open an AI request or edit the plan.
 
-Narration: “The teacher begins with a learning goal and an approved curriculum
-pack. Kanni already provides an editable local plan. When the teacher explicitly
-requests AI planning, GPT-5.6 receives the goal and at most six relevant sections,
-not account names or learner work. A strict schema requires differentiation,
-misconception probes, checks, choices, making, reflection, and a family activity.
-Unknown citations or unsafe output hide the whole response. The teacher still
-edits, reviews, and publishes the plan.”
+Narration: “In the teacher workspace, the Rainwater Resilience Lab asks how much
+water a school roof could collect safely. The saved GPT-5.6 plan is tied to its
+model, prompt version, citations, token usage, and cost. It includes success
+criteria, misconception probes, differentiated routes, making choices, and a
+family activity. Nothing publishes until the teacher reviews the sources and
+accepts responsibility.”
 
-## 1:09 to 1:53
+## 1:04 to 1:46
 
-Screen: Student workspace. Choose an interest route and maker path, enter a
-prediction, then write a first attempt. Show that both support buttons are disabled
-before the attempt. Open the teacher-reviewed prompts, confirm adult supervision,
-request Creative thinking coach, cut the waiting time, and show the three grounded
-question-and-action cards. Then move through critique, revision, explanation, and
-reflection.
+Screen: Student workspace. Show the read-only evidence trail. Pause on the flawed
+first version, expand the saved creative thinking questions, then show the
+critique, corrected revision, explanation, and reflection. Finish on the teacher’s
+lighter next scaffold. Do not type or submit anything.
 
-Narration: “The student does not begin with a chatbot. They choose a route, predict,
-and make a first version. Only then can they open teacher-reviewed prompts or make
-one AI-help request. For that request, GPT-5.6 receives the first attempt and at
-most four relevant sections, after an adult confirms supervision. It returns
-questions and small experiments, never a finished answer. The student decides what
-to test, finds a weakness, revises the work, explains why it changed, and finishes
-with a self-check they can repeat without AI.”
+Narration: “The learner’s evidence begins with a prediction, not a chatbot. Their
+first design estimates sixteen thousand litres, then incorrectly adds eighty
+percent and forgets first flush and overflow. Only after that attempt, the thinking
+coach asks grounded questions and suggests small tests. It does not supply the
+corrected total. The learner spots the percentage error, revises the estimate to
+twelve thousand eight hundred litres, adds safe storage and overflow, explains the
+evidence, and writes how they will repeat the process with less help.”
 
-## 1:53 to 2:18
+## 1:46 to 2:12
 
-Screen: Teacher evidence review. Show the prediction-to-reflection sequence and the
-expandable audit of AI questions. Enter feedback, choose the next scaffold level,
-and open the family activity.
+Screen: Return to the teacher workspace. Show the completed student-owned evidence,
+expand the audit of AI questions, then show the teacher feedback, next question,
+and `light` scaffold decision.
 
-Narration: “The teacher reviews how the thinking changed, including which support
-was opened and which AI questions were shown. The model never chooses the learner's
-level. Here the teacher selects lighter support for the next studio and writes the
-feedback and family activity.”
+Narration: “Back with the teacher, the complete evidence trail keeps prediction,
+first version, critique, revision, explanation, reflection, and the exact AI
+questions together. The teacher, not the model, records feedback, asks what changes
+in a lower-rainfall month, and reduces the next scaffold from guided to light.”
 
-## 2:18 to 2:34
+## 2:12 to 2:30
 
-Screen: Parent mobile view. Edit a short response, submit it, then cut to the
-administrator handoff board. Keep the unique learner draft absent from both views.
+Screen: Parent workspace at a mobile-width crop. Show the reviewed paper-roof
+activity, privacy boundary, and completed family response.
 
-Narration: “The parent receives one reviewed activity and can edit a response before
-sending it. Raw drafts, AI text, scores, ranks, and diagnoses stay out. The
-administrator sees the handoff finish without opening private student work.”
+Narration: “The parent sees one reviewed paper-roof activity and the learner’s next
+question, then returns a short response. The private draft, AI text, score, rank,
+and diagnosis never enter this view.”
 
-## 2:34 to 2:48
+## 2:30 to 2:47
 
-Screen: Architecture diagram, prompt-version code, and the passing test summary.
+Screen: System architecture diagram, then a terminal or README crop with the final
+test counts. Do not show secrets or environment output.
 
-Narration: “Prompt and context engineering are versioned in code. PostgreSQL
-enforces role and workflow boundaries. Fifty-six unit tests, fifty-one deterministic
-cases, and a clean four-role browser journey verify grounding, safety, permissions,
-privacy, and accessibility without spending AI credit.”
+Narration: “Role checks and workflow versions protect every handoff. Retrieval
+stays inside the curriculum, while strict schemas and citation checks hide invalid
+output. Sixty-one unit tests, fifty-one evaluation cases, and the four-role
+browser test run without AI credit.”
 
-## 2:48 to 2:56
+## 2:47 to 2:56
 
-Screen: README section about Codex and GPT-5.6, then the Kanni closing frame.
+Screen: README contribution table, then the Kanni closing frame.
 
-Narration: “Codex helped turn the early static lesson into this tested system.
-GPT-5.6 prepares support. Teachers decide. Learners create.”
+Narration: “Codex helped rebuild Kanni around this loop. GPT-5.6 prepares bounded
+support. Teachers decide. Learners create and grow more independent.”
 
-## Recording checks
+## Final checks
 
-- Keep the exported video below three minutes.
-- Record at 1080p or higher and zoom enough for text to remain readable.
-- Use quick cuts between roles. Remove provider waiting time, but keep the real
-  before and after states.
-- Use only original Kanni screens, diagrams, narration, and music you are licensed
-  to use. Silence is safer than unlicensed music.
-- Do not show SCERT logos, textbook pages, third-party marks, or real child data.
-- Explain any Malayalam interface text in the English narration.
-- Confirm that captions match the final edit before upload.
-- Upload the final video to YouTube as a public video.
+- Keep the exported video at 2:56 and never at or above three minutes.
+- Keep the opening product screen visible within the first three seconds.
+- Use quick cuts between the four prepared workspaces. Do not accelerate scrolling.
+- Keep captions inside the frame and verify they match the final narration.
+- Use only original Kanni screens, diagrams, narration, and licensed media. Silence
+  is safer than unlicensed music.
+- Upload the final video to YouTube as a public video and watch the uploaded copy
+  once before adding its URL to Devpost.

@@ -60,6 +60,14 @@ describe("student thinking-coach output gate", () => {
     const unsafe = validHelp();
     unsafe.opening = "Send your work to coach@example.com before continuing.";
     expect(studentHelpIsSafe(unsafe)).toBe(false);
+
+    const malformed = validHelp();
+    malformed.selfCheck = "Repeat the test without AI, then compare the result. 배";
+    expect(studentHelpIsSafe(malformed)).toBe(false);
+
+    const boundaryPadded = validHelp();
+    boundaryPadded.selfCheck = "A".repeat(220);
+    expect(studentHelpIsSafe(boundaryPadded)).toBe(false);
   });
 
   it("rejects schema-valid text that reveals an answer or stops asking questions", () => {

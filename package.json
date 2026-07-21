@@ -28,6 +28,8 @@
     "db:test:prepare": "prisma migrate reset --force",
     "eval": "node --import tsx scripts/run-evals.ts",
     "eval:live": "node --conditions=react-server --import tsx scripts/run-live-evals.ts",
+    "recording:prepare": "node --conditions=react-server --import tsx scripts/prepare-recording-flow.ts",
+    "recording:review": "node --conditions=react-server --import tsx scripts/review-recording-flow.ts",
     "diagrams": "node --import tsx scripts/render-rich-diagrams.ts",
     "screenshots": "node --import tsx scripts/capture-submission-screenshots.ts"
   },

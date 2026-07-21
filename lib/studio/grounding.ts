@@ -5,6 +5,75 @@ import {
 } from "@/lib/safety/input-guard";
 import type { StudentThinkingCoach, TeacherPlan } from "@/lib/studio/contracts";
 
+const invisibleOrReplacementCharacterPattern =
+  /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F\u200B-\u200F\u202A-\u202E\u2060-\u206F\uFFFC\uFFFD]/u;
+const unsupportedWritingSystemPattern =
+  /[^\p{Script=Latin}\p{Script=Malayalam}\p{Script=Greek}\p{M}\p{N}\p{P}\p{Z}\p{S}\n\r\t]/u;
+
+export function generatedTextIsDisplaySafe(value: string): boolean {
+  return (
+    value === value.normalize("NFC") &&
+    !invisibleOrReplacementCharacterPattern.test(value) &&
+    !unsupportedWritingSystemPattern.test(value)
+  );
+}
+
+function reachesDeclaredMaximum(
+  fields: ReadonlyArray<readonly [value: string, maximum: number]>,
+): boolean {
+  return fields.some(([value, maximum]) => value.length >= maximum);
+}
+
+function teacherPlanReachesTextBoundary(plan: TeacherPlan): boolean {
+  return reachesDeclaredMaximum([
+    [plan.overview, 320],
+    ...plan.successCriteria.map((value) => [value, 180] as const),
+    ...plan.learningSequence.flatMap((item) => [
+      [item.title, 80] as const,
+      [item.teacherMove, 280] as const,
+      [item.learnerMove, 280] as const,
+    ]),
+    ...plan.differentiation.flatMap((item) => [
+      [item.teacherMove, 300] as const,
+      [item.learnerChoice, 220] as const,
+    ]),
+    ...plan.misconceptions.flatMap((item) => [
+      [item.ideaToCheck, 220] as const,
+      [item.probe, 240] as const,
+      [item.teacherResponse, 280] as const,
+    ]),
+    ...plan.quickChecks.flatMap((item) => [
+      [item.prompt, 260] as const,
+      [item.evidenceToNotice, 240] as const,
+    ]),
+    ...plan.interestHooks.flatMap((item) => [
+      [item.title, 70] as const,
+      [item.prompt, 260] as const,
+    ]),
+    ...plan.makerChoices.flatMap((item) => [
+      [item.title, 80] as const,
+      [item.prompt, 320] as const,
+      ...item.constraints.map((value) => [value, 140] as const),
+      [item.evidenceToCapture, 220] as const,
+    ]),
+    ...plan.socraticPrompts.map((value) => [value, 220] as const),
+    ...plan.reflectionPrompts.map((value) => [value, 220] as const),
+    [plan.familyActivity, 700],
+  ]);
+}
+
+function studentHelpReachesTextBoundary(help: StudentThinkingCoach): boolean {
+  return reachesDeclaredMaximum([
+    [help.opening, 180],
+    ...help.creativeSteps.flatMap((item) => [
+      [item.title, 70] as const,
+      [item.question, 220] as const,
+      [item.tryThis, 220] as const,
+    ]),
+    [help.selfCheck, 220],
+  ]);
+}
+
 export function planCitationGroups(plan: TeacherPlan): string[][] {
   return [
     plan.sourceSectionIds,
@@ -59,7 +128,9 @@ export function teacherPlanIsSafeForReview(plan: TeacherPlan): boolean {
   const textValues = teacherPlanTextValues(plan);
   return (
     inspectTextFields(textValues).status === "clear" &&
-    !textValues.some(containsDiagnosticObservation)
+    !textValues.some(containsDiagnosticObservation) &&
+    textValues.every(generatedTextIsDisplaySafe) &&
+    !teacherPlanReachesTextBoundary(plan)
   );
 }
 
@@ -104,6 +175,8 @@ export function studentHelpIsSafe(help: StudentThinkingCoach): boolean {
   return (
     inspectTextFields(textValues).status === "clear" &&
     !textValues.some(containsDiagnosticObservation) &&
+    textValues.every(generatedTextIsDisplaySafe) &&
+    !studentHelpReachesTextBoundary(help) &&
     studentHelpPreservesAgency(help)
   );
 }

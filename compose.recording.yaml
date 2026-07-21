@@ -1,0 +1,68 @@
+name: kanni-recording
+
+services:
+  prepare:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: operator
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?schema=public
+      DATABASE_POOL_SIZE: "2"
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL}
+      GROWTH_AI_PROVIDER: ${GROWTH_AI_PROVIDER}
+      GROWTH_AI_MODEL: ${GROWTH_AI_MODEL}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
+      GROWTH_AI_ENABLED: ${GROWTH_AI_ENABLED}
+      GROWTH_AI_RATE_LIMIT_CONFIRMED: ${GROWTH_AI_RATE_LIMIT_CONFIRMED}
+      GROWTH_AI_SPEND_LIMIT_CONFIRMED: ${GROWTH_AI_SPEND_LIMIT_CONFIRMED}
+      GROWTH_AI_STUDENT_HELP_ENABLED: "true"
+      GROWTH_AI_STUDENT_DATA_REVIEW_CONFIRMED: "true"
+      KANNI_RECORDING_FLOW_CONFIRMATION: ${KANNI_RECORDING_FLOW_CONFIRMATION:-}
+    networks:
+      - data
+      - egress
+    mem_limit: 1g
+    cpus: 1.0
+
+  review:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: operator
+    command:
+      - node
+      - --conditions=react-server
+      - --import
+      - tsx
+      - scripts/review-recording-flow.ts
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?schema=public
+      DATABASE_POOL_SIZE: "2"
+      KANNI_RECORDING_REVIEW_CONFIRMATION: ${KANNI_RECORDING_REVIEW_CONFIRMATION:-}
+    networks:
+      - data
+    mem_limit: 512m
+    cpus: 0.5
+
+networks:
+  data:
+    external: true
+    name: kanni-production_data
+  egress:

@@ -50,5 +50,14 @@ describe("teacher plan grounding", () => {
 
     plan.overview = "This weak student is not intelligent enough for the extension.";
     expect(teacherPlanIsSafeForReview(plan)).toBe(false);
+
+    plan.overview = "Use the evidence, then revise the weakest claim.\uFFFC\uFFFC";
+    expect(teacherPlanIsSafeForReview(plan)).toBe(false);
+
+    plan.overview = "അളവ് പരിശോധിച്ച് തെളിവ് വിശദീകരിക്കുക.";
+    expect(teacherPlanIsSafeForReview(plan)).toBe(true);
+
+    plan.overview = "A".repeat(320);
+    expect(teacherPlanIsSafeForReview(plan)).toBe(false);
   });
 });

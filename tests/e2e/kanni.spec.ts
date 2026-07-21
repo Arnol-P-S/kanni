@@ -193,6 +193,8 @@ test("a clean school completes the teacher-led agency loop across all four roles
   await page.getByRole("button", { name: "Send feedback and open family activity" }).click();
   await expect(page.getByRole("status")).toContainText("family activity are ready");
   await expect(page.getByRole("heading", { name: "The reviewed family activity is open" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "The full thinking record remains available after review" })).toBeVisible();
+  await expect(page.getByText(studentRawRevision)).toBeVisible();
   await login.signOut();
 
   await login.signIn(accounts.parent);
@@ -208,6 +210,8 @@ test("a clean school completes the teacher-led agency loop across all four roles
   await login.signOut();
 
   await login.signIn(accounts.student);
+  await expect(page.getByRole("heading", { name: "See what changed from your first idea to your revision" })).toBeVisible();
+  await expect(page.getByText(studentRawRevision)).toBeVisible();
   await expect(page.getByText(teacherFeedback)).toBeVisible();
   await expect(page.getByText(/next studio will begin with/i)).toContainText("light");
   await login.signOut();

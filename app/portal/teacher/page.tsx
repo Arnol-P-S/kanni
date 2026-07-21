@@ -66,6 +66,7 @@ export default async function TeacherPortalPage({
     ? StudentThinkingCoachSchema.safeParse(studio.studentHelp.response)
     : null;
   const ai = getStudioAiCapability();
+  const submission = studio?.submission ?? null;
   const students = workspace.assignments.map(({ studentMembership }) => ({
     id: studentMembership.id,
     displayName: studentMembership.user.displayName,
@@ -73,6 +74,18 @@ export default async function TeacherPortalPage({
       studentMembership.studentGuardians[0]?.guardianMembership.user.displayName ?? null,
   }));
   const showBuilder = params.new === "1" || !studio;
+  const evidenceTrail = studio && plan && submission ? <>
+    <div className="evidence-sequence">
+      <article><span>1</span><small>Prediction</small><p>{submission.prediction}</p></article>
+      <article><span>2</span><small>First version</small><p>{submission.firstDraft}</p></article>
+      <article><span>3</span><small>Self-critique</small><p>{submission.selfCritique}</p></article>
+      <article><span>4</span><small>Revision</small><p>{submission.revision}</p></article>
+      <article><span>5</span><small>Reason for change</small><p>{submission.explanation}</p></article>
+      <article><span>6</span><small>Reflection</small><p>{submission.reflection}</p></article>
+    </div>
+    <div className="evidence-context-row"><span><strong>Chosen route:</strong> {plan.interestHooks[submission.interestHookIndex]?.title ?? "Student choice"}</span><span><strong>Maker path:</strong> {plan.makerChoices.find((choice) => choice.id === submission.makerChoiceId)?.title ?? submission.makerChoiceId}</span><span><strong>Opened support:</strong> {submission.supportOpened ? "Yes" : "No"}</span></div>
+    {studentHelp?.success ? <details className="teacher-student-help-audit"><summary>Review the AI questions the learner saw</summary><p>Kanni did not add the learner&apos;s account name or family records. The request used the learner&apos;s first attempt and cited curriculum sections.</p><p className="ai-audit-metadata">{studio.studentHelp?.model} · {studio.studentHelp?.promptVersion}</p><ol>{studentHelp.data.creativeSteps.map((step) => <li key={`${step.title}-${step.question}`}><strong>{step.title}</strong><span>{step.question}</span><small>{step.sourceSectionIds.join(", ")}</small></li>)}</ol></details> : null}
+  </> : null;
 
   return (
     <PortalChrome
@@ -124,6 +137,12 @@ export default async function TeacherPortalPage({
                 {studio.curriculumPack.sourceUrl ? <a className="source-link" href={studio.curriculumPack.sourceUrl} target="_blank" rel="noreferrer">Open source record<ExternalLink aria-hidden="true" /></a> : null}
               </section>
 
+              {studio.status !== StudioStatus.planning && teacherAiRun ? <section className="portal-card ai-provenance-card">
+                <div className="card-heading-row"><div><p className="eyebrow">Saved AI provenance</p><h2>The teacher reviewed one grounded GPT-5.6 planning draft</h2><p>The request is closed. Its model, prompt version, retrieved citations, and provider-reported cost stay attached to this studio.</p></div><Sparkles aria-hidden="true" /></div>
+                <div className="ai-result-note success"><CheckCircle2 aria-hidden="true" /><span><strong>Grounded draft accepted for teacher review</strong><small>The teacher remained responsible for editing and publishing the plan.</small></span></div>
+                <dl className="ai-run-facts"><div><dt>Model</dt><dd>{teacherAiRun.model}</dd></div><div><dt>Prompt</dt><dd>{teacherAiRun.promptVersion}</dd></div><div><dt>Citations</dt><dd>{Array.isArray(teacherAiRun.citationIds) ? teacherAiRun.citationIds.length : 0}</dd></div><div><dt>Recorded cost</dt><dd>${((teacherAiRun.costMicros ?? 0) / 1_000_000).toFixed(4)}</dd></div></dl>
+              </section> : null}
+
               {studio.status === StudioStatus.planning ? (
                 <>
                   <section className="portal-card ai-planning-card" data-status={studio.aiStatus}>
@@ -145,24 +164,15 @@ export default async function TeacherPortalPage({
                 </>
               ) : studio.status === StudioStatus.ready_for_student ? (
                 <section className="portal-card active-handoff-card"><Clock3 aria-hidden="true" /><div><p className="eyebrow">With the learner</p><h2>The student is choosing, making, critiquing, and revising</h2><p>Kanni will bring the full evidence sequence here after submission. AI can offer one grounded set of questions after a first attempt, but it cannot answer or submit the activity.</p><span className="status-badge">Thinking coach: {studio.studentHelpStatus.replaceAll("_", " ")}</span></div></section>
-              ) : studio.status === StudioStatus.awaiting_teacher_review && studio.submission ? (
+              ) : studio.status === StudioStatus.awaiting_teacher_review && submission ? (
                 <section className="portal-card evidence-review-card">
                   <div className="card-heading-row"><div><p className="eyebrow">Student-owned evidence</p><h2>Review the thinking process, not just the final version</h2></div><span className="status-badge attention">Needs your decision</span></div>
-                  <div className="evidence-sequence">
-                    <article><span>1</span><small>Prediction</small><p>{studio.submission.prediction}</p></article>
-                    <article><span>2</span><small>First version</small><p>{studio.submission.firstDraft}</p></article>
-                    <article><span>3</span><small>Self-critique</small><p>{studio.submission.selfCritique}</p></article>
-                    <article><span>4</span><small>Revision</small><p>{studio.submission.revision}</p></article>
-                    <article><span>5</span><small>Reason for change</small><p>{studio.submission.explanation}</p></article>
-                    <article><span>6</span><small>Reflection</small><p>{studio.submission.reflection}</p></article>
-                  </div>
-                  <div className="evidence-context-row"><span><strong>Chosen route:</strong> {plan.interestHooks[studio.submission.interestHookIndex]?.title ?? "Student choice"}</span><span><strong>Maker path:</strong> {plan.makerChoices.find((choice) => choice.id === studio.submission?.makerChoiceId)?.title ?? studio.submission.makerChoiceId}</span><span><strong>Opened support:</strong> {studio.submission.supportOpened ? "Yes" : "No"}</span></div>
-                  {studentHelp?.success ? <details className="teacher-student-help-audit"><summary>Review the AI questions the learner saw</summary><p>No learner name or family data was sent. These prompts were generated from the first attempt and cited curriculum sections.</p><ol>{studentHelp.data.creativeSteps.map((step) => <li key={`${step.title}-${step.question}`}><strong>{step.title}</strong><span>{step.question}</span><small>{step.sourceSectionIds.join(", ")}</small></li>)}</ol></details> : null}
+                  {evidenceTrail}
                   <form action={reviewLearnerWorkAction} className="teacher-review-form">
                     <input type="hidden" name="studioId" value={studio.id} />
                     <div className="form-grid two-columns"><div className="field-group"><label htmlFor="noticedStrength">What did the work show the learner doing well?</label><textarea id="noticedStrength" name="noticedStrength" rows={4} minLength={20} maxLength={500} placeholder="In this activity, the learner…" required /></div><div className="field-group"><label htmlFor="studentFeedback">Feedback the learner will receive</label><textarea id="studentFeedback" name="studentFeedback" rows={4} minLength={20} maxLength={700} placeholder="Your revision became stronger when…" required /></div></div>
                     <label htmlFor="nextQuestion">One next thinking question</label><textarea id="nextQuestion" name="nextQuestion" rows={2} minLength={10} maxLength={300} defaultValue={plan.reflectionPrompts[0]} required />
-                    <fieldset className="scaffold-decision-grid"><legend>How much scaffold should the next studio begin with?</legend>{(["guided", "light", "independent"] as const).map((level) => <label key={level}><input type="radio" name="nextScaffoldLevel" value={level} defaultChecked={level === nextScaffoldSuggestion(studio.scaffoldLevel, studio.submission?.supportOpened ?? true)} /><span><strong>{level}</strong><small>{level === "guided" ? "Up to three teacher-reviewed prompts" : level === "light" ? "One teacher-reviewed prompt" : "No planned prompt at the start"}</small></span></label>)}</fieldset>
+                    <fieldset className="scaffold-decision-grid"><legend>How much scaffold should the next studio begin with?</legend>{(["guided", "light", "independent"] as const).map((level) => <label key={level}><input type="radio" name="nextScaffoldLevel" value={level} defaultChecked={level === nextScaffoldSuggestion(studio.scaffoldLevel, submission.supportOpened)} /><span><strong>{level}</strong><small>{level === "guided" ? "Up to three teacher-reviewed prompts" : level === "light" ? "One teacher-reviewed prompt" : "No planned prompt at the start"}</small></span></label>)}</fieldset>
                     <label htmlFor="familyActivity">Reviewed family activity</label><textarea id="familyActivity" name="familyActivity" lang={studio.familyLocale} rows={5} minLength={30} maxLength={700} defaultValue={plan.familyActivity} required />
                     <label className="confirmation-check"><input type="checkbox" name="reviewedEvidence" value="yes" required /><span><strong>I read the prediction, first version, critique, revision, and reflection.</strong><small>This decision is based on this activity, not a diagnosis or ability label.</small></span></label>
                     <button className="button primary" type="submit"><ClipboardCheck aria-hidden="true" />Send feedback and open family activity</button>
@@ -176,6 +186,11 @@ export default async function TeacherPortalPage({
                   <Link className="button secondary" href="/portal/teacher?new=1"><Plus aria-hidden="true" />Create the next studio</Link>
                 </section>
               )}
+
+              {(studio.status === StudioStatus.ready_for_family || studio.status === StudioStatus.complete) && evidenceTrail ? <section className="portal-card evidence-review-card completed-evidence-card">
+                <div className="card-heading-row"><div><p className="eyebrow">Student-owned evidence</p><h2>The full thinking record remains available after review</h2><p>The teacher can revisit the prediction, first version, critique, revision, explanation, reflection, and AI questions without exposing them to the parent or administrator.</p></div><span className="status-badge success">Reviewed</span></div>
+                {evidenceTrail}
+              </section> : null}
 
               {studio.status !== StudioStatus.planning ? <TeacherPlanView plan={plan} /> : null}
             </>
