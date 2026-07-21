@@ -157,7 +157,7 @@ it into a score.
 
 ## Current evidence
 
-- 51 passing unit tests and 51 deterministic evaluation cases
+- 61 passing unit tests and 51 deterministic evaluation cases
 - clean migrations from an empty PostgreSQL database
 - a browser test that creates the school, all four accounts, mappings, curriculum,
   studio, learner evidence, teacher review, and family response through the UI
