@@ -1,282 +1,399 @@
 # Kanni system design
 
-## 1. Outcome
+## 1. Product boundary
 
-Kanni connects one learning goal across a school administrator, assigned teacher, enrolled student, and linked parent. It is designed around a complete learning-support cycle, not four disconnected dashboards.
+Kanni is a teacher-first learning platform for Classes 6 to 9. It connects four
+roles around a curriculum-grounded learning studio:
 
 ```text
-teacher plans
-  -> student chooses a maker path, creates, critiques, revises, and checks the mathematics
-  -> teacher reviews the artifact and chooses the next support and scaffold level
-  -> parent receives one reviewed home activity and responds
-  -> the next cycle inherits the teacher-selected guided, light, or independent scaffold
+school maps responsibility
+  -> teacher prepares and publishes
+  -> learner predicts, makes, critiques, revises, explains, and reflects
+  -> teacher reviews evidence and selects the next scaffold
+  -> parent receives one reviewed activity and responds
 ```
 
-PostgreSQL is the source of truth. Users sign in with separate accounts. Every read and write is scoped by both school membership and the relevant relationship.
+The system does not grade, rank, diagnose, select an academic stream, recommend a
+career, or let AI publish content.
 
-## 2. Current boundaries
+![Kanni learner-agency loop](diagrams/render/agency-loop.png)
 
-The current release contains:
+## 2. Architecture choice
 
-- one school-ready tenant model
-- four roles: school administrator, teacher, student, and parent
-- password authentication and revocable opaque sessions
-- teacher-student and parent-student relationships
-- one persisted fractions learning cycle
-- teacher planning and differentiation
-- a teacher-controlled Socratic scaffold, student-owned artifact, fixed-choice evidence, and record challenge
-- create, critique, and revise fields with server-side personal-data screening
-- teacher review, next-support selection, and scaffold fading
-- filtered family handoff and bounded family response
-- persistent English or Malayalam preference
-- reviewed curriculum retrieval and non-authoritative GPT-5.6 Luna drafting through OpenRouter
-- development and production Docker Compose topologies
+The current release is a modular monolith. Next.js holds the web interface and
+server actions. PostgreSQL holds identity, mappings, workflow state, curriculum,
+and audit records. OpenRouter is an optional adapter used for one teacher-requested
+planning draft and one student-requested thinking coach per studio.
 
-The next operational slice is administrator-driven account provisioning and relationship editing. Multi-membership selection, password recovery, MFA, SSO, retention automation, notifications, and analytics are integration points, not hidden behavior.
-
-## 3. Runtime topology
+This shape is deliberate. A distributed system would add network failure,
+deployment work, and privacy boundaries without helping the current workload.
+The modules keep future integration points clear without pretending that separate
+services already exist.
 
 ```text
-Browser
-  | HTTPS at deployment ingress
-  v
-Next.js application container
-  | Prisma 7 PostgreSQL adapter
-  v
-PostgreSQL 18
-
-Next.js server only, optional
-  |
-  v
-reviewed Kanni lesson sections -> deterministic retrieval
-  -> OpenRouter -> GPT-5.6 Luna through an Azure ZDR route
+Presentation
+  app/ and components/
+        |
+Application actions
+  app/actions/setup.ts
+  app/actions/admin.ts
+  app/actions/studio.ts
+        |
+Domain contracts and policy
+  lib/studio/
+  lib/curriculum/
+  lib/safety/
+  lib/permissions.ts
+        |
+Infrastructure adapters
+  lib/db.ts -> Prisma -> PostgreSQL
+  lib/ai/studio-ai.ts -> OpenRouter -> GPT-5.6
 ```
 
-The production Compose file keeps PostgreSQL on an internal network. A one-shot migrator applies committed schema migrations before the non-root application container becomes healthy. The application container is read-only, drops Linux capabilities, and uses a small temporary filesystem.
+Dependencies point inward. The studio contract does not import OpenRouter. The AI
+adapter may return only a validated `TeacherPlan` or `StudentThinkingCoach`.
 
-The public deployment must add a managed ingress or reverse proxy for TLS, request-size limits, malformed-request handling, and traffic rate limiting.
+![Kanni system architecture](diagrams/render/system-architecture.png)
 
-## 4. Data model
+## 3. Main modules
 
-### Identity and tenancy
+### Identity and installation
 
-- `School`: tenant boundary and local context
-- `User`: login identity, bcrypt password hash, locale, active flag
-- `Membership`: user role inside one school
-- `Session`: hashed opaque token bound to one user and membership
-- `LoginThrottle`: HMAC-derived failure key and reset window
-- `AuditEvent`: school-scoped security and workflow event
+`app/actions/setup.ts` creates the only school and first administrator inside a
+serializable transaction protected by a PostgreSQL advisory lock. The database
+begins empty. `app/actions/admin.ts` creates later role accounts and responsibility
+mappings.
 
-### Relationships
+`lib/auth.ts` owns password login, throttling, opaque sessions, cookie settings,
+role homes, and actor resolution. Protected pages call `requireActor` for one
+role. Application actions repeat school and relationship checks before writing.
 
-- `TeacherStudent`: an explicit assigned teacher and enrolled student link
-- `GuardianStudent`: an explicit parent and student link
+### Curriculum and retrieval
 
-These relations are independent of role labels. A teacher or parent can access a learning cycle only when the cycle references their membership.
+`lib/curriculum/rag.ts` owns:
 
-### Learning cycle
+- rights basis validation
+- source normalization to Unicode NFC
+- deterministic section creation
+- SHA-256 checksums
+- small-pack lexical retrieval
+- source context formatting
+- citation allowlists
 
-`LearningCycle` holds the learning goal, reviewed content, learner-agency move, selected strategy, current scaffold level, Socratic thinking prompts, maker path, artifact draft, critique, artifact revision, fixed-choice evidence, teacher review, next scaffold level, family approval and response, timestamps, and an incrementing version.
+An administrator manages active and archived immutable curriculum versions. A
+teacher can reuse an active pack or add a permission-safe teacher version. Small
+packs do not need a vector database. The retrieval contract can later be implemented by an embedding
+index without changing the teacher plan, learner submission, or workflow models.
 
-The state sequence is:
+### Learning studio
+
+`lib/studio/contracts.ts` is the domain boundary. The main records are:
+
+- `TeacherPlan`
+- `CreateStudioInput`
+- `CurriculumPackInput`
+- `StudentThinkingCoach`
+- `LearnerSubmission`
+- `TeacherReviewInput`
+- `FamilyResponseInput`
+
+`lib/studio/plan.ts` creates a complete local starting plan. It keeps the product
+usable with AI disabled. `lib/studio/grounding.ts` walks a plan and rejects nested
+source IDs that are not in the retrieved section set. `lib/studio/workflow.ts`
+contains status progress, prompt fading, and next-scaffold policy.
+
+### AI and context adapter
+
+`lib/ai/capability-policy.ts` decides whether runtime AI is available. It checks
+the enable flag, provider, allowlisted model, provider key, and release-control
+confirmations. Student AI adds a separate feature flag and a separate operator
+confirmation for student-data processing, so enabling teacher planning cannot
+silently enable student requests.
+
+`lib/ai/prompt-context.ts` owns separate, versioned teacher and student
+instructions and context builders. `lib/ai/studio-ai.ts` makes one bounded
+OpenRouter request for the chosen use case, validates the structured result and
+every citation, and returns a result category. It does not own publishing,
+submission, or database transitions.
+
+### Safety and privacy
+
+`lib/safety/input-guard.ts` screens user-entered text for personal data, high-risk
+English and Malayalam phrases, prompt injection, and source override attempts.
+Teacher observations also reject diagnostic wording.
+
+`lib/school-data.ts` uses different Prisma select shapes for each role. Privacy is
+therefore enforced before rendering:
+
+| Role | Raw learner submission | Student AI help | Teacher review | Family response | AI usage |
+| --- | --- | --- | --- | --- | --- |
+| Student | Own only | Own only | Own feedback only | No | No |
+| Teacher | Assigned learner only | Assigned learner only | Full assigned record | Assigned handoff | Own aggregate |
+| Parent | No | No | Reviewed summary only | Own handoff | No |
+| Administrator | No | No | No raw feedback | No note body | School aggregate |
+
+## 4. Patterns used with restraint
+
+The code uses patterns where they clarify a real change boundary. It does not add
+classes or interfaces only to name a pattern.
+
+### State pattern, represented by persisted status
+
+`LearningStudio.status` controls which action is valid and which role acts next.
+The database update includes the expected status and version. This gives the main
+benefit of the State pattern while keeping transitions explicit in server actions.
 
 ```text
-draft
-  -> active
-  -> waiting_teacher_review
-  -> waiting_family
+planning
+  -> ready_for_student
+  -> awaiting_teacher_review
+  -> ready_for_family
   -> complete
-
-non-draft cycle -> archived + a new draft when an administrator reopens the goal
 ```
 
-Writes repeat the expected status and membership in the SQL predicate. This prevents a stale browser action from silently moving the cycle after another role has already advanced it. Archived cycles remain available as school history and are excluded from the current-work query.
+### Strategy pattern for scaffolding
 
-### Create, critique, revise
+`promptsForScaffold` applies one of three support policies to the same reviewed
+prompt bank:
 
-The student chooses one of three bounded maker paths: a fair-sharing plan, a fraction pattern, or a mini lesson using objects. Kanni stores a first design, one self-critique choice, and a revision. Each text field accepts 30 to 600 Unicode characters and rejects links, email addresses, and phone-like content.
+- `guided`: up to three prompts
+- `light`: one prompt
+- `independent`: no planned prompt at the start
 
-The artifact is ordinary schoolwork, not an AI prompt. It is visible only to the enrolled student and assigned teacher. Parents receive the artifact type and one safe conversation prompt. School administrators receive the workflow and scaffold state. Neither role receives raw artifact text.
+Adding another scaffold policy changes one domain module. It does not change the
+student submission contract.
 
-### Scaffold fading
+### Adapter pattern for model providers
 
-Each cycle starts at `guided`, `light`, or `independent`:
+The OpenRouter code translates the provider API into `GroundedPlanResult` or
+`GroundedStudentHelpResult`. Application actions depend on those results, not
+provider response fields. A later school-hosted model can implement the same
+boundaries.
 
-- `guided`: visual, explanation, and all reviewed thinking questions
-- `light`: no visual and one thinking question
-- `independent`: no model call; the student starts with their own plan and uses a final self-check
+### Factory function for safe local plans
 
-Kanni never lowers the scaffold automatically. During evidence review, the teacher selects the next level. When a school administrator opens the goal again, the new cycle inherits that reviewed level and the reviewed support strategy.
+`createTeacherStarterPlan` creates a valid `TeacherPlan` from a goal and local
+sections. The factory preserves schema and citation invariants and gives the
+teacher a useful plan without external AI.
 
-## 5. Authentication
+### Facade by role
 
-1. A Server Action validates the email and password with Zod.
-2. The server checks HMAC-keyed throttle state.
-3. The password is compared against bcrypt. Unknown users use a fixed dummy hash.
-4. Exactly one active membership is required in this release.
-5. The server creates a 256-bit random token and stores only its SHA-256 hash.
-6. The browser receives an HttpOnly, SameSite=Lax cookie that is Secure in production.
-7. Every protected request resolves the session, user, membership, school, active state, and expiry from PostgreSQL.
-8. Logout deletes the database session and clears the cookie.
+`getAdminWorkspace`, `getTeacherWorkspace`, `getStudentStudio`, and
+`getParentStudio` present small role-specific views over the relational model.
+They keep UI code away from cross-role joins and reduce the chance of selecting a
+private field into the wrong page.
 
-Proxy only redirects requests that have no session cookie. It cannot prove that a cookie is valid and is never used as the authorization boundary.
+### Validation pipeline
 
-## 6. Authorization and information visibility
+Input checks run in a fixed order: schema, normalization, personal data, high-risk
+route, prompt injection when AI-bound, authorization, state transition, database
+write. Provider output follows a separate pipeline: provider object, use-case Zod
+schema, citation allowlist, safety gate, then teacher review or student display.
 
-| Role | Scope | Can change | Cannot see or change |
-|---|---|---|---|
-| School administrator | current school | preserve the current cycle and open the goal again | raw student evidence, artifact text, and teacher review decisions |
-| Teacher | assigned cycles | plan, publish, review evidence and artifact, choose next support and scaffold, approve family activity | unrelated students and other schools |
-| Student | enrolled cycles | answer, open support, create and revise an artifact, explain, challenge own record | teacher controls, family response, other students |
-| Parent | explicitly linked cycles | read the artifact type, try one reviewed activity, send one bounded response | raw student evidence, artifact text, model output, private teacher work |
+This resembles Chain of Responsibility, but the implementation remains a small
+set of pure functions because the chain is fixed.
 
-Authorization has three layers:
+### Patterns intentionally deferred
 
-1. Server session resolves the actor and active membership.
-2. Data Access Layer adds school and relationship scope to reads.
-3. Every Server Action repeats the exact role, relationship, and state preconditions at the write.
+- no event bus until notifications or integrations create a real consumer
+- no generic repository wrapper over Prisma while one database implementation exists
+- no microservices until independent scale or ownership requires them
+- no vector database while curriculum packs fit in a small deterministic context
+- no agent loop because each use case is one bounded structured call
 
-Client controls, hidden buttons, route names, and Proxy redirects are not treated as security controls.
+## 5. Data model
 
-## 7. Design patterns used with purpose
+### Identity and access
 
-Patterns are used only where they make the learning system easier to extend and test.
+- `School`: installation tenant
+- `User`: credential and profile
+- `Membership`: one role inside the school
+- `TeacherStudent`: assigned teaching responsibility
+- `GuardianStudent`: assigned family responsibility
+- `Session`: hashed opaque login session
+- `LoginThrottle`: HMAC-keyed failed-login window
+- `AuditEvent`: bounded security and workflow event
 
-### Data Access Layer
+### Curriculum and work
 
-`lib/school-data.ts` owns relationship-scoped queries. UI components receive already-scoped records and do not assemble authorization filters.
+- `CurriculumPack`: source registry, rights basis, version, checksum, active state
+- `CurriculumSection`: ordered source section and checksum
+- `LearningStudio`: goal, plan, status, scaffold, and role references
+- `LearnerSubmission`: prediction through reflection
+- `TeacherReview`: observation, feedback, next question, next scaffold
+- `FamilyHandoff`: reviewed activity and family response
+- `StudentHelp`: validated question-and-action response and source IDs
+- `AiRun`: status, model, prompt version, latency, tokens, cost, citation IDs
 
-### Policy Object
+Raw provider prompts and model reasoning are not persisted.
 
-`lib/permissions.ts` makes role capabilities and information visibility explicit. `lib/ai/capability-policy.ts` separately expresses release gates for the provider. Both are deterministic and evaluated without infrastructure.
+## 6. Important request sequences
 
-### State Machine
-
-Cycle status, required fields, and database predicates define valid handoffs. Server Actions act as transition commands. Invalid or repeated transitions fail closed or remain idempotent.
-
-### Strategy
-
-The teacher chooses `fraction_strips`, `guided_questions`, or `explain_to_someone`, plus `guided`, `light`, or `independent`. `growth-support-presentations.ts` maps the support choice to reviewed student and parent presentations. `maker-challenge.ts` maps maker paths, critiques, and scaffold levels to fixed English and Malayalam copy. Adding an option requires an enum migration, presentation mapping, and tests.
-
-### Adapter
-
-`lib/ai/growth-ai.ts` is the provider adapter. `lib/curriculum/fractions-foundation.ts` is the reviewed retrieval boundary. The domain workflow consumes a teacher-plan or student-support draft and remains unchanged when AI is unavailable. A future provider can implement the same validated boundary.
-
-### Unit of Work
-
-Prisma transactions group security-sensitive multi-record operations with audit events. Examples include session creation, plan publication, evidence submission, record challenge, teacher review, family response, cycle archival and creation, and logout.
-
-### Presentation Model
-
-Parents and school administrators receive deliberately reduced views of the learning cycle. Neither page renders the raw artifact fields. The parent view derives the artifact type, one reviewed summary, and one home action from trusted enum values.
-
-Patterns deliberately not used:
-
-- no global singleton state store in the browser
-- no event bus for a single-process, synchronous workflow
-- no recursive agent graph
-- no repository abstraction over every Prisma call
-- no microservices before there is an independent scaling or ownership need
-
-## 8. Optional AI
-
-AI is an enhancement to reviewed content, not the product's control plane.
-
-Teacher-plan request:
+### First-run setup
 
 ```text
-teacher requests draft
-  -> server checks feature, provider, model, credential, and release gates
-  -> server retrieves relevant reviewed Kanni sections
-  -> GPT-5.6 Luna returns a strict structured plan
-  -> every citation must match a retrieved section
-  -> agency move must require prediction, evidence, and explanation
-  -> teacher reviews and decides whether to publish
+browser -> setup action: school and administrator fields
+setup action -> Zod: validate and normalize
+setup action -> PostgreSQL: serializable transaction and advisory lock
+PostgreSQL -> setup action: school, user, membership, audit event
+setup action -> auth: create opaque session
+setup action -> browser: administrator workspace
 ```
 
-Student support request:
+Concurrent first-run requests serialize on the database lock. The second request
+sees the created school and cannot create another administrator.
+
+### Administrator curates curriculum, then teacher publishes without AI
 
 ```text
-student opens support already selected by teacher
-  -> independent level skips the model call
-  -> server retrieves the relevant comparison sections
-  -> model asks about one of two and one of four equal parts
-  -> schema validation
-  -> citations must be a subset of retrieved source IDs
-  -> deterministic topic, safety, strategy, and no-final-choice checks
-  -> accepted draft or immediate reviewed fallback
+administrator -> curriculum action: source, version, rights confirmation
+curriculum action -> curriculum module: normalize, split, checksum
+curriculum action -> PostgreSQL: immutable pack and sections
+teacher -> studio action: learner, goal, active pack ID
+studio action -> role mapping: verify assigned learner and parent
+studio action -> local plan factory: valid cited TeacherPlan
+studio action -> PostgreSQL: studio and audit event
+teacher -> plan editor: review and edit
+teacher -> publish action: source confirmation
+publish action -> PostgreSQL: planning -> ready_for_student
 ```
 
-No AI request contains learner identity, email, answer record, artifact text, family response, session, or membership. AI cannot write or critique the artifact, decide access, publish content, grade, rank, diagnose, contact a family, or mutate the database directly.
+### Optional AI plan
 
-The current lesson pack has four short reviewed sections, so deterministic in-process retrieval is more reliable and cheaper than embeddings. An embedding adapter belongs at the same retrieval boundary when the reviewed corpus grows enough to justify semantic search. Audio transcription is also an integration boundary, not a hidden feature: adding Whisper or another speech model requires an age-band decision, explicit school and caregiver consent, short-lived audio handling, Malayalam accuracy evaluation, and a policy that raw audio is not retained. Neither embeddings nor audio are called in the current release.
+```text
+teacher -> AI action: explicit click
+AI action -> PostgreSQL: atomically claim the studio's one request
+AI adapter -> retrieval: top local sections
+AI adapter -> OpenRouter: bounded GPT-5.6 structured request
+OpenRouter -> AI adapter: candidate TeacherPlan
+AI adapter -> Zod and citation checks
+AI action -> PostgreSQL: safe plan or unavailable/rejected status plus usage
+teacher -> publish action: human review remains required
+```
 
-## 9. Language model
+### Optional student thinking coach
 
-English and Malayalam interface strings are fixed code dictionaries. Locale is stored on the user and mirrored to an HttpOnly cookie so public and authenticated pages render consistently. The language action validates the locale and accepts only a same-origin relative return path.
+```text
+student -> local form: write a first attempt of at least 60 characters
+adult -> local form: confirm adult testing or supervision for this request
+student -> help action: explicit click with studio ID, first attempt, and confirmation
+help action -> safety: reject personal data, high-risk text, or prompt injection
+help action -> PostgreSQL: verify assignment and atomically claim one help request
+AI adapter -> retrieval: top four relevant local sections
+AI adapter -> OpenRouter: bounded GPT-5.6 structured request
+OpenRouter -> AI adapter: candidate StudentThinkingCoach
+AI adapter -> Zod, citation, safety, and no-answer agency checks
+help action -> PostgreSQL: safe help and usage, or unavailable/rejected status
+student -> local form: choose what to test, revise, and submit
+```
 
-Malayalam passages use `lang="ml"`, local Noto Sans Malayalam fonts, and no artificial letter spacing. A native Malayalam educator review remains a release gate for real school use.
+### Learner and family loop
 
-## 10. Failure behavior
+```text
+learner -> submission action: choices and six evidence fields
+submission action -> safety and state checks
+submission action -> PostgreSQL: ready_for_student -> awaiting_teacher_review
+teacher -> review action: observation, feedback, question, next scaffold, family text
+review action -> PostgreSQL: awaiting_teacher_review -> ready_for_family
+parent -> response action: bounded response and optional note
+response action -> PostgreSQL: ready_for_family -> complete
+next studio -> workflow policy: inherit teacher-selected scaffold
+```
+
+## 7. Failure behavior
 
 | Failure | Behavior |
-|---|---|
-| PostgreSQL unavailable | health endpoint returns 503; account and workflow operations stop without inventing state |
-| invalid or expired session | redirect to sign-in; no protected data returned |
-| wrong role | redirect to the actor's own portal; mutation is not executed |
-| unrelated membership | scoped query finds no cycle; mutation is not executed |
-| stale workflow action | database transition predicate updates zero rows; safe notice returned |
-| provider disabled or missing key | reviewed content remains available |
-| provider timeout or error | reviewed content is returned |
-| malformed or unsafe AI output | generated text is hidden and reviewed content is returned |
-| incomplete artifact or personal-data pattern | submission is rejected; no artifact field is written |
-| duplicate action | one-shot precondition or idempotent transition prevents double mutation |
+| --- | --- |
+| Empty installation race | One request wins the database lock; later setup is refused |
+| Wrong role or school | Redirect or reject before data access |
+| Missing support-circle mapping | Studio cannot be published |
+| Stale workflow action | Conditional update fails and the record does not advance |
+| Personal data in learner text | Text is not saved; learner is asked to remove it |
+| High-risk text | Text is not saved; reviewed static support appears |
+| AI disabled or missing key | Local teacher plan and reviewed student prompts remain usable |
+| Provider timeout or error | Generated text stays hidden; request status is recorded |
+| Malformed AI object | Candidate is discarded |
+| Unknown citation | Whole candidate response is discarded |
+| Parent or administrator query | Raw submission is absent from the database select |
 
-## 11. Deployment evolution
+## 8. Deployment topology
 
-### Current complete slice
+The production Compose stack has three runtime responsibilities:
 
-- one Next.js process
-- one PostgreSQL instance
-- one school and one learning goal seeded for judging
-- opaque database sessions
-- Docker Compose deployment
-- optional AI provider
-- student-owned create, critique, revise artifact
-- teacher-controlled scaffold fading across cycles
+```text
+host browser
+  -> 127.0.0.1:APP_PORT
+  -> Next.js runner container
+       -> internal data network
+       -> PostgreSQL
 
-### School integration
+migrator container
+  -> internal data network
+  -> PostgreSQL
 
-- administrator provisioning and relationship approval
-- school SSO or reviewed identity provider
-- MFA for staff and school administrators
-- password reset and session-management screens
-- retention, export, correction, and deletion workflows
-- notification outbox and consent-aware delivery
-- backup schedule, restore tests, monitoring, and incident playbooks
+Next.js runner, explicit teacher or student request only
+  -> outbound HTTPS
+  -> OpenRouter
+```
 
-### Multi-school scale
+The database is not published by the production Compose file. The runner and
+migrator drop capabilities, reject privilege escalation, use read-only filesystems,
+and receive a bounded temporary filesystem. A production operator still needs TLS,
+an ingress proxy, rate limiting, managed secrets, monitoring, and tested backups.
 
-- membership selection for users in multiple schools
-- database row-level-security defense in depth
-- immutable tenant-aware audit export
-- queued notifications and background tasks
-- shared cache and a stable Server Action encryption key for multiple app replicas
-- deployment ID and controlled rolling releases
-- per-school feature, budget, and provider policy
+## 9. Future integration path
 
-Microservices should be introduced only when notification delivery, identity, analytics, or AI execution has a clear independent scale, security, or ownership boundary.
+### Curriculum at school scale
 
-## 12. Verification model
+Introduce a `CurriculumRepository` port with two implementations:
 
-The release evidence combines:
+1. current PostgreSQL section retrieval for small teacher packs;
+2. an embedding-backed implementation for permission-cleared school collections.
 
-- unit tests for state transitions, role policy, AI release policy, schemas, and deterministic output gates
-- 44 deterministic cases covering authorization, workflow, language, privacy, AI configuration, curriculum retrieval, learner agency, artifact completion, and scaffold fading
-- database-backed Playwright tests for the full four-account cycle and denied access
-- Axe scans on landing and sign-in pages
-- mobile language switching at 360 pixels
-- dependency audit, production build, Docker configuration validation, and image build
-- separate read-only security and implementation self-review
+Keep rights, version, checksum, and citation IDs in PostgreSQL. Store only the
+embedding index needed for retrieval. A vector hit is never permission evidence.
 
-This evidence demonstrates that the implemented workflow behaves as designed. It does not claim learning effectiveness or legal readiness for every school.
+### School identity
+
+Add an identity adapter for OIDC or SAML. Map the external subject to `User` and
+`Membership`. Keep relationship authorization inside Kanni so an identity token
+alone cannot grant learner access.
+
+### Notifications
+
+Add an outbox table in the same transaction as a state transition. A separate
+worker can send email, SMS, or school-system events idempotently. Do not call a
+notification provider inside the workflow transaction.
+
+### Reporting
+
+Build reports from privacy-reduced event projections, not raw submissions. Add
+school retention rules before any warehouse export.
+
+### Multiple schools
+
+Move from one-school installation setup to operator-managed school provisioning.
+Keep `schoolId` on every tenant record, add tenant-aware database tests, and
+consider database row-level security as a second boundary after application checks.
+
+### Voice and accessibility
+
+Add speech only behind a separate consent and data-processing review. For younger
+learners, stream the minimum audio needed, avoid retaining raw recordings by
+default, and keep a text and keyboard path for every activity.
+
+## 10. Release qualities
+
+- 360-pixel mobile layout and 200 percent zoom as design constraints
+- keyboard completion for the main loop
+- reduced-motion behavior
+- visible focus and non-color status cues
+- fixed English and Malayalam interface copy
+- deterministic tests that make no provider calls
+- a live AI test that requires explicit paid-run confirmation
+- clean migrations from an empty database
+- no seed or sample accounts in deployment
+
+This design supports a serious school pilot path while staying honest about the
+current release: one installation, Classes 6 to 9, school-managed text sources, and no
+claim of educational effectiveness.

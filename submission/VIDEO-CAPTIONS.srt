@@ -1,0 +1,31 @@
+1
+00:00:00,000 --> 00:00:13,000
+Most school AI is built to deliver answers faster. Kanni takes another path: teachers gain leverage, while students make, test, question, and revise their own ideas.
+
+2
+00:00:13,000 --> 00:00:34,000
+The administrator manages real role accounts, responsibility mappings, and versioned curriculum. Content is split into checksummed sections. Teachers can reuse an active version, while an old version can be archived without rewriting a past learning record.
+
+3
+00:00:34,000 --> 00:01:09,000
+The teacher begins with a learning goal and an approved curriculum pack. Kanni already provides an editable local plan. When the teacher explicitly requests AI planning, GPT-5.6 receives the goal and at most six relevant sections, not account names or learner work. A strict schema requires differentiation, misconception probes, checks, choices, making, reflection, and a family activity. Unknown citations or unsafe output hide the whole response. The teacher still edits, reviews, and publishes the plan.
+
+4
+00:01:09,000 --> 00:01:53,000
+The student does not begin with a chatbot. They choose a route, predict, and make a first version. Only then can they open teacher-reviewed prompts or make one AI-help request. For that request, GPT-5.6 receives the first attempt and at most four relevant sections, after an adult confirms supervision. It returns questions and small experiments, never a finished answer. The student decides what to test, finds a weakness, revises the work, explains why it changed, and finishes with a self-check they can repeat without AI.
+
+5
+00:01:53,000 --> 00:02:18,000
+The teacher reviews how the thinking changed, including which support was opened and which AI questions were shown. The model never chooses the learner's level. Here the teacher selects lighter support for the next studio and writes the feedback and family activity.
+
+6
+00:02:18,000 --> 00:02:34,000
+The parent receives one reviewed activity and can edit a response before sending it. Raw drafts, AI text, scores, ranks, and diagnoses stay out. The administrator sees the handoff finish without opening private student work.
+
+7
+00:02:34,000 --> 00:02:48,000
+Prompt and context engineering are versioned in code. PostgreSQL enforces role and workflow boundaries. Fifty-six unit tests, fifty-one deterministic cases, and a clean four-role browser journey verify grounding, safety, permissions, privacy, and accessibility without spending AI credit.
+
+8
+00:02:48,000 --> 00:02:56,000
+Codex helped turn the early static lesson into this tested system. GPT-5.6 prepares support. Teachers decide. Learners create.

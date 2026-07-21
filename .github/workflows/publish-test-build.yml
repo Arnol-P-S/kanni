@@ -1,0 +1,131 @@
+name: Publish judge test build
+
+on:
+  push:
+    tags:
+      - build-week-submission
+
+permissions: {}
+
+concurrency:
+  group: publish-test-build-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  IMAGE: ghcr.io/arnol-p-s/kanni
+
+jobs:
+  images:
+    name: Build ${{ matrix.target }} image
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - target: runner
+            suffix: ""
+          - target: migrator
+            suffix: -migrator
+    steps:
+      - name: Check out release source
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+
+      - name: Sign in to GitHub Container Registry
+        uses: docker/login-action@af1e73f918a031802d376d3c8bbc3fe56130a9b0 # v4.4.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
+
+      - name: Build and publish image
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          context: .
+          target: ${{ matrix.target }}
+          platforms: linux/amd64
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:${{ github.ref_name }}${{ matrix.suffix }}
+            ${{ env.IMAGE }}:sha-${{ github.sha }}${{ matrix.suffix }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.version=${{ github.ref_name }}
+          cache-from: type=gha,scope=${{ matrix.target }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.target }}
+          provenance: mode=max
+          sbom: true
+
+  smoke:
+    name: Start published test build
+    needs: images
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    permissions:
+      contents: read
+      packages: read
+    env:
+      KANNI_APP_IMAGE: ghcr.io/arnol-p-s/kanni:${{ github.ref_name }}
+      KANNI_MIGRATOR_IMAGE: ghcr.io/arnol-p-s/kanni:${{ github.ref_name }}-migrator
+      KANNI_JUDGE_PORT: "3001"
+    steps:
+      - name: Check out release source
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+
+      - name: Sign in to GitHub Container Registry
+        uses: docker/login-action@af1e73f918a031802d376d3c8bbc3fe56130a9b0 # v4.4.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Start test build
+        run: docker compose -f compose.judge.yaml up -d --wait
+
+      - name: Verify application and database health
+        run: >-
+          node --input-type=module -e "const response = await fetch('http://127.0.0.1:3001/api/health');
+          if (!response.ok) throw new Error('Health request failed: ' + response.status);
+          const body = await response.json();
+          if (body.status !== 'ok' || body.database !== 'available')
+          throw new Error('Unexpected health response');"
+
+      - name: Show container state after failure
+        if: failure()
+        run: docker compose -f compose.judge.yaml ps
+
+      - name: Show application logs after failure
+        if: failure()
+        run: docker compose -f compose.judge.yaml logs --no-color app migrate
+
+      - name: Remove test build
+        if: always()
+        run: docker compose -f compose.judge.yaml down -v
+
+  release:
+    name: Create GitHub test-build release
+    needs: smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - name: Check out release source
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+
+      - name: Create release and attach Compose file
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: >-
+          gh release create "${GITHUB_REF_NAME}"
+          "compose.judge.yaml#Kanni judge Compose file"
+          --repo "${GITHUB_REPOSITORY}"
+          --title "Kanni Build Week judge test build"
+          --notes "Download compose.judge.yaml and run: docker compose -f compose.judge.yaml up -d --wait. Open http://localhost:3001 and complete the clean first-run school setup. The README contains the full four-role testing path, stop command, and verified platform requirements."

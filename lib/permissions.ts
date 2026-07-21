@@ -1,17 +1,25 @@
 import { SchoolRole } from "@prisma/client";
 
 export type SchoolCapability =
-  | "manage_school"
-  | "plan_instruction"
-  | "review_evidence"
-  | "submit_evidence"
+  | "manage_people"
+  | "manage_mapping"
+  | "manage_curriculum"
+  | "create_studio"
+  | "edit_studio_plan"
+  | "draft_with_ai"
+  | "publish_studio"
+  | "edit_own_work"
+  | "request_student_help"
+  | "submit_work"
+  | "review_work"
+  | "edit_family_response"
   | "respond_to_family_activity";
 
 const roleCapabilities: Record<SchoolRole, readonly SchoolCapability[]> = {
-  school_admin: ["manage_school"],
-  teacher: ["plan_instruction", "review_evidence"],
-  student: ["submit_evidence"],
-  parent: ["respond_to_family_activity"],
+  school_admin: ["manage_people", "manage_mapping", "manage_curriculum"],
+  teacher: ["create_studio", "edit_studio_plan", "draft_with_ai", "publish_studio", "review_work"],
+  student: ["edit_own_work", "request_student_help", "submit_work"],
+  parent: ["edit_family_response", "respond_to_family_activity"],
 };
 
 export function roleCan(
@@ -21,24 +29,36 @@ export function roleCan(
   return roleCapabilities[role].includes(capability);
 }
 
-export type CycleInformation =
-  | "school_members"
+export type StudioInformation =
+  | "school_people"
+  | "curriculum_source"
   | "teacher_plan"
-  | "student_evidence"
-  | "student_artifact"
+  | "student_raw_work"
+  | "student_ai_help"
+  | "teacher_feedback"
   | "family_activity"
-  | "family_response";
+  | "family_response"
+  | "ai_usage_summary";
 
-const visibleInformation: Record<SchoolRole, readonly CycleInformation[]> = {
-  school_admin: ["school_members", "family_response"],
-  teacher: ["teacher_plan", "student_evidence", "student_artifact", "family_response"],
-  student: ["teacher_plan", "student_evidence", "student_artifact", "family_activity"],
+const visibleInformation: Record<SchoolRole, readonly StudioInformation[]> = {
+  school_admin: ["school_people", "family_response", "ai_usage_summary"],
+  teacher: [
+    "curriculum_source",
+    "teacher_plan",
+    "student_raw_work",
+    "student_ai_help",
+    "teacher_feedback",
+    "family_activity",
+    "family_response",
+    "ai_usage_summary",
+  ],
+  student: ["curriculum_source", "teacher_plan", "student_raw_work", "student_ai_help", "teacher_feedback"],
   parent: ["family_activity", "family_response"],
 };
 
 export function roleCanSee(
   role: SchoolRole,
-  information: CycleInformation,
+  information: StudioInformation,
 ): boolean {
   return visibleInformation[role].includes(information);
 }

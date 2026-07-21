@@ -18,17 +18,24 @@ enum Locale {
   ml
 }
 
-enum CycleStatus {
-  draft
-  active
-  waiting_teacher_review
-  waiting_family
+enum RightsBasis {
+  original
+  cc_by_4_0
+  public_domain
+  written_permission
+}
+
+enum StudioStatus {
+  planning
+  ready_for_student
+  awaiting_teacher_review
+  ready_for_family
   complete
   archived
 }
 
 enum ContentOrigin {
-  project_authored
+  teacher_authored
   gpt_5_6
 }
 
@@ -36,47 +43,18 @@ enum AiStatus {
   not_requested
   ready
   unavailable
+  rejected
 }
 
-enum SupportStrategy {
-  fraction_strips
-  guided_questions
-  explain_to_someone
+enum CurriculumStatus {
+  active
+  archived
 }
 
 enum ScaffoldLevel {
   guided
   light
   independent
-}
-
-enum MakerPath {
-  fair_share_plan
-  fraction_pattern
-  teach_with_objects
-}
-
-enum ArtifactCritique {
-  evidence_missing
-  whole_size_unclear
-  explanation_unclear
-  ready_to_test
-}
-
-enum FractionAnswer {
-  one_half
-  one_quarter
-}
-
-enum ExplanationChoice {
-  same_whole_more_equal_parts
-  four_is_bigger
-  not_sure
-}
-
-enum ReviewStatus {
-  pending
-  reviewed
 }
 
 enum FamilyResponse {
@@ -86,17 +64,25 @@ enum FamilyResponse {
   contact_teacher
 }
 
+enum AiRunStatus {
+  succeeded
+  rejected
+  provider_error
+}
+
 model School {
-  id          String          @id @default(cuid())
-  slug        String          @unique @db.VarChar(80)
-  name        String          @db.VarChar(160)
-  state       String          @default("Kerala") @db.VarChar(80)
-  timezone    String          @default("Asia/Kolkata") @db.VarChar(64)
-  memberships Membership[]
-  cycles      LearningCycle[]
-  auditEvents AuditEvent[]
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
+  id              String           @id @default(cuid())
+  slug            String           @unique @db.VarChar(80)
+  name            String           @db.VarChar(160)
+  state           String           @default("Kerala") @db.VarChar(80)
+  timezone        String           @default("Asia/Kolkata") @db.VarChar(64)
+  memberships     Membership[]
+  curriculumPacks CurriculumPack[]
+  studios         LearningStudio[]
+  aiRuns          AiRun[]
+  auditEvents     AuditEvent[]
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
 }
 
 model User {
@@ -128,9 +114,13 @@ model Membership {
   studentTeachers       TeacherStudent[]  @relation("StudentTeachers")
   guardianAssignments   GuardianStudent[] @relation("GuardianAssignments")
   studentGuardians      GuardianStudent[] @relation("StudentGuardians")
-  teachingCycles        LearningCycle[]   @relation("CycleTeacher")
-  learningCycles        LearningCycle[]   @relation("CycleStudent")
-  guardianCycles        LearningCycle[]   @relation("CycleGuardian")
+  authoredPacks         CurriculumPack[]  @relation("PackAuthor")
+  teachingStudios       LearningStudio[]  @relation("StudioTeacher")
+  learningStudios       LearningStudio[]  @relation("StudioStudent")
+  guardianStudios       LearningStudio[]  @relation("StudioGuardian")
+  completedReviews      TeacherReview[]   @relation("ReviewTeacher")
+  studentHelps          StudentHelp[]      @relation("StudentHelpStudent")
+  aiRuns                AiRun[]           @relation("AiRunActor")
   createdAt             DateTime          @default(now())
   updatedAt             DateTime          @updatedAt
 
@@ -188,65 +178,179 @@ model LoginThrottle {
   @@index([resetAt])
 }
 
-model LearningCycle {
+model CurriculumPack {
+  id                    String              @id @default(cuid())
+  schoolId              String
+  createdByMembershipId String
+  title                 String              @db.VarChar(180)
+  subject               String              @db.VarChar(80)
+  gradeLabel            String              @db.VarChar(40)
+  version               String              @db.VarChar(40)
+  rightsBasis           RightsBasis
+  sourceUrl             String?             @db.VarChar(500)
+  locale                Locale               @default(en)
+  checksum              String               @db.VarChar(64)
+  status                CurriculumStatus     @default(active)
+  school                School               @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  createdByMembership   Membership           @relation("PackAuthor", fields: [createdByMembershipId], references: [id], onDelete: Restrict)
+  sections              CurriculumSection[]
+  studios               LearningStudio[]
+  createdAt             DateTime             @default(now())
+  updatedAt             DateTime             @updatedAt
+
+  @@index([schoolId, status, subject, gradeLabel])
+  @@index([createdByMembershipId, createdAt])
+}
+
+model CurriculumSection {
+  id          String         @id @default(cuid())
+  packId      String
+  referenceId String         @db.VarChar(12)
+  heading     String         @db.VarChar(160)
+  content     String         @db.Text
+  position    Int
+  checksum    String         @db.VarChar(64)
+  pack        CurriculumPack @relation(fields: [packId], references: [id], onDelete: Cascade)
+  createdAt   DateTime       @default(now())
+
+  @@unique([packId, referenceId])
+  @@unique([packId, position])
+  @@index([packId, position])
+}
+
+model LearningStudio {
   id                    String            @id @default(cuid())
   schoolId              String
   teacherMembershipId   String
   studentMembershipId   String
   guardianMembershipId  String?
-  title                 String            @db.VarChar(180)
+  curriculumPackId      String
+  title                 String            @db.VarChar(160)
   subject               String            @db.VarChar(80)
   gradeLabel            String            @db.VarChar(40)
   goal                  String            @db.VarChar(320)
-  status                CycleStatus       @default(draft)
+  drivingQuestion       String            @db.VarChar(300)
+  status                StudioStatus      @default(planning)
   familyLocale          Locale            @default(ml)
-  planOrigin            ContentOrigin     @default(project_authored)
+  planOrigin            ContentOrigin     @default(teacher_authored)
   aiStatus              AiStatus          @default(not_requested)
-  planSuccessCriteria   Json
-  planLearningSequence  Json
-  misconceptionIds      Json
-  quickCheck            String            @db.VarChar(500)
-  familyDraft           String            @db.VarChar(700)
-  planAgencyMove        String            @default("Ask for a prediction, show only the selected scaffold, then ask the learner to explain.") @db.VarChar(300)
-  sourceSectionIds      Json
-  selectedSupport       SupportStrategy   @default(fraction_strips)
-  scaffoldLevel         ScaffoldLevel      @default(guided)
-  firstAnswer           FractionAnswer?
-  supportUsed           Boolean           @default(false)
-  supportOrigin         ContentOrigin     @default(project_authored)
-  supportExplanation    String            @db.VarChar(700)
-  supportThinkingPrompts Json              @default("[]")
-  supportHandoffPrompt  String            @default("Use what you noticed to choose again and explain your reason.") @db.VarChar(260)
-  supportSourceIds      Json
-  makerPath             MakerPath?
-  artifactDraft         String?           @db.VarChar(700)
-  artifactCritique      ArtifactCritique?
-  artifactRevision      String?           @db.VarChar(700)
-  revisedAnswer         FractionAnswer?
-  explanationChoice     ExplanationChoice?
-  disagreedWithRecord   Boolean           @default(false)
-  teacherReviewStatus   ReviewStatus      @default(pending)
-  nextSupport           SupportStrategy?
-  nextScaffoldLevel     ScaffoldLevel?
-  familyBriefApproved   Boolean           @default(false)
-  familyResponse        FamilyResponse    @default(not_sent)
+  studentHelpStatus     AiStatus          @default(not_requested)
+  plan                  Json
+  planPromptVersion     String            @default("teacher-starter-v1") @db.VarChar(60)
+  aiModel               String?           @db.VarChar(120)
+  scaffoldLevel         ScaffoldLevel     @default(guided)
   version               Int               @default(1)
+  planReviewedAt        DateTime?
   publishedAt           DateTime?
   evidenceSubmittedAt   DateTime?
-  artifactSubmittedAt   DateTime?
   reviewedAt            DateTime?
   familyRespondedAt     DateTime?
   school                School            @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  teacherMembership     Membership        @relation("CycleTeacher", fields: [teacherMembershipId], references: [id], onDelete: Restrict)
-  studentMembership     Membership        @relation("CycleStudent", fields: [studentMembershipId], references: [id], onDelete: Restrict)
-  guardianMembership    Membership?       @relation("CycleGuardian", fields: [guardianMembershipId], references: [id], onDelete: SetNull)
+  teacherMembership     Membership        @relation("StudioTeacher", fields: [teacherMembershipId], references: [id], onDelete: Restrict)
+  studentMembership     Membership        @relation("StudioStudent", fields: [studentMembershipId], references: [id], onDelete: Restrict)
+  guardianMembership    Membership?       @relation("StudioGuardian", fields: [guardianMembershipId], references: [id], onDelete: SetNull)
+  curriculumPack        CurriculumPack    @relation(fields: [curriculumPackId], references: [id], onDelete: Restrict)
+  submission            LearnerSubmission?
+  teacherReview         TeacherReview?
+  familyHandoff         FamilyHandoff?
+  studentHelp           StudentHelp?
+  aiRuns                AiRun[]
   createdAt             DateTime          @default(now())
   updatedAt             DateTime          @updatedAt
 
   @@index([schoolId, status, updatedAt])
-  @@index([teacherMembershipId, status])
-  @@index([studentMembershipId, status])
-  @@index([guardianMembershipId, status])
+  @@index([teacherMembershipId, status, updatedAt])
+  @@index([studentMembershipId, status, updatedAt])
+  @@index([guardianMembershipId, status, updatedAt])
+  @@index([curriculumPackId])
+}
+
+model LearnerSubmission {
+  id                String         @id @default(cuid())
+  studioId          String         @unique
+  interestHookIndex Int
+  makerChoiceId     String         @db.VarChar(48)
+  prediction        String         @db.Text
+  firstDraft        String         @db.Text
+  selfCritique      String         @db.Text
+  revision          String         @db.Text
+  explanation       String         @db.Text
+  reflection        String         @db.Text
+  supportOpened     Boolean        @default(false)
+  studio            LearningStudio @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  submittedAt       DateTime       @default(now())
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+}
+
+model TeacherReview {
+  id                    String         @id @default(cuid())
+  studioId              String         @unique
+  teacherMembershipId   String
+  noticedStrength       String         @db.VarChar(500)
+  studentFeedback       String         @db.VarChar(700)
+  nextQuestion          String         @db.VarChar(300)
+  nextScaffoldLevel     ScaffoldLevel
+  familyActivity        String         @db.VarChar(700)
+  studio                LearningStudio @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  teacherMembership     Membership     @relation("ReviewTeacher", fields: [teacherMembershipId], references: [id], onDelete: Restrict)
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+
+  @@index([teacherMembershipId, createdAt])
+}
+
+model FamilyHandoff {
+  id          String         @id @default(cuid())
+  studioId    String         @unique
+  activity    String         @db.VarChar(700)
+  response    FamilyResponse @default(not_sent)
+  parentNote  String?        @db.VarChar(400)
+  respondedAt DateTime?
+  studio      LearningStudio @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+}
+
+model StudentHelp {
+  id                    String         @id @default(cuid())
+  studioId              String         @unique
+  studentMembershipId   String
+  response              Json
+  sourceSectionIds      Json
+  model                 String         @db.VarChar(120)
+  promptVersion         String         @db.VarChar(60)
+  studio                LearningStudio @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  studentMembership     Membership     @relation("StudentHelpStudent", fields: [studentMembershipId], references: [id], onDelete: Restrict)
+  createdAt             DateTime       @default(now())
+
+  @@index([studentMembershipId, createdAt])
+}
+
+model AiRun {
+  id                    String         @id @default(cuid())
+  schoolId              String
+  studioId              String
+  actorMembershipId     String
+  purpose               String         @db.VarChar(60)
+  provider              String         @db.VarChar(40)
+  model                 String         @db.VarChar(120)
+  status                AiRunStatus
+  promptVersion         String         @db.VarChar(60)
+  inputTokens           Int?
+  outputTokens          Int?
+  costMicros            Int?
+  latencyMs             Int
+  errorCode             String?        @db.VarChar(60)
+  citationIds           Json
+  school                School         @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  studio                LearningStudio @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  actorMembership       Membership     @relation("AiRunActor", fields: [actorMembershipId], references: [id], onDelete: Restrict)
+  createdAt             DateTime       @default(now())
+
+  @@index([schoolId, createdAt])
+  @@index([studioId, createdAt])
+  @@index([actorMembershipId, createdAt])
 }
 
 model AuditEvent {
@@ -258,7 +362,7 @@ model AuditEvent {
   entityId    String   @db.VarChar(120)
   metadata    Json?
   school      School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  actorUser   User?    @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+  actor       User?    @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
   createdAt   DateTime @default(now())
 
   @@index([schoolId, createdAt])

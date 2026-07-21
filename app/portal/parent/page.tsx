@@ -1,16 +1,25 @@
-import { CycleStatus, SchoolRole } from "@prisma/client";
+import { FamilyResponse, SchoolRole, StudioStatus } from "@prisma/client";
 import type { Metadata } from "next";
-import { CheckCircle2, MessageCircleMore, ShieldCheck } from "lucide-react";
+import {
+  CheckCircle2,
+  Home,
+  MessageCircle,
+  ShieldCheck,
+} from "lucide-react";
 
-import { recordFamilyResponseAction } from "@/app/actions/learning-cycle";
-import { PortalChrome, WaitingCard } from "@/components/portal-chrome";
+import { recordFamilyResponseAction } from "@/app/actions/studio";
+import { EmptyWorkspace, PortalChrome } from "@/components/portal-chrome";
 import { requireActor } from "@/lib/auth";
-import { growthSupportPresentations } from "@/lib/growth-support-presentations";
-import { copy } from "@/lib/i18n";
-import { makerPathPresentations } from "@/lib/maker-challenge";
-import { getLearningCycleSummaryForActor } from "@/lib/school-data";
+import { getParentStudio } from "@/lib/school-data";
 
-export const metadata: Metadata = { title: "Parent workspace" };
+export const metadata: Metadata = { title: "Parent home connection" };
+
+const notices: Record<string, string> = {
+  "response-sent": "Your response has returned to the teacher.",
+  "choose-response": "Choose what happened before sending your response.",
+  "remove-personal-data": "Remove contact details and web links from the note.",
+  "activity-closed": "This family activity has already been completed.",
+};
 
 export default async function ParentPortalPage({
   searchParams,
@@ -18,60 +27,46 @@ export default async function ParentPortalPage({
   searchParams: Promise<{ notice?: string }>;
 }) {
   const actor = await requireActor(SchoolRole.parent);
-  const cycle = await getLearningCycleSummaryForActor(actor);
-  const locale = actor.locale;
+  const studio = await getParentStudio(actor);
   const { notice } = await searchParams;
-  const support = cycle
-    ? growthSupportPresentations[cycle.nextSupport ?? cycle.selectedSupport]
-    : null;
-  const familyLocale = locale;
-  const makerPath = cycle?.makerPath
-    ? makerPathPresentations[cycle.makerPath]
-    : null;
 
   return (
     <PortalChrome
       actor={actor}
-      cycle={cycle}
-      title={copy(locale, { en: "Understand the goal and help once at home", ml: "ലക്ഷ്യം മനസ്സിലാക്കി വീട്ടിൽ ഒരിക്കൽ സഹായിക്കുക" })}
-      intro={copy(locale, { en: "Kanni turns the teacher's review into one short activity and gives you a simple way to respond.", ml: "അധ്യാപകന്റെ പരിശോധനയെ കണ്ണി ഒരു ചെറിയ പ്രവർത്തനമാക്കി മാറ്റുകയും ലളിതമായി പ്രതികരിക്കാൻ സഹായിക്കുകയും ചെയ്യുന്നു." })}
+      studio={studio}
+      title="Continue one useful idea at home"
+      intro="See the learning goal, one teacher observation, and one short activity. Raw student work and model output stay out of this view."
     >
-      {notice ? <p className="form-notice" role="status">{copy(locale, { en: "Your response has been saved.", ml: "നിങ്ങളുടെ പ്രതികരണം സേവ് ചെയ്തു." })}</p> : null}
-      {!cycle ? (
-        <WaitingCard locale={locale} title={copy(locale, { en: "No learner is connected", ml: "പഠിതാവിനെ ബന്ധിപ്പിച്ചിട്ടില്ല" })} detail={copy(locale, { en: "Ask the school administrator to connect your account to the learner.", ml: "നിങ്ങളുടെ അക്കൗണ്ടിനെ പഠിതാവുമായി ബന്ധിപ്പിക്കാൻ സ്കൂൾ അഡ്മിനിസ്ട്രേറ്ററോട് ആവശ്യപ്പെടുക." })} />
-      ) : cycle.status === CycleStatus.draft || cycle.status === CycleStatus.active || cycle.status === CycleStatus.waiting_teacher_review ? (
-        <WaitingCard locale={locale} title={copy(locale, { en: "The teacher is still reviewing this goal", ml: "അധ്യാപകൻ ഈ ലക്ഷ്യം പരിശോധിച്ചുകൊണ്ടിരിക്കുന്നു" })} detail={copy(locale, { en: "A home activity will appear after the student responds and the teacher approves the next support.", ml: "വിദ്യാർത്ഥി പ്രതികരിച്ച് അധ്യാപകൻ അടുത്ത പിന്തുണ അംഗീകരിച്ച ശേഷം വീട്ടുപ്രവർത്തനം ഇവിടെ പ്രത്യക്ഷപ്പെടും." })} />
+      {notice === "safety-support" ? <p className="form-error portal-notice" role="alert">If someone may be in immediate danger, call 112. Childline is 1098 and Tele-MANAS is 14416.</p> : notice ? <p className="form-notice portal-notice" role="status">{notices[notice] ?? "The family activity was updated."}</p> : null}
+      {!studio || !studio.teacherReview || !studio.familyHandoff ? (
+        <EmptyWorkspace title="The teacher is still reviewing the learning work" detail="A family activity appears only after the assigned teacher reads the student evidence and approves the wording." />
       ) : (
         <div className="workspace-grid parent-workspace-grid">
-          <section className="portal-card family-summary-card">
-            <p className="eyebrow">{copy(locale, { en: "What happened", ml: "എന്താണ് സംഭവിച്ചത്" })}</p>
-            <h2>{copy(locale, { en: "The learner compared one half and one quarter", ml: "പഠിതാവ് ഒരു പകുതിയും ഒരു കാലും താരതമ്യം ചെയ്തു" })}</h2>
-            <p>{copy(locale, { en: `The first choice was ${cycle.firstAnswer === "one_half" ? "one half" : "one quarter"}. After using the teacher-selected support, the revised choice was ${cycle.revisedAnswer === "one_half" ? "one half" : "one quarter"}.`, ml: `ആദ്യ തിരഞ്ഞെടുപ്പ് ${cycle.firstAnswer === "one_half" ? "ഒരു പകുതി" : "ഒരു കാൽ"} ആയിരുന്നു. അധ്യാപകൻ തിരഞ്ഞെടുത്ത പിന്തുണ ഉപയോഗിച്ച ശേഷം പുതുക്കിയ തിരഞ്ഞെടുപ്പ് ${cycle.revisedAnswer === "one_half" ? "ഒരു പകുതി" : "ഒരു കാൽ"} ആയി.` })}</p>
-            {makerPath ? <p className="family-maker-summary"><strong>{copy(locale, { en: "They also created", ml: "അവർ നിർമ്മിച്ചതും" })} {copy(locale, makerPath.familySummary)}.</strong> {copy(locale, { en: "Ask what they changed after checking the first design.", ml: "ആദ്യ രൂപകൽപ്പന പരിശോധിച്ച ശേഷം എന്താണ് മാറ്റിയതെന്ന് ചോദിക്കുക." })}</p> : null}
+          <section className="portal-card parent-context-card">
+            <div className="card-heading-row"><div><p className="eyebrow">What {studio.studentMembership.user.displayName} worked on</p><h2>{studio.goal}</h2><p>{studio.subject} · {studio.gradeLabel}</p></div><Home aria-hidden="true" /></div>
+            <div className="parent-context-grid"><article><span>Teacher noticed</span><p>{studio.teacherReview.noticedStrength}</p></article><article><span>Question to keep thinking</span><p>{studio.teacherReview.nextQuestion}</p></article></div>
+            <div className="parent-privacy-note"><ShieldCheck aria-hidden="true" /><span><strong>A small, reviewed handoff</strong><small>This page does not contain the learner&apos;s prediction, draft, critique, revision, model transcript, rank, score, or diagnosis.</small></span></div>
           </section>
 
           <section className="portal-card family-activity-card">
-            <div className="family-activity-heading"><MessageCircleMore aria-hidden="true" /><div><p className="eyebrow">{copy(locale, { en: "Try this once at home", ml: "വീട്ടിൽ ഒരിക്കൽ ഇത് ചെയ്യുക" })}</p><h2 lang={familyLocale}>{support?.familyTitle[familyLocale]}</h2></div></div>
-            <p lang={familyLocale} className="family-activity-detail">{support?.familyDetail[familyLocale]}</p>
-            {makerPath ? <p>{copy(locale, { en: `Invite the learner to show ${makerPath.familySummary.en} using paper or safe household objects. Ask questions, but let the learner lead.`, ml: `${makerPath.familySummary.ml} പേപ്പറോ സുരക്ഷിതമായ വീട്ടുപകരണങ്ങളോ ഉപയോഗിച്ച് കാണിക്കാൻ പഠിതാവിനെ ക്ഷണിക്കുക. ചോദ്യങ്ങൾ ചോദിക്കാം, പക്ഷേ പഠിതാവ് നയിക്കട്ടെ.` })}</p> : null}
-            <p className="family-stop-note">{copy(locale, { en: "Keep it short. Stop if the learner is tired or does not want to continue.", ml: "പ്രവർത്തനം ചെറുതാക്കുക. പഠിതാവ് ക്ഷീണിതനാണെങ്കിൽ അല്ലെങ്കിൽ തുടരാൻ ആഗ്രഹിക്കുന്നില്ലെങ്കിൽ നിർത്തുക." })}</p>
+            <div className="card-heading-row"><div><p className="eyebrow">Try this together</p><h2>One activity for home</h2></div><MessageCircle aria-hidden="true" /></div>
+            <p className="family-activity-copy" lang={studio.familyLocale}>{studio.familyHandoff.activity}</p>
+            <p className="family-coaching-tip"><strong>Helpful adult move:</strong> Ask the question, wait, and listen for the reason. Let the learner change their mind when the evidence changes.</p>
+          </section>
 
-            {cycle.familyResponse === "not_sent" ? (
-              <form action={recordFamilyResponseAction} className="family-response-form">
-                <p>{copy(locale, { en: "What would you like the teacher to know?", ml: "അധ്യാപകൻ എന്ത് അറിയണം?" })}</p>
-                <button type="submit" name="response" value="tried">{copy(locale, { en: "We tried it", ml: "ഞങ്ങൾ ചെയ്തു" })}</button>
-                <button type="submit" name="response" value="need_another_idea">{copy(locale, { en: "We need another idea", ml: "മറ്റൊരു ആശയം വേണം" })}</button>
-                <button type="submit" name="response" value="contact_teacher">{copy(locale, { en: "Please contact me", ml: "എന്നെ ബന്ധപ്പെടുക" })}</button>
+          {studio.status === StudioStatus.ready_for_family && studio.familyHandoff.response === FamilyResponse.not_sent ? (
+            <section className="portal-card family-response-card">
+              <div><p className="eyebrow">Close the loop</p><h2>Tell the teacher what happened</h2><p>Choose one response. You can edit the optional note until you send it; after submission, the handoff is locked.</p></div>
+              <form action={recordFamilyResponseAction}>
+                <input type="hidden" name="studioId" value={studio.id} />
+                <fieldset className="family-response-options"><legend>What happened at home?</legend><label><input type="radio" name="response" value="tried" required /><span><strong>We tried it</strong><small>The activity was clear enough to use.</small></span></label><label><input type="radio" name="response" value="need_another_idea" required /><span><strong>We need another idea</strong><small>A different activity would help.</small></span></label><label><input type="radio" name="response" value="contact_teacher" required /><span><strong>Please contact me</strong><small>I want to discuss the next step.</small></span></label></fieldset>
+                <label htmlFor="parentNote">Short note <span className="optional-label">optional</span></label><textarea id="parentNote" name="note" rows={3} maxLength={400} placeholder="We noticed…" />
+                <button className="button primary" type="submit">Send response to teacher</button>
               </form>
-            ) : (
-              <div className="family-response-complete"><CheckCircle2 aria-hidden="true" /><div><strong>{copy(locale, { en: "Response sent", ml: "പ്രതികരണം അയച്ചു" })}</strong><p>{cycle.familyResponse === "tried" ? copy(locale, { en: "We tried the activity.", ml: "ഞങ്ങൾ പ്രവർത്തനം ചെയ്തു." }) : cycle.familyResponse === "need_another_idea" ? copy(locale, { en: "We asked for another idea.", ml: "ഞങ്ങൾ മറ്റൊരു ആശയം ചോദിച്ചു." }) : copy(locale, { en: "We asked the teacher to contact us.", ml: "അധ്യാപകൻ ബന്ധപ്പെടണമെന്ന് ആവശ്യപ്പെട്ടു." })}</p></div></div>
-            )}
-          </section>
-
-          <section className="portal-card family-boundary-card">
-            <ShieldCheck aria-hidden="true" />
-            <div><p className="eyebrow">{copy(locale, { en: "A useful boundary", ml: "പ്രയോജനകരമായ പരിധി" })}</p><h2>{copy(locale, { en: "Support without surveillance", ml: "നിരീക്ഷണമില്ലാത്ത പിന്തുണ" })}</h2><p>{copy(locale, { en: "You receive the learning goal, the kind of artifact created, what changed, and the teacher-reviewed home step. Kanni does not show you the raw artifact text, AI transcript, rank, or diagnosis.", ml: "പഠനലക്ഷ്യം, നിർമ്മിച്ച സൃഷ്ടിയുടെ തരം, ഉണ്ടായ മാറ്റം, അധ്യാപകൻ പരിശോധിച്ച വീട്ടുപ്രവർത്തനം എന്നിവയാണ് നിങ്ങൾക്ക് ലഭിക്കുന്നത്. അസംസ്കൃത സൃഷ്ടി എഴുത്ത്, AI സംഭാഷണം, റാങ്ക്, അല്ലെങ്കിൽ രോഗനിർണ്ണയം കണ്ണി കാണിക്കില്ല." })}</p></div>
-          </section>
+            </section>
+          ) : (
+            <section className="portal-card family-complete-card"><CheckCircle2 aria-hidden="true" /><div><p className="eyebrow">Response sent</p><h2>The teacher has your update</h2><p>Your response: <strong>{studio.familyHandoff.response.replaceAll("_", " ")}</strong></p>{studio.familyHandoff.parentNote ? <p>{studio.familyHandoff.parentNote}</p> : null}</div></section>
+          )}
         </div>
       )}
     </PortalChrome>

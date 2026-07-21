@@ -1,100 +1,119 @@
-# Kanni review kit
+# Kanni adult review kit
 
-## Review purpose
+Use only invented names and work. Do not enter real learner information. These
+sessions measure whether an adult can use the product and whether the wording is
+clear. They do not measure educational effectiveness.
 
-Review the complete learning-support cycle with the provided review accounts. Use invented information only. This session checks usability, teaching language, privacy boundaries, and operational clarity. It is not a test of educational effectiveness.
+## Prepare an isolated review installation
 
-## Before the session
+1. Start Kanni with the judge Docker Compose file.
+2. Open `/setup` and create a temporary review school and administrator.
+3. Create one teacher, one student, and one parent account with temporary passwords.
+4. Connect the support circle.
+5. Give each adult reviewer only the account needed for their task.
+6. Keep AI off unless the session is specifically reviewing the one paid planning
+   request and the provider budget is confirmed.
 
-- Start the isolated PostgreSQL service and seed the review accounts.
-- Restart the learning cycle from the school-administrator workspace.
-- Confirm that AI is disabled unless the session is specifically reviewing the provider path.
-- Explain that the accounts and fractions record are review data, not a real student record.
-- Obtain permission before recording a quote, screen, or observation.
+Delete the isolated Docker volume after the review notes have been copied to the
+submission record.
 
 ## Teacher review
 
-Ask the adult teacher reviewer to:
+The reviewer must be an adult teacher familiar with Kerala classrooms.
 
-1. Sign in with the teacher account.
-2. Read the goal, success criteria, sequence, misconception labels, and quick check.
-3. Choose a support and publish.
-4. After student evidence is submitted, review it and choose the next support.
-5. Approve the family activity.
+### Task
 
-Record:
+1. Sign in as the teacher.
+2. Create a Class 7 learning studio from original notes the reviewer writes for the
+   session.
+3. Confirm that the source-rights wording is clear.
+4. Review the local plan across all sections:
+   - success criteria
+   - lesson sequence
+   - differentiation
+   - likely ideas to check
+   - quick evidence checks
+   - interest routes and maker paths
+   - Socratic and reflection prompts
+   - family activity
+5. Edit one teacher move and one family activity sentence.
+6. Publish the studio.
+7. After the learner submits, review the six evidence fields and choose the next
+   scaffold level.
 
-- Can the task be completed without help?
-- Is the teaching language accurate and respectful?
-- Are the likely misconceptions useful and non-diagnostic?
-- Does the evidence support the teacher's next decision?
-- Is the family activity appropriate and clear?
-- One issue found and one change made because of it.
+### Record
+
+- completion without help: yes or no
+- time to first published studio
+- one phrase that felt natural for a teacher
+- one phrase that felt wrong, vague, or judgmental
+- whether the source mapping is honest and understandable
+- whether the evidence view helps decide a next question
+- one product change caused by the review
+- one short observation the reviewer permits in the submission
 
 ## Parent review
 
-Ask the adult parent reviewer to:
+The reviewer must be an adult parent or caregiver.
 
-1. Sign in with the parent account.
-2. Switch between English and Malayalam.
-3. Explain what the learner worked on.
-4. Explain the home activity in their own words.
-5. Send one response.
+### Task
 
-Record:
+1. Sign in as the parent after the teacher opens the family activity.
+2. Explain what the learner worked on in their own words.
+3. Try the home activity using ordinary household objects.
+4. Send one response to the teacher.
 
-- Can the task be completed without help?
-- Is the summary useful without exposing too much?
-- Is the activity possible with ordinary household materials?
-- Is the Malayalam understandable and natural?
-- Does the stop instruction feel clear and respectful?
-- One issue found and one change made because of it.
+### Record
 
-## Recent learner review
+- completion without help: yes or no
+- time to understand the activity
+- whether the page reveals too much learner detail
+- whether the suggested adult move is clear
+- one phrase that should be shorter or simpler
+- one product change caused by the review
+- one short observation the reviewer permits in the submission
 
-Use an adult reviewer aged 18 or older.
+## Recent adult learner review
 
-Ask the reviewer to:
+Use an adult recent Kerala learner only. Do not recruit a minor for Build Week.
 
-1. Sign in with the student account.
-2. Complete the first choice, support, revision, and explanation.
-3. Use the record-challenge control if anything feels inaccurate.
-4. Return after teacher review and describe what changed.
+### Task
 
-Record:
+1. Sign in as the student.
+2. Choose an interest route and maker path.
+3. Predict before beginning.
+4. Create a first version without opening support.
+5. Open support only after the first version.
+6. Critique, revise, explain, reflect, and submit.
+7. Return after teacher review and explain what changed for the next studio.
 
-- Can the task be completed without help?
-- Does the support help thinking without simply commanding the answer?
-- Is the interface respectful and free of ranking pressure?
-- Is the teacher-selected next activity clearly connected?
-- One issue found and one change made because of it.
+### Record
 
-## Technical and security review
+- completion without help: yes or no
+- time to submit
+- whether the activity felt like answer delivery or real thinking
+- whether the learner understood why support could fade
+- one confusing step or label
+- one product change caused by the review
+- one short observation the reviewer permits in the submission
 
-Review:
+## Malayalam review
 
-- password hashing and generic login failure
-- session token generation, hash storage, expiry, revocation, and cookie flags
-- school, role, and relationship scope on reads and writes
-- learning state preconditions and concurrent action behavior
-- administrator, parent, teacher, and student information filtering
-- optional AI inputs, output validation, content gate, provider policy, and fallback
-- Docker networks, runtime user, read-only filesystem, secrets, migrations, health checks, backups, and recovery notes
-- dependency and secret scans
-- 32 deterministic cases and database-backed browser tests
+A native Malayalam-speaking adult must review every fixed Malayalam string in the
+landing page, setup, role chrome, privacy page, terms page, safety card, and local
+teacher-plan family wording.
 
-Do not include passwords, provider keys, session values, real personal data, or unsafe prompts in review notes.
+Record corrections in the product before calling Malayalam release-ready. Until
+that pass is complete, submission material must call Malayalam a preview.
 
-## Evidence record
+## Release observations
 
-For each reviewer, record:
+Use only permission-safe statements such as:
 
-- adult role and relevant experience
-- date and build revision
-- task completion without help: yes or no
-- time to completion
-- one issue found
-- one product change caused by the issue
-- one permission-safe observation suitable for the submission
+- “The reviewer completed the task without help.”
+- “The teacher reviewer changed this phrase because it sounded diagnostic.”
+- “The parent reviewer understood the activity but asked for a shorter first
+  sentence.”
 
-Describe results as usability feedback. Do not claim academic improvement from a review session.
+Do not turn a usability observation into a claim about grades, mastery, motivation,
+or long-term learning.

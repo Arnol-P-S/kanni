@@ -1,10 +1,14 @@
 import { NextResponse } from "next/server";
 
-import { getGrowthAiCapability } from "@/lib/ai/growth-ai";
+import {
+  getStudentStudioAiCapability,
+  getStudioAiCapability,
+} from "@/lib/ai/studio-ai";
 import { db } from "@/lib/db";
 
 export async function GET(): Promise<NextResponse> {
-  const growthAi = getGrowthAiCapability();
+  const studioAi = getStudioAiCapability();
+  const studentAi = getStudentStudioAiCapability();
   let database: "available" | "unavailable" = "available";
   try {
     await db.$queryRaw`SELECT 1`;
@@ -18,8 +22,9 @@ export async function GET(): Promise<NextResponse> {
       application: "kanni",
       database,
       ai: {
-        available: growthAi.available,
-        provider: growthAi.provider,
+        available: studioAi.available,
+        provider: studioAi.provider,
+        studentHelpAvailable: studentAi.available,
       },
     },
     {

@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="rich.css" />
+    <style>body { width: 1500px; }</style>
+  </head>
+  <body>
+    <svg width="0" height="0" aria-hidden="true">
+      <defs>
+        <symbol id="person" viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M4.5 21c.8-5 3.2-7.5 7.5-7.5s6.7 2.5 7.5 7.5"/></symbol>
+        <symbol id="browser" viewBox="0 0 24 24"><rect x="2.5" y="3.5" width="19" height="17" rx="2"/><path d="M3 8h18M7 6h.01M10 6h.01"/></symbol>
+        <symbol id="action" viewBox="0 0 24 24"><circle cx="5" cy="5" r="2.5"/><circle cx="19" cy="12" r="2.5"/><circle cx="5" cy="19" r="2.5"/><path d="M7.5 5h4a4 4 0 0 1 4 4v1M7.5 19h4a4 4 0 0 0 4-4v-1"/></symbol>
+        <symbol id="shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m8.5 12 2.2 2.2 4.8-5"/></symbol>
+        <symbol id="book" viewBox="0 0 24 24"><path d="M3 5.5c3-1.3 6-.8 9 1v14c-3-1.8-6-2.3-9-1zM21 5.5c-3-1.3-6-.8-9 1v14c3-1.8 6-2.3 9-1z"/></symbol>
+        <symbol id="state" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><path d="M10 6.5h4a3.5 3.5 0 0 1 3.5 3.5v4M14 17.5h-4A3.5 3.5 0 0 1 6.5 14v-4"/></symbol>
+        <symbol id="check" viewBox="0 0 24 24"><path d="m4 12 5 5L20 6"/><path d="M20 12a8 8 0 1 1-4-7"/></symbol>
+        <symbol id="database" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v7c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12v7c0 1.7 3.6 3 8 3s8-1.3 8-3v-7"/></symbol>
+        <symbol id="brain" viewBox="0 0 24 24"><path d="M9.5 4a3.5 3.5 0 0 0-6 2.5A3.5 3.5 0 0 0 4 13a4 4 0 0 0 5.5 4M14.5 4a3.5 3.5 0 0 1 6 2.5A3.5 3.5 0 0 1 20 13a4 4 0 0 1-5.5 4M9.5 4v16M14.5 4v16M7 8h2.5M14.5 8H17M7 14h2.5M14.5 14H17"/></symbol>
+        <symbol id="lock" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"/></symbol>
+      </defs>
+    </svg>
+
+    <div class="canvas">
+      <div class="status-banner safe">
+        <span>Current release: a modular monolith with one persisted, curriculum-grounded learning-studio workflow.</span>
+        <span class="pill">AI optional, people remain authoritative</span>
+      </div>
+
+      <div class="tier">
+        <div class="tlab h-green"><div class="tn">School roles</div><div class="td">separate accounts and responsibilities</div></div>
+        <div class="tbody cols-4">
+          <div class="node app"><svg class="ic"><use href="#person"/></svg><div class="nl">Administrator<small>accounts, mappings, curriculum, status</small></div></div>
+          <div class="node app"><svg class="ic"><use href="#person"/></svg><div class="nl">Teacher<small>goal, plan, review, scaffold decision</small></div></div>
+          <div class="node app"><svg class="ic"><use href="#person"/></svg><div class="nl">Learner<small>attempt, optional questions, revise, reflect</small></div></div>
+          <div class="node app"><svg class="ic"><use href="#person"/></svg><div class="nl">Parent<small>reviewed activity and bounded response</small></div></div>
+        </div>
+      </div>
+
+      <div class="va"><svg viewBox="0 0 22 28"><line x1="11" y1="1" x2="11" y2="19" stroke="#0f766e" stroke-width="2.4"/><polygon points="6,18 11,27 16,18" fill="#0f766e"/></svg></div>
+
+      <div class="tier">
+        <div class="tlab h-green"><div class="tn">Presentation</div><div class="td">Next.js 16 and React 19</div></div>
+        <div class="tbody cols-4">
+          <div class="node app"><svg class="ic"><use href="#browser"/></svg><div class="nl">Public and setup routes<small>clean first run, login, privacy, terms</small></div></div>
+          <div class="node app"><svg class="ic"><use href="#browser"/></svg><div class="nl">Role workspaces<small>server-rendered, privacy-reduced pages</small></div></div>
+          <div class="node app"><svg class="ic"><use href="#browser"/></svg><div class="nl">Guided task forms<small>progress, required action, keyboard path</small></div></div>
+          <div class="node route"><svg class="ic"><use href="#action"/></svg><div class="nl">Server actions<small>setup, accounts, mappings, studio transitions</small></div></div>
+        </div>
+      </div>
+
+      <div class="va"><svg viewBox="0 0 22 28"><line x1="11" y1="1" x2="11" y2="19" stroke="#c2410c" stroke-width="2.4"/><polygon points="6,18 11,27 16,18" fill="#c2410c"/></svg></div>
+
+      <div class="tier">
+        <div class="tlab h-orange"><div class="tn">Policy gates</div><div class="td">checked before data or provider access</div></div>
+        <div class="tbody cols-4">
+          <div class="node guard"><svg class="ic"><use href="#lock"/></svg><div class="nl">Authentication<small>bcrypt, hashed opaque sessions, throttling</small></div></div>
+          <div class="node guard"><svg class="ic"><use href="#shield"/></svg><div class="nl">Authorization<small>school, role, relationship, workflow state</small></div></div>
+          <div class="node guard"><svg class="ic"><use href="#check"/></svg><div class="nl">Boundary schemas<small>Zod, Unicode NFC, size and enum limits</small></div></div>
+          <div class="node guard"><svg class="ic"><use href="#shield"/></svg><div class="nl">Safety and privacy<small>personal data, high-risk route, role selects</small></div></div>
+        </div>
+      </div>
+
+      <div class="va"><svg viewBox="0 0 22 28"><line x1="11" y1="1" x2="11" y2="19" stroke="#a16207" stroke-width="2.4"/><polygon points="6,18 11,27 16,18" fill="#a16207"/></svg></div>
+
+      <div class="tier">
+        <div class="tlab h-amber"><div class="tn">Domain modules</div><div class="td">provider-independent contracts</div></div>
+        <div class="tbody cols-4">
+          <div class="node route"><svg class="ic"><use href="#book"/></svg><div class="nl">Curriculum RAG<small>rights, sections, checksums, retrieval</small></div></div>
+          <div class="node route"><svg class="ic"><use href="#state"/></svg><div class="nl">Studio state machine<small>conditional transitions and version checks</small></div></div>
+          <div class="node route"><svg class="ic"><use href="#check"/></svg><div class="nl">AI output contracts<small>teacher toolkit or student thinking steps</small></div></div>
+          <div class="node route"><svg class="ic"><use href="#action"/></svg><div class="nl">Scaffold strategy<small>guided, light, independent next start</small></div></div>
+        </div>
+      </div>
+
+      <div class="va"><svg viewBox="0 0 22 28"><line x1="11" y1="1" x2="11" y2="19" stroke="#475569" stroke-width="2.4"/><polygon points="6,18 11,27 16,18" fill="#475569"/></svg></div>
+
+      <div class="tier">
+        <div class="tlab h-slate"><div class="tn">Infrastructure</div><div class="td">local source of truth and optional external draft</div></div>
+        <div class="tbody cols-4">
+          <div class="node data"><svg class="ic"><use href="#database"/></svg><div class="nl">PostgreSQL 18<small>identity, mappings, source, work, audit</small></div></div>
+          <div class="node data"><svg class="ic"><use href="#database"/></svg><div class="nl">Prisma 7 adapter<small>parameterized writes and role-specific selects</small></div></div>
+          <div class="node ai"><svg class="ic"><use href="#brain"/></svg><div class="nl">OpenRouter and GPT-5.6<small>one request per bounded use case</small></div></div>
+          <div class="node guard"><svg class="ic"><use href="#check"/></svg><div class="nl">Output release gate<small>strict object, retrieved IDs, safety checks</small></div></div>
+        </div>
+      </div>
+
+      <div class="note-band">
+        <div class="note"><strong>No automatic model traffic</strong>Teacher planning and student help each require an explicit click. Local support works with AI off.</div>
+        <div class="note"><strong>Privacy before rendering</strong>Parent and administrator queries do not select raw learner work.</div>
+        <div class="note"><strong>Clean deployment</strong>Migrations create schema only. The first school and every account come through the interface.</div>
+        <div class="note"><strong>Future ports</strong>OIDC, vector retrieval, notifications, and reporting can replace adapters without changing the studio contract.</div>
+      </div>
+
+      <div class="legend">
+        <span class="lt">Color key</span>
+        <span class="leg"><span class="sw" style="background:#86efac"></span>Application and people</span>
+        <span class="leg"><span class="sw" style="background:#fde047"></span>Domain decision</span>
+        <span class="leg"><span class="sw" style="background:#fdba74"></span>Policy gate</span>
+        <span class="leg"><span class="sw" style="background:#cbd5e1"></span>Data and external boundary</span>
+        <span class="leg"><span class="sw" style="background:#5eead4"></span>Bounded AI support</span>
+      </div>
+    </div>
+  </body>
+</html>

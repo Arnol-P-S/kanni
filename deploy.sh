@@ -7,7 +7,7 @@ COMPOSE=(docker compose -f compose.production.yaml --env-file .env.production)
 
 require_env() {
   if [[ ! -f .env.production ]]; then
-    echo "Missing .env.production. Copy .env.production.example and set real secrets." >&2
+    echo "Missing .env.production. Copy .env.production.example and set deployment-specific secrets." >&2
     exit 1
   fi
   corepack pnpm env:production:check
@@ -39,10 +39,6 @@ case "${1:-help}" in
     require_env
     "${COMPOSE[@]}" run --rm migrate
     ;;
-  seed-review)
-    require_env
-    "${COMPOSE[@]}" --profile tools run --rm seed
-    ;;
   backup)
     require_env
     mkdir -p data/backup
@@ -51,6 +47,6 @@ case "${1:-help}" in
     echo "Backup written to data/backup/kanni_${timestamp}.sql"
     ;;
   *)
-    echo "Usage: ./deploy.sh deploy|start|stop|status|logs [service]|migrate|seed-review|backup"
+    echo "Usage: ./deploy.sh deploy|start|stop|status|logs [service]|migrate|backup"
     ;;
 esac

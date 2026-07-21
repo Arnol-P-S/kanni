@@ -63,15 +63,16 @@ services:
       AUTH_SECRET: ${AUTH_SECRET:?set in .env.production}
       AUTH_TRUST_PROXY: ${AUTH_TRUST_PROXY:-false}
       NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:?set in .env.production}
-      REVIEW_ACCESS_VISIBLE: ${REVIEW_ACCESS_VISIBLE:-false}
       GROWTH_AI_PROVIDER: ${GROWTH_AI_PROVIDER:-disabled}
       GROWTH_AI_MODEL: ${GROWTH_AI_MODEL:-openai/gpt-5.6-luna}
       OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
       GROWTH_AI_ENABLED: ${GROWTH_AI_ENABLED:-false}
       GROWTH_AI_RATE_LIMIT_CONFIRMED: ${GROWTH_AI_RATE_LIMIT_CONFIRMED:-false}
       GROWTH_AI_SPEND_LIMIT_CONFIRMED: ${GROWTH_AI_SPEND_LIMIT_CONFIRMED:-false}
+      GROWTH_AI_STUDENT_HELP_ENABLED: ${GROWTH_AI_STUDENT_HELP_ENABLED:-false}
+      GROWTH_AI_STUDENT_DATA_REVIEW_CONFIRMED: ${GROWTH_AI_STUDENT_DATA_REVIEW_CONFIRMED:-false}
     ports:
-      - "${APP_PORT:-3001}:3000"
+      - "${APP_HOST:-127.0.0.1}:${APP_PORT:-3001}:3000"
     depends_on:
       db:
         condition: service_healthy
@@ -88,33 +89,6 @@ services:
       - web
     mem_limit: 1536m
     cpus: 1.5
-
-  seed:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: migrator
-    profiles: ["tools"]
-    read_only: true
-    security_opt:
-      - no-new-privileges:true
-    cap_drop:
-      - ALL
-    tmpfs:
-      - /tmp:size=64m,mode=1777
-    environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?schema=public
-      KANNI_SEED_LOCAL_ACCOUNTS: ${KANNI_SEED_LOCAL_ACCOUNTS:-false}
-      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-}
-      SEED_TEACHER_PASSWORD: ${SEED_TEACHER_PASSWORD:-}
-      SEED_STUDENT_PASSWORD: ${SEED_STUDENT_PASSWORD:-}
-      SEED_PARENT_PASSWORD: ${SEED_PARENT_PASSWORD:-}
-    command: ["node", "--import", "tsx", "prisma/seed.ts"]
-    depends_on:
-      migrate:
-        condition: service_completed_successfully
-    networks:
-      - data
 
 networks:
   data:

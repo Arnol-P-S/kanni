@@ -10,11 +10,8 @@ const runFile = promisify(execFile);
 const diagramDirectory = resolve(process.cwd(), "docs/diagrams");
 const renderDirectory = resolve(diagramDirectory, "render");
 const specifications = [
-  { name: "current-static-release", width: 1440, height: 1200 },
-  { name: "future-provider-runtime", width: 1480, height: 1500 },
-  { name: "connected-learning-loop", width: 1540, height: 900 },
-  { name: "learning-support-cycle", width: 1540, height: 1080 },
-  { name: "role-access-boundaries", width: 1500, height: 1100 },
+  { name: "system-architecture", width: 1500, height: 1200 },
+  { name: "agency-loop", width: 1540, height: 900 },
 ] as const;
 
 async function main() {

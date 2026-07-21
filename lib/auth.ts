@@ -24,7 +24,12 @@ const DUMMY_PASSWORD_HASH =
 
 export const LoginInputSchema = z
   .object({
-    email: z.email().trim().max(320).transform((value) => value.toLowerCase()),
+    email: z
+      .string()
+      .trim()
+      .max(320)
+      .pipe(z.email())
+      .transform((value) => value.toLowerCase()),
     password: z.string().min(8).max(128),
   })
   .strict();

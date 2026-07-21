@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="rich.css" />
+    <style>
+      body { width: 1540px; }
+      .flow-card { width: 190px; min-height: 176px; }
+      .flow-row { margin-top: 8px; }
+    </style>
+  </head>
+  <body>
+    <svg width="0" height="0" aria-hidden="true">
+      <defs>
+        <symbol id="person" viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M4.5 21c.8-5 3.2-7.5 7.5-7.5s6.7 2.5 7.5 7.5"/></symbol>
+        <symbol id="book" viewBox="0 0 24 24"><path d="M3 5.5c3-1.3 6-.8 9 1v14c-3-1.8-6-2.3-9-1zM21 5.5c-3-1.3-6-.8-9 1v14c3-1.8 6-2.3 9-1z"/></symbol>
+        <symbol id="brain" viewBox="0 0 24 24"><path d="M9.5 4a3.5 3.5 0 0 0-6 2.5A3.5 3.5 0 0 0 4 13a4 4 0 0 0 5.5 4M14.5 4a3.5 3.5 0 0 1 6 2.5A3.5 3.5 0 0 1 20 13a4 4 0 0 1-5.5 4M9.5 4v16M14.5 4v16"/></symbol>
+        <symbol id="make" viewBox="0 0 24 24"><path d="m14 4 6 6L8 22H2v-6zM12 6l6 6M3 3l5 1-4 4z"/></symbol>
+        <symbol id="revise" viewBox="0 0 24 24"><path d="M20 7h-7a6 6 0 1 0 5.2 9"/><path d="m16 3 4 4-4 4"/></symbol>
+        <symbol id="check" viewBox="0 0 24 24"><path d="m4 12 5 5L20 6"/><path d="M20 12a8 8 0 1 1-4-7"/></symbol>
+        <symbol id="home" viewBox="0 0 24 24"><path d="m3 11 9-8 9 8v10h-6v-6H9v6H3z"/></symbol>
+        <symbol id="database" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v7c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12v7c0 1.7 3.6 3 8 3s8-1.3 8-3v-7"/></symbol>
+        <symbol id="shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m8.5 12 2.2 2.2 4.8-5"/></symbol>
+      </defs>
+    </svg>
+
+    <div class="canvas">
+      <div class="status-banner safe">
+        <span>The learner creates the evidence. The teacher decides how support changes. AI may prepare a plan or ask bounded questions.</span>
+        <span class="pill">Agency grows as scaffolding fades</span>
+      </div>
+
+      <div class="flow-row">
+        <div class="flow-card teacher"><div class="head"><span class="step">1</span><svg class="ic"><use href="#book"/></svg></div><h3>Teacher grounds the goal</h3><p>Selects an approved school curriculum version, chooses a learner and driving question, then reviews the local starting plan.</p></div>
+        <div class="arrow-h"><svg viewBox="0 0 38 22"><line x1="1" y1="11" x2="29" y2="11" stroke="#0f766e" stroke-width="2.2"/><polygon points="28,6 37,11 28,16" fill="#0f766e"/></svg></div>
+        <div class="flow-card system"><div class="head"><span class="step">2</span><svg class="ic"><use href="#brain"/></svg></div><h3>Optional AI prepares</h3><p>One teacher request retrieves local sections. Unknown citations discard the full GPT-5.6 draft. The teacher remains the author.</p></div>
+        <div class="arrow-h"><svg viewBox="0 0 38 22"><line x1="1" y1="11" x2="29" y2="11" stroke="#0f766e" stroke-width="2.2"/><polygon points="28,6 37,11 28,16" fill="#0f766e"/></svg></div>
+        <div class="flow-card student"><div class="head"><span class="step">3</span><svg class="ic"><use href="#make"/></svg></div><h3>Learner predicts and makes</h3><p>Chooses a route, records a prediction, and makes a first version before opening reviewed prompts or one AI question set.</p></div>
+        <div class="arrow-h"><svg viewBox="0 0 38 22"><line x1="1" y1="11" x2="29" y2="11" stroke="#0f766e" stroke-width="2.2"/><polygon points="28,6 37,11 28,16" fill="#0f766e"/></svg></div>
+        <div class="flow-card student"><div class="head"><span class="step">4</span><svg class="ic"><use href="#revise"/></svg></div><h3>Learner critiques and revises</h3><p>Uses questions and small tests, not a finished answer, then explains the change and reflects on what can be done alone.</p></div>
+        <div class="arrow-h"><svg viewBox="0 0 38 22"><line x1="1" y1="11" x2="29" y2="11" stroke="#0f766e" stroke-width="2.2"/><polygon points="28,6 37,11 28,16" fill="#0f766e"/></svg></div>
+        <div class="flow-card teacher"><div class="head"><span class="step">5</span><svg class="ic"><use href="#check"/></svg></div><h3>Teacher reviews evidence</h3><p>Reads the full sequence, gives one next question, and selects guided, light, or independent support for the next studio.</p></div>
+        <div class="arrow-h"><svg viewBox="0 0 38 22"><line x1="1" y1="11" x2="29" y2="11" stroke="#0f766e" stroke-width="2.2"/><polygon points="28,6 37,11 28,16" fill="#0f766e"/></svg></div>
+        <div class="flow-card parent"><div class="head"><span class="step">6</span><svg class="ic"><use href="#home"/></svg></div><h3>Family continues one idea</h3><p>Receives one reviewed home activity and returns a small response. Raw learner work stays with the learner and teacher.</p></div>
+      </div>
+
+      <div class="loop-return">
+        <svg viewBox="0 0 1400 74" preserveAspectRatio="none"><path d="M1360 4 V33 Q1360 57 1335 57 H64 Q40 57 40 33 V4" fill="none" stroke="#0f766e" stroke-width="2.5"/><polygon points="35,10 40,1 45,10" fill="#0f766e"/></svg>
+        <span>The teacher-selected scaffold becomes the next studio's starting support</span>
+      </div>
+
+      <div class="record-card">
+        <svg class="ic"><use href="#database"/></svg>
+        <div><h3>One versioned PostgreSQL record connects the handoffs</h3><p>Curriculum IDs, plan, AI request states, learner evidence, teacher review, family response, scaffold decision, and bounded audit events.</p></div>
+        <div class="exclude"><h3><svg class="ic" style="width:20px;height:20px;vertical-align:middle"><use href="#shield"/></svg> Privacy reduction by role</h3><p><strong>Parent and administrator:</strong> no learner draft, critique, revision, model text, score, rank, or diagnosis.</p></div>
+      </div>
+
+      <div class="note-band">
+        <div class="note"><strong>Academic mastery</strong>Evidence and revision matter more than answer delivery.</div>
+        <div class="note"><strong>Interest-grounded work</strong>The learner chooses a context and a form to make.</div>
+        <div class="note"><strong>Metacognition</strong>Reflection records what help can be reduced next time.</div>
+        <div class="note"><strong>Teacher scale</strong>One reviewed plan prepares routes, checks, misconceptions, and family wording.</div>
+      </div>
+    </div>
+  </body>
+</html>

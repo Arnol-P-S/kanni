@@ -1,38 +1,72 @@
 import "dotenv/config";
 
-import {
-  generateStudentSupportDraft,
-  generateTeacherPlanDraft,
-  getGrowthAiCapability,
-} from "../lib/ai/growth-ai";
+import { writeFile } from "node:fs/promises";
 
-process.env.GROWTH_AI_DIAGNOSTICS = "true";
+import { generateGroundedTeacherPlan } from "../lib/ai/studio-ai";
+import { splitCurriculumIntoSections } from "../lib/curriculum/rag";
 
-const capability = getGrowthAiCapability();
-const studentOnly = process.argv.includes("--student-only");
-if (!capability.available) {
-  console.error(`Live evaluation is unavailable: ${capability.reason}.`);
+const confirmation = process.env.RUN_LIVE_AI_EVALS;
+if (confirmation !== "I_UNDERSTAND_THIS_SPENDS_OPENROUTER_CREDIT") {
+  throw new Error(
+    "Live eval stopped before any request. Set RUN_LIVE_AI_EVALS=I_UNDERSTAND_THIS_SPENDS_OPENROUTER_CREDIT to permit one OpenRouter call.",
+  );
+}
+
+const sections = splitCurriculumIntoSections(`
+Equivalent ratios
+Equivalent ratios describe the same multiplicative relationship. In a ratio table, each pair of corresponding values is multiplied or divided by the same factor.
+
+Unit rates
+A unit rate compares a quantity with one unit. A vehicle travelling 120 kilometres in two hours has a unit rate of 60 kilometres per hour.
+
+Claims and evidence
+A strong mathematical explanation states a claim, gives relevant evidence, and explains the connection. A learner should revise a claim when a test or source example does not support it.
+
+Learning through revision
+Begin with a prediction. Build or represent the idea, test it, identify one weakness, revise the work, and explain why the revision is stronger.
+`);
+
+const result = await generateGroundedTeacherPlan({
+  title: "Ratios as relationships",
+  subject: "Mathematics",
+  gradeLabel: "Class 7",
+  goal: "Compare equivalent ratios and justify the comparison with a table or model.",
+  drivingQuestion: "How can we prove that two ratios describe the same relationship?",
+  familyLocale: "en",
+  sections,
+});
+
+const report = {
+  runDate: new Date().toISOString(),
+  suiteVersion: "teacher-agency-rag-live-v1",
+  requestCount: 1,
+  status: result.status,
+  model: result.model,
+  promptVersion: result.promptVersion,
+  inputTokens: result.inputTokens,
+  outputTokens: result.outputTokens,
+  costMicros: result.costMicros,
+  latencyMs: result.latencyMs,
+  citationIds: result.citationIds,
+  checks: {
+    structuredPlanReturned: result.plan !== null,
+    validSourceIds: result.citationIds.every((id) =>
+      sections.some((section) => section.referenceId === id),
+    ),
+    createCritiqueRevisePresent: Boolean(
+      result.plan?.learningSequence.some((step) => step.phase === "make") &&
+        result.plan.learningSequence.some((step) => step.phase === "explain") &&
+        result.plan.reflectionPrompts.length >= 2,
+    ),
+  },
+};
+
+await writeFile("eval/live-results.json", `${JSON.stringify(report, null, 2)}\n`, "utf8");
+console.log(`Kanni live evaluation: ${result.status}; one request recorded.`);
+if (
+  result.status !== "succeeded" ||
+  !report.checks.validSourceIds ||
+  !report.checks.createCritiqueRevisePresent
+) {
   process.exitCode = 1;
-} else if (studentOnly) {
-  const support = await generateStudentSupportDraft(
-    "guided_questions",
-    "ml",
-  );
-  const passed = support.origin === "gpt_5_6";
-  console.log(
-    `Kanni live student evaluation: ${passed ? "1/1" : "fallback used"}. Model ${capability.model}. Student: ${support.fallbackReason ?? "grounded"}.`,
-  );
-  if (!passed) process.exitCode = 1;
-} else {
-  const [plan, support] = await Promise.all([
-    generateTeacherPlanDraft("ml"),
-    generateStudentSupportDraft("guided_questions", "ml"),
-  ]);
-  const passed =
-    plan.origin === "gpt_5_6" &&
-    support.origin === "gpt_5_6";
-  console.log(
-    `Kanni live AI evaluation: ${passed ? "2/2" : "fallback used"}. Model ${capability.model}. Plan: ${plan.fallbackReason ?? "grounded"}. Student: ${support.fallbackReason ?? "grounded"}.`,
-  );
-  if (!passed) process.exitCode = 1;
 }

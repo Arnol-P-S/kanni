@@ -2,70 +2,128 @@
 
 ## Inspiration
 
-Learning support often breaks at the handoffs. A teacher plans a useful activity, but the student's struggle is reduced to a score. A parent wants to help, but receives either too little context or a long report. A school leader can see systems and accounts, but not whether the right person knows what to do next.
+School AI can make content delivery faster, but speed is not the same as learning.
+If the model answers first, the learner can become a passenger. Kanni began with a
+different question: can AI save teachers real planning time while requiring the
+learner to make, test, question, and revise an idea?
 
-Kanni started with a simple idea: one learning goal should become a useful next task for each person around the learner.
-
-Kanni means a link or node in Malayalam. That is the product. It connects a school administrator, teacher, student, and parent without giving every role the same information or control.
+Teachers are the main lever. A better student chatbot helps one learner in one
+moment. A better planning and evidence tool can help one teacher prepare several
+routes, notice likely confusion, review how thinking changed, and communicate one
+useful next step to a family.
 
 ## What Kanni does
 
-Kanni is a persistent school learning-support platform with four separate account types.
+Kanni connects a school administrator, teacher, learner, and parent around one
+curriculum-grounded learning studio.
 
-The administrator sees the school accounts, assigned relationships, and current handoff. The teacher reviews a fractions plan, anticipates likely misconceptions, chooses a support strategy, and publishes the activity. The student makes a first choice, opens that support, revises the answer, and explains the reasoning. The same teacher reviews the evidence, chooses what should happen next, and approves one home activity. The linked parent receives a short summary and the reviewed activity, then sends one bounded response. When the student returns, the next activity has changed because of the teacher's decision.
+The administrator creates real accounts, maps responsibility, and manages
+versioned curriculum packs. The teacher selects a source the school is allowed to
+use and prepares a full plan. The learner chooses
+a route, predicts, creates a first version, critiques it, revises it, explains the
+change, and reflects. The teacher reviews that sequence and chooses whether the
+next studio begins with guided, light, or independent support. The parent receives
+one reviewed activity without receiving the learner's private work.
 
-The current learning goal is original Kanni content: compare one half and one quarter when both wholes are the same size. Keeping one complete goal let us build the whole school workflow with honest depth.
+The teacher's decision is not a label. It changes one concrete product behavior:
+how many reviewed prompts appear in the learner's next studio.
 
 ## How it was built
 
-Kanni uses Next.js 16, React 19, TypeScript, PostgreSQL 18, Prisma 7, and Docker Compose.
+The application uses Next.js 16, React 19, strict TypeScript, PostgreSQL 18,
+Prisma 7, Zod, the Vercel AI SDK, and the OpenRouter AI SDK provider. Docker builds
+separate migration and application images.
 
-Passwords are hashed with bcrypt. The browser receives an opaque HttpOnly token, while PostgreSQL stores only its hash and session expiry. Reads and writes are scoped by school, role, and assigned relationship. The learning cycle is a database state machine, so an old or repeated action cannot silently skip a handoff.
+The domain is a versioned state machine. Every transition checks the school, role,
+relationship, expected status, and current version. Parent and administrator data
+queries omit raw learner submissions before the page is rendered.
 
-The production topology has a one-shot migration container, an internal PostgreSQL network, and a non-root, read-only application container with dropped Linux capabilities. The local development database uses its own project name, volume, database, and loopback port.
-
-English and Malayalam are fixed product dictionaries. Changing the language updates the signed-in user's preference and changes the actual portal, including the family activity.
+Curriculum text is normalized, split into checksummed sections, and retrieved
+locally. A small teacher pack does not need a vector database. The retrieval
+contract leaves room for a later embedding-backed implementation for larger,
+permission-cleared school collections.
 
 ## How Codex changed the build process
 
-Codex was used as an engineering partner, not as a substitute for product decisions. It helped inspect the existing implementation, challenge the broad tutor approach, model the role and relationship rules, design the database, implement the authentication and cycle transitions, compare the Docker topology with an existing production-shaped system, build tests, and review the finished change.
+The early application was a static fractions lesson with four screens. It did not
+prove the teacher-first idea or provide a clean school setup. We used one primary
+Codex thread to inspect that implementation and replace it with a reusable learning
+studio.
 
-The most important change was architectural. The early version stored one local record and let a reviewer switch perspectives. Codex helped replace that with password accounts, revocable server sessions, persistent PostgreSQL records, relationship-scoped data access, transaction-backed mutations, Docker deployment, and a complete four-account browser journey.
+Codex helped define the new schemas, write the forward migration, build first-run
+setup and account mapping, implement role-specific data access, create the teacher
+plan editor and learner evidence flow, add the OpenRouter boundary, write the
+evaluation set, build Docker verification, and prepare the diagrams and release
+material.
 
-The human decision was to keep the product narrow in content but complete in operation. That meant one learning goal, four real accounts, one full loop, and no claim that unfinished curriculum breadth was a feature.
+The most useful Codex moment came from a failing clean-install browser test. Setup
+looked correct, but PostgreSQL remained empty. The failure was traced to a Prisma 7
+adapter error: the query API tried to deserialize the `void` value returned by
+`pg_advisory_xact_lock`, so the entire serializable setup transaction rolled back.
+The fix kept the lock but called it through the execution API. The original browser
+reproduction then passed.
 
 ## How GPT-5.6 is used
 
-GPT-5.6 Sol is optional. A teacher can request a structured plan draft, and a student can open a strategy-specific support draft after the teacher has selected that strategy.
+GPT-5.6 Luna supports two optional, explicit requests through OpenRouter. For
+teacher planning, Kanni retrieves up to six local curriculum sections and requests a
+strict plan with success criteria, learning sequence, differentiation,
+misconception probes, quick checks, interest routes, maker paths, Socratic prompts,
+reflection, and family wording. After a student makes a first attempt, one separate
+adult-confirmed request can return three or four grounded questions and small
+experiments plus a self-check. A separate operator flag keeps this route off until
+student-data processing has been reviewed. The student context is limited to the
+goal, driving question, first attempt, and up to four relevant sections. It does
+not ask for a finished answer.
 
-The provider receives only the bundled fractions context and selected strategy. It does not receive a learner name, email, answer history, family response, session, or school membership. Output must pass a strict Zod schema, use allowlisted source IDs, and satisfy a deterministic strategy check. There is no retry, tool use, recursive agent, or provider fallback.
+Kanni does not add account names, parent notes, passwords, later submission fields,
+or previous model conversations to either request. Teachers are told to keep names
+out of the goal and source text they write. Unknown citations, unsafe text, or
+answer-revealing student help discard the full output. There is no retry, provider
+fallback, web search, external tool, or automatic publishing.
+The teacher reviews and edits the result. When AI is off or fails, the complete
+local teacher plan remains available.
 
-Most importantly, Kanni remains complete when AI is off. Reviewed project-authored content is always available. AI cannot publish a plan, authorize a user, grade a student, or contact a family.
+## Challenges faced
 
-## Challenges
+The largest design challenge was making agency concrete. A slogan about critical
+thinking is easy. A product must require evidence of it. That led to the stored
+sequence of prediction, first version, self-critique, revision, explanation, and
+reflection.
 
-The first challenge was choosing a complete product slice. A broad tutor across many grades looked larger but made the teacher, parent, and school views feel separate. The connected cycle gave each role a real responsibility and made the teacher's decision visible in the student's next task.
+Another challenge was privacy across roles. The parent needs useful context but not
+surveillance. The administrator needs operational status but not student work. We
+handled that with separate relational select shapes and browser assertions using a
+unique learner sentence.
 
-The second challenge was access control. A role label was not enough. A teacher must be assigned to that student, a student must be enrolled in that cycle, and a parent must be explicitly linked. Those checks now exist in both the read path and the database write conditions.
+Content rights also changed the RAG design. Public access to a textbook does not
+grant permission to copy it. Kanni accepts original, CC BY 4.0, public-domain, or
+written-permission text, and forces known SCERT hosts to link-only treatment.
 
-The third challenge was making Malayalam a real preference, not decoration. The locale now persists on the user and applies across public pages and portals. A browser test at 360 pixels verifies that visible content and the document language change.
+## What was learned
 
-The fourth challenge was honest AI use. The approved Build Week Codex credit does not fund application API traffic. We kept AI optional, bounded its model and route, disabled retries and fallback, and required external spend and traffic controls before production activation.
+RAG is not only retrieval. It is source rights, versions, checksums, allowlisted
+citations, failure behavior, and human release control.
 
-The fifth challenge was deployment discipline. We wanted a local setup that did not disturb other PostgreSQL containers and a production topology that did not expose the database. Isolated Compose projects, internal networks, committed migrations, and hardened containers solved those concerns.
+AI support should also have a removal plan. In Kanni, the teacher can move the next
+studio from guided to light to independent. The product records whether support
+was opened and asks the learner what can now be done alone.
 
-## What we learned
-
-A small lovable complete product is not the same as a thin MVP. Users can forgive narrow content when the job itself is finished. They do not forgive a workflow that stops at a screen.
-
-We also learned that trust works better as architecture than as a marketing page. A parent should receive less data by design. AI should be unable to publish by design. A stale form should fail at the database transition. Secrets should stay out of the image. These choices are stronger than asking users to read a list of promises.
+Finally, a clean database test tells the truth. Seeded review data can hide broken
+installation, account creation, and mapping paths. Kanni's main browser test creates
+everything through the same interface a school would use.
 
 ## What comes next
 
-The next school-operations slice is account provisioning, relationship approval, password recovery or school SSO, and staff MFA. After that come retention and deletion workflows, notifications, backup and restore operations, monitoring, and multi-membership school selection.
+Before real school use, Kanni needs SSO or OIDC, MFA, password recovery, account
+suspension, retention and deletion tools, provider and child-safety review, ingress
+rate limiting, managed secrets, monitoring, and independent security testing.
 
-Content will grow only through reviewed, rights-cleared lesson packs and teacher feedback. Malayalam copy will receive a final native educator review before real school use.
+For learning support, the next work is a school-approved curriculum collection,
+embedding retrieval for larger packs, group planning for a whole class, an outbox
+for notifications, and optional voice access after a separate consent and data
+review.
 
-Kanni will stay focused on the same promise: help every learner take the next useful step by making sure the right person can act at the right time.
-
-> Kanni is independent. It is not affiliated with or endorsed by SCERT Kerala or the Government of Kerala.
+The current release supports one school per installation and Classes 6 to 9. It
+does not claim full SCERT coverage, statewide readiness, or improved academic
+outcomes.

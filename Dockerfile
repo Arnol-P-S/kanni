@@ -22,7 +22,6 @@ FROM base AS migrator
 COPY --from=dependencies --chown=node:node /app/node_modules ./node_modules
 COPY --chown=node:node package.json pnpm-lock.yaml pnpm-workspace.yaml prisma.config.ts ./
 COPY --chown=node:node prisma ./prisma
-COPY --chown=node:node lib/growth-cycle.ts ./lib/growth-cycle.ts
 USER node
 CMD ["node", "node_modules/prisma/build/index.js", "migrate", "deploy"]
 

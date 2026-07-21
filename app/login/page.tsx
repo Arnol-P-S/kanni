@@ -7,7 +7,7 @@ import { PublicFooter } from "@/components/public-footer";
 import { PublicHeader } from "@/components/public-header";
 import { getCurrentActor, homeForRole } from "@/lib/auth";
 import { copy, getRequestLocale } from "@/lib/i18n";
-import { reviewAccounts } from "@/lib/review-accounts";
+import { isInstallationConfigured } from "@/lib/installation";
 
 export const metadata: Metadata = {
   title: "Sign in",
@@ -19,13 +19,11 @@ export default async function LoginPage({
 }: {
   searchParams: Promise<{ notice?: string }>;
 }) {
+  if (!(await isInstallationConfigured())) redirect("/setup");
   const actor = await getCurrentActor();
   if (actor) redirect(homeForRole(actor.role));
   const locale = await getRequestLocale();
   const { notice } = await searchParams;
-  const showReviewAccess =
-    process.env.NODE_ENV !== "production" ||
-    process.env.REVIEW_ACCESS_VISIBLE === "true";
 
   return (
     <>
@@ -68,16 +66,16 @@ export default async function LoginPage({
             <p className="form-notice" role="status">
               {copy(locale, { en: "Sign in to continue.", ml: "തുടരാൻ സൈൻ ഇൻ ചെയ്യുക." })}
             </p>
+          ) : notice === "school-created" ? (
+            <p className="form-notice" role="status">Your school is ready. Sign in with the administrator account you created.</p>
+          ) : notice === "school-ready" ? (
+            <p className="form-notice" role="status">This school is already set up. Sign in to continue.</p>
           ) : null}
           <LoginForm
-            accounts={showReviewAccess ? reviewAccounts : []}
             copy={{
               email: copy(locale, { en: "Email", ml: "ഇമെയിൽ" }),
               password: copy(locale, { en: "Password", ml: "പാസ്‌വേഡ്" }),
               submit: copy(locale, { en: "Open workspace", ml: "പ്രവർത്തിസ്ഥലം തുറക്കുക" }),
-              reviewTitle: copy(locale, { en: "Review access", ml: "പരിശോധനാ പ്രവേശനം" }),
-              reviewDetail: copy(locale, { en: "Choose an account to fill its local review credentials.", ml: "പ്രാദേശിക പരിശോധനാ വിവരങ്ങൾ പൂരിപ്പിക്കാൻ ഒരു അക്കൗണ്ട് തിരഞ്ഞെടുക്കുക." }),
-              useAccount: copy(locale, { en: "Use", ml: "ഉപയോഗിക്കുക" }),
             }}
           />
         </section>

@@ -1,55 +1,128 @@
-# Kanni product video script, 2 minutes 50 seconds
+# Kanni demo video script
 
-## 0:00 to 0:15
+Target length: 2 minutes 56 seconds. Narration and captions are in English.
 
-Screen: Landing page, English to Malayalam switch, then the connected four-role visual.
+## Prepare the recording
 
-Narration: “Learning support often breaks between school and home. Kanni connects the student, teacher, parent, and school around one useful next step.”
+Use adult-operated accounts and original school-authored curriculum. Do not show
+emails, passwords, environment files, provider keys, browser developer tools, or
+personal notifications.
 
-## 0:15 to 0:32
+Before creating the recording state, confirm `/api/health` reports an available
+database, teacher AI, and student help. Student help remains off unless the school
+operator has reviewed external student-data processing and enabled both student
+release controls. Do this check before screen recording so no configuration or
+secret appears in the video.
 
-Screen: Sign-in page. Show the four separate review accounts, then sign in as the school administrator.
+Create these states through the real interface before recording clips:
 
-Narration: “Each person has a separate account. The school sees who is connected and where the learning cycle is now, without reading the student's evidence.”
+1. Keep the administrator, teacher, student, and parent accounts connected.
+2. As administrator, add one original curriculum pack and keep it active.
+3. As teacher, create a planning studio from that pack.
+4. Record the teacher AI request as one clip. Cut the waiting time, but do not fake
+   the returned state.
+5. Publish the plan. Record the student first attempt and AI-help request as a
+   separate clip, then complete and submit the work.
+6. Record the teacher review and parent response.
+7. Keep one final administrator clip showing the completed handoff and recorded AI
+   usage. The administrator view must not show the learner's raw work.
 
-## 0:32 to 1:02
+## 0:00 to 0:13
 
-Screen: Sign in as the teacher. Show the fractions goal, success criteria, likely misconceptions, support choices, and publish with fraction strips.
+Screen: Landing page, Kanni mark, four roles, then the agency-loop diagram.
 
-Narration: “The teacher starts with a reviewed plan, anticipates likely misconceptions, and chooses the support the student can open. AI can help draft, but it is optional and cannot publish.”
+Narration: “Most school AI is built to deliver answers faster. Kanni takes another
+path: teachers gain leverage, while students make, test, question, and revise their
+own ideas.”
 
-## 1:02 to 1:28
+## 0:13 to 0:34
 
-Screen: Sign in as the student. Choose one quarter, open the fraction-strip support, revise to one half, select the equal-parts explanation, and send it.
+Screen: Administrator workspace. Show role permissions, one connected support
+circle, and the active curriculum library. Briefly show the add-curriculum form,
+section count, version, checksum, and archive control.
 
-Narration: “The student tries first, opens the teacher-selected support, revises, and explains what changed. There is no score, rank, streak, or free-text conversation.”
+Narration: “The administrator manages real role accounts, responsibility mappings,
+and versioned curriculum. Content is split into checksummed sections. Teachers can
+reuse an active version, while an old version can be archived without rewriting a
+past learning record.”
 
-## 1:28 to 1:52
+## 0:34 to 1:09
 
-Screen: Return as teacher. Show the evidence timeline, choose guided questions, and approve the family activity.
+Screen: Teacher creates or opens the planning studio. Show the source sections and
+the AI boundary. Click the AI planning button, cut the waiting time, then show the
+persistent completed-request panel, model, prompt version, citations, cost, and the
+editable plan.
 
-Narration: “The assigned teacher reviews the actual evidence and decides what should happen next. Here, the teacher changes the next support to guided questions.”
+Narration: “The teacher begins with a learning goal and an approved curriculum
+pack. Kanni already provides an editable local plan. When the teacher explicitly
+requests AI planning, GPT-5.6 receives the goal and at most six relevant sections,
+not account names or learner work. A strict schema requires differentiation,
+misconception probes, checks, choices, making, reflection, and a family activity.
+Unknown citations or unsafe output hide the whole response. The teacher still
+edits, reviews, and publishes the plan.”
 
-## 1:52 to 2:12
+## 1:09 to 1:53
 
-Screen: Sign in as the parent on a mobile viewport. Switch to Malayalam. Show the reviewed summary, home activity, and bounded response.
+Screen: Student workspace. Choose an interest route and maker path, enter a
+prediction, then write a first attempt. Show that both support buttons are disabled
+before the attempt. Open the teacher-reviewed prompts, confirm adult supervision,
+request Creative thinking coach, cut the waiting time, and show the three grounded
+question-and-action cards. Then move through critique, revision, explanation, and
+reflection.
 
-Narration: “The linked parent receives one plain, teacher-reviewed activity in their chosen language. Raw evidence and model output stay out of this view.”
+Narration: “The student does not begin with a chatbot. They choose a route, predict,
+and make a first version. Only then can they open teacher-reviewed prompts or make
+one AI-help request. For that request, GPT-5.6 receives the first attempt and at
+most four relevant sections, after an adult confirms supervision. It returns
+questions and small experiments, never a finished answer. The student decides what
+to test, finds a weakness, revises the work, explains why it changed, and finishes
+with a self-check they can repeat without AI.”
 
-## 2:12 to 2:27
+## 1:53 to 2:18
 
-Screen: Return as student. Show the changed next activity.
+Screen: Teacher evidence review. Show the prediction-to-reflection sequence and the
+expandable audit of AI questions. Enter feedback, choose the next scaffold level,
+and open the family activity.
 
-Narration: “When the student returns, the next activity has changed because of the teacher's review. That is the link Kanni is built around.”
+Narration: “The teacher reviews how the thinking changed, including which support
+was opened and which AI questions were shown. The model never chooses the learner's
+level. Here the teacher selects lighter support for the next studio and writes the
+feedback and family activity.”
 
-## 2:27 to 2:42
+## 2:18 to 2:34
 
-Screen: Architecture diagram, Docker services, test result summary.
+Screen: Parent mobile view. Edit a short response, submit it, then cut to the
+administrator handoff board. Keep the unique learner draft absent from both views.
 
-Narration: “Underneath, PostgreSQL stores accounts, relationships, sessions, audit events, and the learning-cycle state. Docker runs the app, migrations, and database. Thirty-two release cases and database-backed browser tests protect the handoffs.”
+Narration: “The parent receives one reviewed activity and can edit a response before
+sending it. Raw drafts, AI text, scores, ranks, and diagnoses stay out. The
+administrator sees the handoff finish without opening private student work.”
 
-## 2:42 to 2:50
+## 2:34 to 2:48
 
-Screen: Kanni mark and closing line.
+Screen: Architecture diagram, prompt-version code, and the passing test summary.
 
-Narration: “Kanni helps every learner take the next useful step by helping the right person act at the right time.”
+Narration: “Prompt and context engineering are versioned in code. PostgreSQL
+enforces role and workflow boundaries. Fifty-six unit tests, fifty-one deterministic
+cases, and a clean four-role browser journey verify grounding, safety, permissions,
+privacy, and accessibility without spending AI credit.”
+
+## 2:48 to 2:56
+
+Screen: README section about Codex and GPT-5.6, then the Kanni closing frame.
+
+Narration: “Codex helped turn the early static lesson into this tested system.
+GPT-5.6 prepares support. Teachers decide. Learners create.”
+
+## Recording checks
+
+- Keep the exported video below three minutes.
+- Record at 1080p or higher and zoom enough for text to remain readable.
+- Use quick cuts between roles. Remove provider waiting time, but keep the real
+  before and after states.
+- Use only original Kanni screens, diagrams, narration, and music you are licensed
+  to use. Silence is safer than unlicensed music.
+- Do not show SCERT logos, textbook pages, third-party marks, or real child data.
+- Explain any Malayalam interface text in the English narration.
+- Confirm that captions match the final edit before upload.
+- Upload the final video to YouTube as a public video.

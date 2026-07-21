@@ -1,209 +1,340 @@
 # Kanni | കണ്ണി
 
-Kanni is a connected learning-support platform for schools. It gives students, teachers, parents, and school administrators separate accounts and a shared learning cycle with role-appropriate information.
+Kanni is a teacher-first learning platform for Classes 6 to 9. A teacher starts
+with curriculum the school is allowed to use. A learner then predicts, makes,
+critiques, revises, explains, and reflects. The teacher reads that evidence and
+decides how much support should come next. A parent receives one reviewed home
+activity without receiving the learner's private draft.
 
-One teacher decision changes what the student sees next. The student chooses a maker path, creates a first design, critiques it, and revises it. The assigned teacher reviews that work and decides how much scaffold comes next. The parent receives only a safe summary and teacher-reviewed home activity. The school administrator sees accounts, relationships, handoff state, and scaffold policy without receiving the student's raw work.
+The core idea is simple: AI can prepare support, but it must not do the learner's
+thinking or make the teacher's decision.
 
-## The complete slice
+## What is working
 
-The current release implements one complete school workflow around an original fractions learning goal:
+### School administrator
 
-1. The school administrator sees the active accounts and teacher-student-parent relationships.
-2. The assigned teacher reviews the learning plan, anticipates likely misconceptions, chooses a support strategy, and publishes the activity.
-3. The assigned student makes a first choice, opens the teacher-selected scaffold, chooses what to make, creates a first design, critiques it, and revises it.
-4. The teacher reviews the artifact and mathematics evidence, chooses the next support and scaffold level, and approves a family activity.
-5. The linked parent sees the kind of artifact created and the approved home activity, but not the raw artifact text, then returns a bounded response.
-6. The student's next view reflects the teacher's reviewed support. A new cycle inherits the guided, light, or independent scaffold level chosen by the teacher.
+- creates teacher, student, and parent accounts
+- maps each learner to an assigned teacher and parent
+- adds, versions, archives, and restores permission-safe curriculum packs
+- sees studio handoff status and aggregate AI usage
+- cannot read raw learner submissions
 
-When a school leader opens the goal again, Kanni archives the previous cycle and creates a new draft. Earlier evidence is preserved instead of reset in place.
+### Teacher
 
-The application uses real database persistence, password authentication, revocable server sessions, role and relationship authorization, English and Malayalam preferences, audit events, and Docker deployment. It does not depend on AI to complete the workflow.
+- creates a learning studio for an assigned learner
+- selects an active school curriculum pack or registers a permission-safe source
+- receives a complete teacher-owned starting plan without calling AI
+- can request one GPT-5.6 planning draft through OpenRouter
+- reviews and edits success criteria, lesson sequence, differentiation,
+  misconception probes, quick checks, interest routes, maker paths, Socratic
+  prompts, reflection prompts, and the family activity
+- publishes only after confirming a source review
+- reads the learner's full thinking sequence and chooses the next scaffold level
 
-## Technology
+### Learner
 
-- Node.js 24.18.0 and pnpm 11
-- Next.js 16.2.10, React 19.2.7, and TypeScript strict mode
-- PostgreSQL 18.4
-- Prisma 7.8 with the PostgreSQL driver adapter
-- Tailwind CSS 4 and local Noto Sans font packages
-- Optional OpenRouter integration through the Vercel AI SDK
-- Vitest, Playwright, and Axe
-- Docker Compose for development and production-shaped deployment
+- chooses an interest route and what to make
+- predicts before beginning
+- creates a first version before opening support
+- can request one curriculum-grounded set of creative questions and small actions
+  after making that first version
+- finds a weakness, revises the work, and explains why the revision is stronger
+- reflects on what can be done with less help next time
+- receives the teacher's next question and future scaffold decision
 
-Versions are pinned in `package.json`, `.nvmrc`, the lockfile, Dockerfile, and Compose files.
+### Parent
 
-## Start locally
+- sees the learning goal, one teacher observation, and one reviewed activity
+- sends a small response back to the teacher
+- never receives the learner's prediction, draft, critique, revision, model text,
+  score, rank, or diagnosis
 
-Requirements: Docker with Compose, Node 24.18.0, and Corepack.
+## The connected learning loop
+
+```text
+Administrator approves a versioned, permission-safe curriculum pack
+    -> teacher selects the pack and defines the learning goal
+    -> teacher reviews a local plan or requests one grounded GPT-5.6 draft
+    -> learner predicts and makes before optionally requesting grounded thinking help
+    -> learner critiques, revises, explains, and reflects
+    -> teacher reviews the evidence and selects guided, light, or independent support
+    -> parent receives one reviewed activity and responds
+    -> the teacher's scaffold decision becomes the next studio's starting level
+```
+
+Every handoff checks the persisted stage and record version. Repeated or stale
+actions cannot skip a stage.
+
+![Kanni learner-agency loop](docs/diagrams/render/agency-loop.png)
+
+## Why the AI is bounded
+
+Kanni does not use a general student chatbot. It has two separate, explicit, and
+one-use provider calls per studio: a teacher planning draft and a student thinking
+coach after a first attempt.
+
+When a teacher presses the AI planning button, Kanni:
+
+1. retrieves up to six sections from the curriculum pack stored for that studio;
+2. sends the goal, driving question, class, and retrieved sections to GPT-5.6;
+3. requires a strict Zod object with the complete teacher-plan structure;
+4. rejects the entire draft if any cited section ID was not retrieved;
+5. stores request status, token counts, latency, model, prompt version, and cost,
+   but not the provider prompt or learner work;
+6. leaves publishing to the teacher.
+
+When a student presses the thinking-coach button, Kanni:
+
+1. requires a first attempt of at least 60 characters;
+2. screens the attempt for personal data, high-risk text, and prompt injection;
+3. retrieves at most four relevant sections;
+4. sends only the goal, driving question, class, first attempt, and those sections;
+5. requires three or four question-and-action steps plus a self-check;
+6. rejects unknown citations, unsafe text, malformed output, and anything outside
+   the strict object before the student sees it.
+
+There is no automatic request, retry, provider fallback, web search, tool use, or
+model conversation history. Kanni never asks GPT-5.6 to produce a completed
+student answer. It does not add account names, family notes, passwords, membership
+records, or the learner's later critique, revision, explanation, and reflection.
+
+The local plan remains usable when AI is off, rejected, over budget, or unavailable.
+
+## Clean Docker test build
+
+The judge deployment starts with an empty PostgreSQL database. It does not create
+sample schools, hidden accounts, passwords, or learner records.
+
+After the `build-week-submission` release tag is published:
 
 ```bash
+docker compose -f compose.judge.yaml up -d --wait
+```
+
+Open <http://localhost:3001>. The first screen asks you to create the school and
+administrator. Use the administrator workspace to create the other three roles
+and connect the support circle. AI is off in this portable build, so it cannot
+spend provider credit.
+
+Stop it with:
+
+```bash
+docker compose -f compose.judge.yaml down
+```
+
+Add `-v` only when you intentionally want to delete the local judge database and
+repeat first-run setup.
+
+No public hosting is required for this Education-category submission. The source
+repository and this Docker path give judges a complete local test route.
+
+## Local development
+
+Requirements:
+
+- Node 24, using the version in `.nvmrc`
+- pnpm 11 through Corepack
+- Docker with Compose
+
+```bash
+nvm install
+nvm use
+corepack enable
+corepack pnpm install --frozen-lockfile
 cp .env.example .env
-docker compose up -d db
-corepack pnpm install
+docker compose up -d --wait db
 corepack pnpm db:migrate:deploy
-corepack pnpm db:seed
-corepack pnpm dev --hostname 127.0.0.1 --port 3001
+corepack pnpm dev
 ```
 
-Open `http://localhost:3001`.
+Open <http://localhost:3000>. Kanni redirects an empty installation to `/setup`.
+There is no seed command. Create accounts through the administrator workspace.
 
-The development database listens only on `127.0.0.1:5436`, so it does not conflict with the other PostgreSQL containers on this workstation. The Compose project and volume are also isolated under `kanni-dev`.
+## Production-style Docker deployment
 
-### Local review accounts
-
-The seed creates these local accounts only when `KANNI_SEED_LOCAL_ACCOUNTS=true`:
-
-| Role | Email | Local password |
-|---|---|---|
-| School administrator | `admin@kanni.local` | `Admin@Kanni2026` |
-| Teacher | `teacher@kanni.local` | `Teacher@Kanni2026` |
-| Student | `student@kanni.local` | `Student@Kanni2026` |
-| Parent | `parent@kanni.local` | `Parent@Kanni2026` |
-
-The login page can fill these accounts in development. Production hides them unless `REVIEW_ACCESS_VISIBLE=true`. Do not reuse these credentials for a school deployment.
-
-Stop the local dependency with:
+Create deployment-specific settings first:
 
 ```bash
-docker compose down
+cp .env.production.example .env.production
+corepack pnpm env:production:check
+./deploy.sh deploy
 ```
 
-The database volume remains. Use `docker compose down -v` only when you intentionally want to delete local Kanni data.
+The production Compose stack builds separate migration and application targets,
+runs migrations before the application starts, keeps PostgreSQL on an internal
+network, drops container capabilities, uses read-only application filesystems,
+and exposes the app on `APP_HOST:APP_PORT`. The post-build release check removes
+local environment files and stale development cache from the standalone artifact;
+Docker injects runtime configuration through Compose instead.
 
-## Database commands
+Useful commands:
 
 ```bash
-pnpm db:generate
-pnpm db:migrate
-pnpm db:migrate:deploy
-pnpm db:seed
-pnpm db:studio
+./deploy.sh status
+./deploy.sh logs app
+./deploy.sh backup
+./deploy.sh stop
 ```
 
-`pnpm db:migrate` creates development migrations. Deployment uses only committed migrations through `pnpm db:migrate:deploy`.
+Kanni does not configure TLS or an ingress rate limit. Put a TLS reverse proxy in
+front of any shared deployment and keep AI disabled until the external request
+and spend controls are in place. Complete first-run setup while the application is
+still bound to loopback, before making the reverse proxy public.
 
-## Optional AI
+## Optional OpenRouter configuration
 
-Kanni works fully with `GROWTH_AI_ENABLED=false`. Reviewed project-authored plans and supports remain available when no provider is configured, the provider times out, output is malformed, or the deterministic content gate rejects it.
+Codex credits pay for work done in Codex. They cannot pay for OpenRouter or OpenAI
+API traffic. Runtime model calls need a separate OpenRouter balance.
 
-The optional teacher-plan and student-support drafts use the allowlisted `openai/gpt-5.6-luna` model through OpenRouter by default. Luna is the deliberate choice for this bounded structured-output task because it costs less than Sol. Kanni retrieves only relevant sections from the reviewed, original fractions lesson pack, then rejects generated citations that were not retrieved. It does not send a learner name, email, answer record, family response, session, or school membership.
-
-Codex credit cannot pay for application API calls. It pays for development work performed in Codex. OpenRouter needs its own balance. A $10 ceiling is suitable for controlled judging when AI is optional, each learning cycle can claim each AI draft only once, retries and provider fallback are disabled, and an account spend limit plus host rate limit are active. Exact usage still depends on current provider pricing.
-
-To enable AI after those controls exist:
+Set these only after creating a provider key, a hard spend limit, and an ingress
+rate limit:
 
 ```dotenv
 GROWTH_AI_PROVIDER=openrouter
 GROWTH_AI_MODEL=openai/gpt-5.6-luna
-OPENROUTER_API_KEY=replace-me
+OPENROUTER_API_KEY=your_provider_key
 GROWTH_AI_ENABLED=true
 GROWTH_AI_RATE_LIMIT_CONFIRMED=true
 GROWTH_AI_SPEND_LIMIT_CONFIRMED=true
+# Keep student AI off until the school has reviewed external student-data processing.
+GROWTH_AI_STUDENT_HELP_ENABLED=false
+GROWTH_AI_STUDENT_DATA_REVIEW_CONFIRMED=false
 ```
 
-Production capability remains closed unless both confirmation flags are true. The key stays server-side.
+Allowed models are `openai/gpt-5.6-luna` and `openai/gpt-5.6-sol`. Luna is the
+default for the bounded structured tasks. Each studio can claim one teacher plan
+request. Student thinking-coach requests remain unavailable unless both separate
+student flags are set to `true` after the school reviews provider data handling.
+Each request also requires an adult to confirm that they are testing the feature
+themselves or supervising the activity. The app sets `store: false`, excludes
+providers that collect request data, disables provider fallback, and uses low
+reasoning. Teacher output is capped at 3,200 tokens with a 40-second timeout;
+student help is capped at 900 tokens with a 20-second timeout. Provider-reported
+cost is recorded when available. Both allowed models are restricted to OpenRouter's OpenAI route because
+that endpoint advertises every structured-output parameter used by Kanni. Current
+GPT-5.6 endpoints return no route when Zero Data Retention is required, so Kanni
+makes no ZDR claim. The request excludes account names, learner work, family notes,
+and earlier model conversations. These technical controls do not replace the
+school's legal and child-safety review before any real-student use.
+
+Do not run the live evaluation casually. It makes one paid request and requires an
+explicit confirmation value:
+
+```bash
+RUN_LIVE_AI_EVALS=I_UNDERSTAND_THIS_SPENDS_OPENROUTER_CREDIT corepack pnpm eval:live
+```
 
 ## Verification
 
-Start the development database before the browser suite. Then run:
+Start the local database, then run:
 
 ```bash
-pnpm lint
-pnpm typecheck
-pnpm typecheck:compat
-pnpm test
-pnpm eval
-pnpm build
-pnpm test:e2e
-pnpm audit --audit-level=moderate
-pnpm diagrams
+corepack pnpm lint
+corepack pnpm typecheck
+corepack pnpm typecheck:compat
+corepack pnpm test
+corepack pnpm eval
+corepack pnpm build
+corepack pnpm test:e2e
+corepack pnpm audit --audit-level=moderate
 ```
 
-The Playwright suite resets the isolated `kanni_test` database, applies migrations, and seeds review accounts. It covers the complete four-account handoff, wrong-role denial, generic login failure, English-Malayalam switching at 360 pixels, and serious or critical Axe findings.
+The Playwright suite resets only the isolated `kanni_test` database. It applies
+all migrations and creates the school, users, mappings, curriculum, studio,
+submission, teacher review, and family response through the real interface. It
+also checks role denial, generic login errors, English and Malayalam switching,
+360-pixel layout, reduced motion, parent and administrator privacy, and serious
+or critical Axe findings. AI is disabled in the browser suite.
 
-The 44-case deterministic evaluation covers authorization, workflow transitions, language selection, information visibility, AI release policy, curriculum retrieval, learner-agency guards, artifact completion, and scaffold fading. Results are written to `eval/deterministic-results.json`.
+The unit suite has 51 tests. The deterministic evaluation set has 51 cases covering curriculum rights,
+retrieval, invented citations, learner agency, scaffold fading, unsupported
+requests, prompt injection, personal data, safety routing, role privacy, and
+Malayalam-English input. Live model evaluation is separate so ordinary tests do
+not spend money.
 
-## Architecture
+## Security and privacy boundaries
 
-The application follows a few deliberate patterns:
+- bcrypt password hashes and opaque, hashed server sessions
+- HttpOnly, SameSite cookies, with Secure cookies in production
+- school, role, and relationship checks on every read and write
+- login throttling keyed by HMAC hashes
+- Zod validation at form, AI, and environment boundaries
+- no raw prompt or learner-text logging
+- no analytics in this release
+- no grading, ranking, diagnosis, stream selection, or career recommendation
+- reviewed static safety routing for high-risk English and Malayalam text
+- no SCERT textbook copying, screenshots, diagrams, questions, or logos
 
-- Data Access Layer: authenticated actor and relationship-scoped queries live in server-only modules.
-- State Machine: database status and write preconditions enforce valid learning-cycle handoffs.
-- Strategy: teacher support choices and scaffold levels map to reviewed student and family presentations.
-- Adapter: the optional AI provider sits behind one server-only boundary and returns schema-checked drafts.
-- Unit of Work: multi-record changes and their audit events use Prisma transactions.
-- Policy Object: role capabilities, visible information, and AI release gates are explicit and testable.
+Read [SECURITY.md](SECURITY.md), [Privacy](app/privacy/page.tsx), and
+[Terms](app/terms/page.tsx) before using real school data. Kanni is an independent
+OpenAI Build Week project. It is not affiliated with or endorsed by SCERT Kerala
+or the Government of Kerala.
 
-See [System design](docs/SYSTEM-DESIGN.md) and the rendered diagrams in `docs/diagrams/render/`.
-
-## Docker deployment
-
-Create a private production environment file:
-
-```bash
-cp .env.production.example .env.production
-```
-
-Replace every database, authentication, and seed password. Then:
-
-```bash
-./deploy.sh deploy
-./deploy.sh status
-./deploy.sh logs app
-```
-
-Every deployment command validates `.env.production` first. Placeholder secrets, connection-URL-unsafe database passwords, visible review credentials, non-HTTPS public URLs, and AI without confirmed spend and rate controls are rejected without printing secret values. `openssl rand -hex 32` creates a suitable database password.
-
-The production Compose topology includes:
-
-- a PostgreSQL container on an internal network with a named volume
-- a non-root, read-only one-shot migration container
-- a non-root, read-only Next.js application container
-- dropped Linux capabilities, `no-new-privileges`, resource bounds, and health checks
-- a separate opt-in seed profile
-
-The app is exposed on port 3001 by default. Put a reviewed reverse proxy or managed ingress in front of it for TLS, request-size limits, and rate limiting. Configure backups, restore tests, retention, monitoring, password reset or SSO, and school privacy approval before using real student data.
-
-## Privacy and school readiness
-
-Kanni stores only the data needed for the connected learning cycle: school accounts, memberships, assigned relationships, fixed-choice evidence, the student's bounded artifact draft and revision, teacher review, family response, locale, sessions, and audit events.
-
-It does not create public profiles, ranks, feeds, direct student messaging, ability labels, academic-stream decisions, career recommendations, or automated grades. Raw artifact text is visible only to the student and assigned teacher. Parents and administrators receive safe workflow summaries instead.
-
-This repository is production-shaped, not a claim that one codebase alone makes a school deployment legally or operationally ready. A real deployment still needs local policy review, identity lifecycle, password recovery or SSO, data retention, backup and restore, incident response, and approval for processing student data. See [Security](SECURITY.md), `/privacy`, and `/terms`.
-
-## Content rights
-
-The fractions lesson and all Kanni interface content are original project content. Code is licensed under MIT. Original lesson content is separately licensed under CC BY 4.0 in `CONTENT-LICENSE.md`.
-
-Public textbook sites are references only. Kanni does not ingest, copy, index, transcribe, screenshot, redraw, or redistribute textbook passages, images, diagrams, questions, PDFs, or logos.
-
-> Kanni is independent. It is not affiliated with or endorsed by SCERT Kerala or the Government of Kerala.
-
-## Repository map
+## System structure
 
 ```text
-app/                     Next.js routes and server actions
-components/              public, login, and portal components
-lib/                     auth, data access, workflow, policy, and AI adapter
-prisma/                  schema, migrations, and seed
-docker/                  database initialization
-eval/                    deterministic release cases and results
-tests/unit/              state, policy, and AI boundary tests
-tests/e2e/               browser journeys
-docs/                    system design and diagrams
-submission/              Devpost story, review kit, video script, screenshots
-compose.yaml             isolated local PostgreSQL
-compose.production.yaml  application, migration, and database topology
+app/                      Next.js routes, server actions, and role workspaces
+components/               accessible forms and learning-studio interfaces
+lib/curriculum/           source rights, normalization, sections, retrieval, citations
+lib/studio/               schemas, local plan, grounding, and workflow transitions
+lib/ai/                   versioned prompt contexts, capability policy, and GPT-5.6 adapter
+lib/safety/               personal-data, high-risk, and prompt-injection screens
+prisma/                   schema and forward-only migrations
+eval/                     deterministic cases and published results
+tests/unit/               domain and boundary tests
+tests/e2e/                clean-install four-role browser flow
+docs/                     system design and rendered architecture diagrams
+submission/               Devpost copy, video script, captions, and reviewer notes
 ```
 
-## Current limitations and next integrations
+PostgreSQL is the source of truth. React state is used only for form steps. AI is
+an optional adapter behind validated domain contracts, not the owner of workflow
+state.
 
-- The complete slice has one school and one original fractions learning cycle.
-- The school admin portal observes seeded accounts and relationships. Full account provisioning and relationship editing are the next school-operations slice.
-- Each user currently has one active membership. The schema supports multiple memberships, but account-time school selection is not implemented.
-- Password reset, MFA, school SSO, email delivery, backups, monitoring, and automated retention are deployment integrations, not hidden claims.
-- Malayalam copy needs final review by a native Malayalam educator before a real school release.
-- AI supports plan drafting and curriculum-grounded Socratic questions only. It never receives or writes the student's artifact, and it cannot publish a plan, change authorization, grade a student, or contact a family.
+![Kanni system architecture](docs/diagrams/render/system-architecture.png)
 
-These boundaries preserve a complete, useful learning cycle while keeping the path to school integration explicit.
+## How Codex contributed
+
+This repository was built through one primary Codex thread. Codex helped inspect
+and replace an early static lesson prototype, define the learning-studio state
+machine, write the Prisma migration, implement clean setup and role mapping,
+create the RAG and AI validation boundaries, build each role workspace, and write
+the unit, evaluation, and browser suites.
+
+Human decisions set the product direction and limits. In particular:
+
+| Problem | Codex contribution | Human decision | Result |
+| --- | --- | --- | --- |
+| The first build felt like a static lesson | Traced hardcoded content and replaced the domain and screens | Make teachers the main lever and learner agency the outcome | A reusable curriculum-grounded studio |
+| A generic tutor could answer for the learner | Added the first-attempt gate, bounded thinking-coach schema, and predict, make, critique, revise, explain, reflect contract | AI may ask and scaffold, but it may not complete student work | The student owns the evidence |
+| School AI can hallucinate | Added local sections, retrieval, strict objects, and citation rejection | Discard unknown source IDs and require teacher review | Provider text cannot publish itself |
+| Sample accounts made the deployment feel fake | Added transactional first-run setup and admin provisioning | Production must begin empty | No seed data or displayed credentials |
+| Privacy differed by role | Added relation-scoped queries and E2E privacy assertions | Parents and administrators do not receive raw work | The handoff carries only what each role needs |
+| A browser check exposed setup failure | Isolated a Prisma adapter error around an advisory lock | Keep the lock and fix the correct boundary | Clean setup works without weakening concurrency control |
+
+GPT-5.6 is integrated as the optional teacher planning model through OpenRouter.
+Deterministic and browser verification do not call it. The final README and
+submission should report a live model result only after the explicit paid live
+evaluation has actually been run.
+
+## Current limits
+
+- one school per installation
+- Classes 6 to 9 in the current interface
+- one assigned teacher and parent used for each studio handoff
+- school-provided text sources, with deterministic section retrieval instead of
+  a vector database
+- no SSO, MFA, password recovery, account suspension interface, file upload,
+  speech input, analytics, or notification service yet
+- fixed Malayalam copy still needs a native-speaker release review
+- real-child testing is outside the Build Week scope
+
+These are release boundaries, not claims of statewide readiness or learning
+effectiveness.
+
+## Licenses
+
+Code is MIT licensed in [LICENSE](LICENSE). Original Kanni teaching prompts,
+planning templates, interface copy, safety cards, and evaluation cases are CC BY
+4.0 under [CONTENT-LICENSE.md](CONTENT-LICENSE.md). A school remains responsible
+for the rights and retention policy of any curriculum it enters.

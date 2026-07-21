@@ -1,0 +1,95 @@
+name: kanni-judge
+
+services:
+  db:
+    image: postgres:18.4-alpine@sha256:9a8afca54e7861fd90fab5fdf4c42477a6b1cb7d293595148e674e0a3181de15
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: kanni
+      POSTGRES_PASSWORD: kanni_judge_local_database_2026
+      POSTGRES_DB: kanni
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kanni -d kanni"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+    volumes:
+      - kanni_judge_data:/var/lib/postgresql
+    networks:
+      - data
+    mem_limit: 768m
+    cpus: 1.0
+
+  migrate:
+    image: ${KANNI_MIGRATOR_IMAGE:-ghcr.io/arnol-p-s/kanni:build-week-submission-migrator}
+    pull_policy: ${KANNI_IMAGE_PULL_POLICY:-always}
+    restart: "no"
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    environment:
+      DATABASE_URL: postgresql://kanni:kanni_judge_local_database_2026@db:5432/kanni?schema=public
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - data
+
+  app:
+    image: ${KANNI_APP_IMAGE:-ghcr.io/arnol-p-s/kanni:build-week-submission}
+    pull_policy: ${KANNI_IMAGE_PULL_POLICY:-always}
+    restart: unless-stopped
+    init: true
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://kanni:kanni_judge_local_database_2026@db:5432/kanni?schema=public
+      DATABASE_POOL_SIZE: "5"
+      AUTH_SECRET: kanni-judge-local-session-secret-2026-only
+      AUTH_TRUST_PROXY: "false"
+      NEXT_PUBLIC_APP_URL: http://localhost:${KANNI_JUDGE_PORT:-3001}
+      GROWTH_AI_PROVIDER: disabled
+      GROWTH_AI_MODEL: openai/gpt-5.6-luna
+      OPENROUTER_API_KEY: ""
+      GROWTH_AI_ENABLED: "false"
+      GROWTH_AI_RATE_LIMIT_CONFIRMED: "false"
+      GROWTH_AI_SPEND_LIMIT_CONFIRMED: "false"
+      GROWTH_AI_STUDENT_HELP_ENABLED: "false"
+      GROWTH_AI_STUDENT_DATA_REVIEW_CONFIRMED: "false"
+    ports:
+      - "127.0.0.1:${KANNI_JUDGE_PORT:-3001}:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:3000/api/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 8
+      start_period: 20s
+    networks:
+      - data
+      - web
+    mem_limit: 1g
+    cpus: 1.5
+
+networks:
+  data:
+    internal: true
+  web:
+
+volumes:
+  kanni_judge_data:

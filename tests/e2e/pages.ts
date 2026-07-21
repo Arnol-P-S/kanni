@@ -1,10 +1,10 @@
 import { expect, type Page } from "@playwright/test";
 
 export const accounts = {
-  admin: { email: "admin@kanni.local", password: "Admin@Kanni2026" },
-  teacher: { email: "teacher@kanni.local", password: "Teacher@Kanni2026" },
-  student: { email: "student@kanni.local", password: "Student@Kanni2026" },
-  parent: { email: "parent@kanni.local", password: "Parent@Kanni2026" },
+  admin: { email: "admin@riverbank.example", password: "RiverbankAdmin2026" },
+  teacher: { email: "teacher@riverbank.example", password: "TeacherStudio2026" },
+  student: { email: "student@riverbank.example", password: "StudentAgency2026" },
+  parent: { email: "parent@riverbank.example", password: "ParentCircle2026" },
 } as const;
 
 export class LoginPage {
@@ -21,25 +21,10 @@ export class LoginPage {
     await this.page.getByLabel("Password").fill(account.password);
     await this.page.getByRole("button", { name: "Open workspace" }).click();
     await expect(this.page).toHaveURL(/\/portal\//);
-    const english = this.page.getByRole("button", { name: "English" });
-    if ((await english.getAttribute("aria-pressed")) === "false") {
-      await english.click();
-      await expect(english).toHaveAttribute("aria-pressed", "true");
-    }
   }
 
   async signOut(): Promise<void> {
     await this.page.getByRole("button", { name: "Sign out" }).click();
     await expect(this.page).toHaveURL(/\/login\?notice=signed-out/);
-  }
-}
-
-export class WorkspacePage {
-  constructor(private readonly page: Page) {}
-
-  async expectHandoff(name: string): Promise<void> {
-    await expect(
-      this.page.getByText("Current handoff").locator("..").getByText(name),
-    ).toBeVisible();
   }
 }

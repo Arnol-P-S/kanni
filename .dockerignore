@@ -8,7 +8,6 @@ test-results
 .github
 .env*
 !.env.example
-!.env.production.example
 *.log
 *.tmp
 .DS_Store
